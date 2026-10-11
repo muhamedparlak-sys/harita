@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "20 · 11 Ekim";
+const SURUM = "21 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -370,12 +370,15 @@ SAHNE GÖREVLERİ (Save the Cat)
 - Kaynakta bir görevin karşılığı yoksa uydurma; o sahneyi hikâyenin gerçek akışına göre kullan.
 
 SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, hareket, olay, hava)
-- " | yer: " → o sahnede haritada gösterilecek yerler; virgülle ayrılmış, haritada bulunabilecek bilinen adlar (ör. Kilitbahir, Erenköy Koyu, Çanakkale Boğazı). En çok 4 yer. Hikâyenin ana bölgesinin dışında kalan bir yer varsa (ör. bugünkü müze şehri) onu yer olarak yazma, yalnızca metinde geçsin.
+- " | yer: " → o sahnede haritada gösterilecek yerler; virgülle ayrılmış, en çok 4 yer. Hikâyenin ana bölgesinin dışında kalan bir yer varsa (ör. bugünkü müze şehri) onu yer olarak yazma, yalnızca metinde geçsin.
+- YER ADI KURALI (yer, hareket ve olay alanlarının hepsinde geçerli): Harita, adları OpenStreetMap/Google Maps aramasıyla koordinata çevirir; bu yüzden yalnızca bu servislerin doğrudan tanıdığı tescilli, tekil nokta adları yaz: burun, koy, liman, fener, ada, kale, köy, kasaba, kıyı noktası (ör. Kilitbahir, Erenköy Koyu, Nara Burnu, Morto Koyu, Tekke Burnu, Kumkale, Kabatepe, Bozcaada).
+  "-açığı", "-açıkları", "-önleri", "-yakınları", "-civarı", "-bölgesi", "-kıyıları", "-suları" gibi muğlak uzantıları ASLA kullanma; arama motoru bunları tanımaz, olayı ya hiç bulamaz ya da karadaki aynı adlı bir müzeye, otele, kuruma atar. Denizde geçen olayda da en yakın tescilli kıyı noktasını yaz: "Kabatepe açığı" değil "Kabatepe"; "Seddülbahir önleri" değil "Morto Koyu" ya da "Tekke Burnu"; "Gökçeada açığı" değil "Gökçeada"; "Kumkale açığı" değil "Kumkale". Gemi işareti haritada kendiliğinden en yakın denize oturur.
+  Geniş deniz, boğaz ve bölge adları (Ege Denizi, Akdeniz, Marmara Denizi, Karadeniz, Çanakkale Boğazı, Gelibolu Yarımadası) YASAK; bunlar haritada tek bir noktaya karşılık gelmez.
 - " | tarih: " → ekranın köşesinde etiket olarak görünür, seslendirilmez: RAKAMLA ve kısa yaz, en çok 4 kelime (ör. 18 Mart 1915 · 7/8 Mart 1915 gecesi · 8–17 Mart 1915 · 18 Mart 1915, 13.54 · Bugün).
 - " | hareket: " → o sahnede yer değiştirenler; haritada rota boyunca ilerler. Biçim: Ad [taraf, tür] Başlangıç → Varış
   Birden çoksa noktalı virgülle ayır; gerekirse ara nokta ekle (A → B → C). Gemiler denizden, kara birlikleri düz çizgiyle gider.
   Yerinde duran (demirli, savaşan, batan) gemi için tek yer yaz: Goliath [lacivert, büyük gemi] Morto Koyu
-  Yer olarak geniş deniz ya da bölge adı (Ege Denizi, Akdeniz, Gelibolu Yarımadası) yazma; haritada bir nokta yaz (Gökçeada açığı, Kumkale açığı, Morto Koyu).
+  Başlangıç ve varış da YER ADI KURALI'na uyar: Goliath [lacivert, büyük gemi] Kumkale → Morto Koyu (değil: Ege Denizi → Seddülbahir açığı).
 - " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır (biçimler aşağıdaki ARAÇ KUTUSU'nda).
 - Boş kalan alanı silme: iki dik çizgi arasını boş bırak (| olay:  | hava: ).
 - " | hava: " → sahnenin ışığı ve havası, virgülle (ör. gece, yağmur). Saat ve mevsimden çıkar: gece yapılan iş → gece; sabaha karşı → şafak; akşam olayı → akşam; kaynakta sis, yağmur, kar, fırtına geçiyorsa onları ekle. Kaynakta hava bilgisi yoksa ve olay gündüzse boş bırak; hava durumu uydurma.

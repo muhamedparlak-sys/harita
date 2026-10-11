@@ -44,16 +44,21 @@ const DEPO = (() => {
   const icinde = (r, k) => !k || (r[0] >= k[0] && r[0] <= k[1] && r[1] >= k[2] && r[1] <= k[3]);
   async function ara(ad, k) {
     const bekle = 1100 - (Date.now() - sonArama); if (bekle > 0) await new Promise(r => setTimeout(r, bekle)); sonArama = Date.now();
-    const o = { q: ad, format: "json", limit: 1, "accept-language": "tr" }; if (k) Object.assign(o, { viewbox: `${k[0]},${k[3]},${k[1]},${k[2]}`, bounded: 1 });
+    const o = { q: ad, format: "json", limit: 6, "accept-language": "tr" }; if (k) Object.assign(o, { viewbox: `${k[0]},${k[3]},${k[1]},${k[2]}`, bounded: 1 });
     let j = null;
     for (let deneme = 0; deneme < 3 && !j; deneme++) {
       if (deneme) { await new Promise(r => setTimeout(r, 1500 * deneme)); sonArama = Date.now(); }
       try { const r = await fetch("https://nominatim.openstreetmap.org/search?" + new URLSearchParams(o)); if (r.ok) j = JSON.parse(await r.text()); } catch (e) { j = null; } }
     if (!j) throw new Error("yer arama servisine ulaşılamadı");
-    return j.length ? [+(+j[0].lon).toFixed(5), +(+j[0].lat).toFixed(5), j[0].display_name.slice(0, 90)] : null;
+    /* müze, otel, dükkân gibi yapılar yerine burun, koy, köy, liman, fener gibi coğrafi noktaları yeğle */
+    const DUSUK = new Set(["tourism", "amenity", "shop", "office", "building", "highway", "leisure", "craft", "healthcare", "club", "emergency"]);
+    const s = j.find(x => !DUSUK.has(x.class)) || j[0];
+    return s ? [+(+s.lon).toFixed(5), +(+s.lat).toFixed(5), s.display_name.slice(0, 90)] : null;
   }
   async function yer(ad, kutu) {
     if (!Object.keys(YERLER).length) { try { YERLER = await (await fetch("kut/yerler.json")).json(); } catch (e) { } Object.assign(YERLER, (await al("ayar", "yerler")) || {}); }
+    /* muğlak uzantılar (açığı, önleri, yakınları, bölgesi…) arama motorunda karşılığı olmadığından doğrudan çıkarılır; deniz olayı haritada en yakın denize oturtulur */
+    ad = ad.replace(/\s+(açığı|açıkları|açıklarında|önleri|önü|önünde|yakınları|yakını|yakınında|bölgesi|civarı|çevresi|kıyıları|sahilleri|sularında|suları)$/i, "").trim();
     const kk = kutu ? `${ad}@${kutu.map(v => v.toFixed(1)).join(",")}` : ad;
     if (YERLER[ad] && icinde(YERLER[ad], kutu)) return YERLER[ad];
     if (YERLER[kk]) return YERLER[kk];
