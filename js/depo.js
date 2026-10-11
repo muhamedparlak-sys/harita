@@ -51,8 +51,9 @@ const DEPO = (() => {
       try { const r = await fetch("https://nominatim.openstreetmap.org/search?" + new URLSearchParams(o)); if (r.ok) j = JSON.parse(await r.text()); } catch (e) { j = null; } }
     if (!j) throw new Error("yer arama servisine ulaşılamadı");
     /* müze, otel, dükkân gibi yapılar yerine burun, koy, köy, liman, fener gibi coğrafi noktaları yeğle */
-    const DUSUK = new Set(["tourism", "amenity", "shop", "office", "building", "highway", "leisure", "craft", "healthcare", "club", "emergency"]);
-    const s = j.find(x => !DUSUK.has(x.class)) || j[0];
+    const puan = x => ["place", "natural", "waterway", "historic", "man_made", "military", "boundary", "landuse"].includes(x.class) ? 0
+      : ["ferry_terminal", "marina", "harbour", "lighthouse", "beach"].includes(x.type) ? 1 : ["highway", "building", "shop", "office", "craft"].includes(x.class) ? 3 : 2;
+    const s = j.reduce((a, x) => (!a || puan(x) < puan(a) ? x : a), null);
     return s ? [+(+s.lon).toFixed(5), +(+s.lat).toFixed(5), s.display_name.slice(0, 90)] : null;
   }
   async function yer(ad, kutu) {
