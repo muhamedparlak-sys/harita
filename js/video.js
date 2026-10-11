@@ -169,7 +169,8 @@ const VIDEO = (() => {
         return EFEKT.sikistir(r.x, r.W, .32);
       }
       const b = await DEPO.kayit(AD, parca); if (!b) { log(`  kayıt yok: ${parca} → sessiz`); return { x: null, W: [] }; }
-      return EFEKT.sikistir(EFEKT.dengele(await cozMono(b)), [], .32);
+      const W = (await DEPO.kayit(AD, parca + "#W")) || []; /* bilgisayarda üretilen kopya sesin kelime zamanları */
+      return EFEKT.sikistir(EFEKT.dengele(await cozMono(b)), Array.isArray(W) ? W : [], .32);
     }
     function altyazi(o, x, W, bas, son) {
       if (!x || !altOn) return [];

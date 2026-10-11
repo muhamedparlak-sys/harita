@@ -108,6 +108,7 @@ const DEPO = (() => {
   /* ---------- kayıtlar (kendi sesiniz) ---------- */
   const kayitKaydet = (ad, parca, blob) => yaz("kayitlar", ad + "/" + parca, blob);
   const kayit = (ad, parca) => al("kayitlar", ad + "/" + parca);
+  const kayitSil = (ad, parca) => sil("kayitlar", ad + "/" + parca);
   async function kayitlar(ad) { const o = {}; for (const k of await anahtarlar("kayitlar")) if (String(k).startsWith(ad + "/")) o[String(k).slice(ad.length + 1)] = 1; return o; }
 
   /* ---------- motor sayfası (masaüstündeki sayfa_kur) ---------- */
@@ -143,5 +144,5 @@ main>section:not(#story),main>.top{display:none!important}
   const sesOnbYaz = (k, v) => yaz("sesonbellek", k, v);
   const ayar = k => al("ayar", k), ayarYaz = (k, v) => yaz("ayar", k, v);
   return { kutuphane, kutuphaneSifirla, haritaPng, onizleUrl, haritaKaydet, haritaSil, okunusSozluk, okunusEkle, yer, noktalar, sec, VURUS, guvenli,
-    hikayeler, hikaye, hikayeKaydet, hikayeSil, yeniHikaye, iceAktar, disaAktar, kayitKaydet, kayit, kayitlar, sayfaKur, sesOnb, sesOnbYaz, ayar, ayarYaz };
+    hikayeler, hikaye, hikayeKaydet, hikayeSil, yeniHikaye, iceAktar, disaAktar, kayitKaydet, kayit, kayitSil, kayitlar, sayfaKur, sesOnb, sesOnbYaz, ayar, ayarYaz };
 })();

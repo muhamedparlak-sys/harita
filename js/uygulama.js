@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "6 · 11 Ekim";
+const SURUM = "7 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -399,15 +399,24 @@ async function mikrofon() { if (AKIS && AKIS.active) return AKIS; AKIS = await n
   OLCER = () => { an.getByteTimeDomainData(buf); let m = 0; for (const v of buf) m = Math.max(m, Math.abs(v - 128)); return m / 128; }; return AKIS; }
 function kaydedici(ad) { let at = false; const P = [], r = new MediaRecorder(AKIS, MIME ? { mimeType: MIME, audioBitsPerSecond: 128000 } : {});
   r.ondataavailable = e => e.data.size && P.push(e.data);
-  const bitti = new Promise(ok => r.onstop = async () => { if (at) return ok(); await DEPO.kayitKaydet(AD, ad, new Blob(P, { type: r.mimeType || MIME || "audio/mp4" })); ok(); });
+  const bitti = new Promise(ok => r.onstop = async () => { if (at) return ok(); await DEPO.kayitKaydet(AD, ad, new Blob(P, { type: r.mimeType || MIME || "audio/mp4" })); await DEPO.kayitSil(AD, ad + "#W"); ok(); });
   r.start(250); return { dur: () => { r.stop(); return bitti; }, at: () => { at = true; r.stop(); return bitti; } }; }
 async function kabin() { const L = parcalar(); if (!L.length) return bildir("Önce sahnelerin seslendirme metinlerini yazın", 3); const K = await DEPO.kayitlar(AD);
   pencere("Seslendirme kabini", `<p class="ipucu">Kendi sesinizle okuyun. <b>Hepsini sırayla oku</b>: metin ekranda büyük görünür; her parçayı okuyunca <b>Sonraki</b>ye dokunun. Beğenmediğiniz parçayı aşağıdan tek başına yeniden okuyabilirsiniz. Sessiz bir odada telefonu ağzınızdan 15–20 cm uzakta tutun. Video üretirken “Kendi kaydım”ı seçin.</p>
     <div class="satir"><button class="ana" id="kHepsi">● Hepsini sırayla oku</button><button id="kEksik">● Yalnız eksikleri oku</button></div>
+    <div class="ipucu">Bilgisayardaki stüdyoda “Benim sesim” ile üretilen dosyaları (hikayeler\&lt;ad&gt;\ses_klon klasöründeki hook_01.wav, sahne_01.wav… ve .json dosyaları) buraya aktarabilirsiniz; video üretirken “Kendi kaydım”ı seçin.
+    <div class="satir" style="margin-top:6px"><button id="kIce">Ses dosyalarını içe aktar</button></div></div>
+    <input type="file" id="kDosya" multiple accept="audio/*,.wav,.m4a,.mp3,.json,application/json" hidden>
     <div id="kListe">${L.map(p => `<div class="parca" data-ad="${p.ad}"><b>${p.bas}</b><div>${esc(p.metin)}<div class="durum ${K[p.ad] ? "var" : "yok"}">${K[p.ad] ? "kayıtlı" : "kayıt yok"}</div>
       <div class="satir" style="margin-top:6px"><button data-k>● Oku</button>${K[p.ad] ? `<button data-d>▶ Dinle</button>` : ""}</div></div></div>`).join("")}</div><audio id="kDinle" hidden playsinline></audio>`);
   $$("#kListe [data-d]").forEach(b => b.onclick = async () => { const bl = await DEPO.kayit(AD, b.closest(".parca").dataset.ad), a = $("#kDinle"); a.src = URL.createObjectURL(bl); a.play(); });
   $$("#kListe [data-k]").forEach(b => b.onclick = () => prompter([L.find(p => p.ad === b.closest(".parca").dataset.ad)]));
+  $("#kIce").onclick = () => $("#kDosya").click();
+  $("#kDosya").onchange = async e => { const F = [...e.target.files]; e.target.value = ""; let n = 0, w = 0, atla = [];
+    for (const fl of F) { const m = fl.name.match(/^((?:hook|sahne|soru)_\d{2})\.(\w+)$/i); if (!m) { atla.push(fl.name); continue; } const parca = m[1].toLowerCase();
+      if (m[2].toLowerCase() === "json") { try { await DEPO.kayitKaydet(AD, parca + "#W", JSON.parse(await fl.text())); w++; } catch (er) { atla.push(fl.name); } }
+      else { await DEPO.kayitKaydet(AD, parca, fl); n++; } }
+    bildir(`${n} ses dosyası aktarıldı${w ? `, ${w} kelime zamanı` : ""}${atla.length ? `; tanınmayan: ${atla.join(", ")}` : ""}`, 5); kabin(); };
   $("#kHepsi").onclick = () => prompter(L); $("#kEksik").onclick = () => { const E = L.filter(p => !K[p.ad]); E.length ? prompter(E) : bildir("Eksik parça yok"); }; }
 async function prompter(L) { try { await mikrofon(); } catch (e) { return bildir("Mikrofona erişilemedi. Ayarlar → Safari → Mikrofon iznini verin.", 5); }
   kapat(); const el = document.createElement("div"); el.className = "prompter"; document.body.append(el);
