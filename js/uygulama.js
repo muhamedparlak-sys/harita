@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "12 · 11 Ekim";
+const SURUM = "13 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -358,8 +358,9 @@ SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, har
 - " | hareket: " → o sahnede yer değiştirenler; haritada rota boyunca ilerler. Biçim: Ad [taraf, tür] Başlangıç → Varış
   Birden çoksa noktalı virgülle ayır; gerekirse ara nokta ekle (A → B → C). Gemiler denizden, kara birlikleri düz çizgiyle gider.
 - " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır (biçimler aşağıdaki ARAÇ KUTUSU'nda).
-- " | hava: " → sahnenin ışığı ve havası, virgülle (ör. gece, yağmur). Yalnızca kaynakta geçiyorsa ya da olayın saatinden açıkça biliniyorsa yaz (gece baskını → gece); gündüz ve açık hava için boş bırak.
-- hareket ve olay yalnızca kaynakta geçen şeyler içindir; sahnede yoksa boş bırak. Her sahnede en az bir hareket ya da olay videoyu canlı kılar, ama uydurma.
+- " | hava: " → sahnenin ışığı ve havası, virgülle (ör. gece, yağmur). Saat ve mevsimden çıkar: gece yapılan iş → gece; sabaha karşı → şafak; akşam olayı → akşam; kaynakta sis, yağmur, kar, fırtına geçiyorsa onları ekle. Kaynakta hava bilgisi yoksa ve olay gündüzse boş bırak; hava durumu uydurma.
+- ÖNEMLİ: Haritadaki bütün animasyon, efekt ve ses yalnızca bu alanlardan otomatik kurulur; kullanıcı haritada elle hiçbir şey eklemeyecek. Bu yüzden her sahnede hareket, olay ve hava alanlarını kaynağın izin verdiği ölçüde MUTLAKA doldur. Her sahnede en az bir hareket ya da olay olsun; sahnede gerçekten hiçbir şey yer değiştirmiyorsa bir olay (vurgu, ikon, bayrak) kullan.
+- Bunlar yalnızca kaynaktaki olgulara dayanır: kaynakta olmayan çatışma, batış, patlama uydurma.
 
 ARAÇ KUTUSU (yalnızca bunları kullan; başka bir şey yazarsan haritada görünmez)
 Taraf: kızıl (anlatılan/kahraman taraf) ya da lacivert (karşı taraf); nötr için yazma. Bir taraf hikâye boyunca hep aynı renk.
