@@ -2,6 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const SURUM = "4 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -306,7 +307,7 @@ const MENU = [["kart", "Kartı içe aktar", "NotebookLM çıktısını sahnelere
   ["dikey", "Dikey kontrol tablosu", "Her sahnenin reel kadrajı tek görselde"], ["yer", "Yer ara", "Bir yeri bulup sahneye ekleyin"], ["haritalar", "Haritalar", "Hikâyenin haritalarını seçin"],
   ["uret", "Yeni harita üret", "Kütüphanede olmayan bölge için"], ["sayfa", "Sayfayı dışa aktar", "Tek dosyalık kaydırmalı web sayfası"], ["disa", "Hikâyeyi dışa aktar", "Yedek ya da masaüstüne taşımak için .json"],
   ["kilavuz", "Kılavuz", "İş akışı ve NotebookLM istemi"], ["sil", "Hikâyeyi sil", "Bu hikâyeyi telefondan kaldır"]];
-$("#menuBtn").onclick = () => { pencere("Menü", `<div class="liste">${MENU.map(([k, a, b]) => `<button data-m="${k}" ${k === "sil" ? 'class="tehlike"' : ""}><span>${a}</span><small>${b}</small></button>`).join("")}</div>`);
+$("#menuBtn").onclick = () => { pencere("Menü", `<div class="liste">${MENU.map(([k, a, b]) => `<button data-m="${k}" ${k === "sil" ? 'class="tehlike"' : ""}><span>${a}</span><small>${b}</small></button>`).join("")}</div><p class="ipucu" style="text-align:center">Sürüm ${SURUM}</p>`);
   $$("#dlgIc [data-m]").forEach(b => b.onclick = () => ({ kart: kartPencere, kabin, denetle, dikey: dikeyTablo, yer: yerAra, haritalar: haritaSec, uret: haritaUret, sayfa: sayfaDisa, disa: hikayeDisa, kilavuz, sil: hikayeSil })[b.dataset.m]()); };
 async function denetle() { pencere("Denetim", `<p class="ipucu">Denetleniyor…</p>`);
   const r = HARITA.denetle(V), d = await HARITA.deniz(V);
