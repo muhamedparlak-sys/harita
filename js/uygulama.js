@@ -435,12 +435,12 @@ async function videoPencere() {
     <div class="izgara2"><label>Seslendirme dili<select id="vDil"><option value="tr">Türkçe</option><option value="en">İngilizce (sahnelerdeki İngilizce metin)</option></select></label>
     <label>Altyazı dili<select id="vADil"><option value="">Sesle aynı (kelime kelime)</option><option value="tr">Türkçe</option><option value="en">İngilizce</option></select></label>
     <label>Altyazı<select id="vAlt"><option value="on">Açık</option><option value="off">Kapalı</option></select></label><label>Efektler<select id="vEf"><option value="on">Açık</option><option value="off">Kapalı</option></select></label>
-    <label>Harita teması<select id="vTema"><option value="light">Açık</option><option value="dark">Koyu</option></select></label><label>Yalnız şu sahneler<input id="vAd" placeholder="hepsi · ör. 5-5" inputmode="numeric"></label></div>
+    <label>Kodlama<select id="vYon"><option value="oto">Otomatik (hızlı)</option><option value="gercek">Gerçek zamanlı kayıt</option></select></label><label>Harita teması<select id="vTema"><option value="light">Açık</option><option value="dark">Koyu</option></select></label><label>Yalnız şu sahneler<input id="vAd" placeholder="hepsi · ör. 5-5" inputmode="numeric"></label></div>
     <p class="ipucu" id="vNot"></p>
     <button class="ana" id="vBas">Üret</button>
     <div id="vIs" hidden><div class="ilerleme"><b id="vBar"></b></div><div class="satir" style="justify-content:space-between"><span id="vYuzde" class="ipucu" style="background:none;padding:0"></span><button id="vDur" class="tehlike">Durdur</button></div><pre class="log" id="vLog"></pre></div>
     <div id="vRes"></div>`);
-  for (const [id, k] of [["vSes", "ses"], ["vKon", "konusmaci"], ["vTon", "ton"], ["vDil", "dil"], ["vADil", "altyazi_dil"], ["vAlt", "altyazi"], ["vEf", "efekt"], ["vTema", "tema"]]) if (ayar[k] != null && $("#" + id).querySelector(`option[value="${ayar[k]}"]`)) $("#" + id).value = ayar[k];
+  for (const [id, k] of [["vYon", "yontem"], ["vSes", "ses"], ["vKon", "konusmaci"], ["vTon", "ton"], ["vDil", "dil"], ["vADil", "altyazi_dil"], ["vAlt", "altyazi"], ["vEf", "efekt"], ["vTema", "tema"]]) if (ayar[k] != null && $("#" + id).querySelector(`option[value="${ayar[k]}"]`)) $("#" + id).value = ayar[k];
   const not = () => { const s = $("#vSes").value; $("#vTtsAyar").hidden = s !== "tts";
     $("#vNot").innerHTML = s === "tts" ? "Ses telefonda üretilir; ilk kullanımda seçilen ses modeli bir kez indirilir (yaklaşık 60 MB, Wi-Fi önerilir), sonra internetsiz çalışır. iPhone'un kendi sesi (Siri sesleri) videoya kaydedilemediği için videoda bu sesler kullanılır; önizlemede 🔈 düğmesiyle iPhone sesini dinleyebilirsiniz."
       : s === "kendi" ? "Seslendirme kabininde okuduğunuz parçalar kullanılır; altyazı kaydınıza göre zamanlanır. Kaydı olmayan parça sessiz kalır."
@@ -448,7 +448,8 @@ async function videoPencere() {
     if ($("#vDil").value === "en" && s === "tts" && PIPER.SESLER[$("#vKon").value].dil !== "en") $("#vNot").innerHTML += "<br><b class='uyari'>İngilizce seslendirme için İngilizce bir ses seçin.</b>"; };
   $("#vSes").onchange = not; $("#vDil").onchange = not; $("#vKon").onchange = not; not();
   $("#vBas").onclick = async () => {
-    const a = { ses: $("#vSes").value, konusmaci: $("#vKon").value, ton: $("#vTon").value, dil: $("#vDil").value, altyazi_dil: $("#vADil").value, altyazi: $("#vAlt").value, efekt: $("#vEf").value, adimlar: $("#vAd").value.trim(), tema: $("#vTema").value };
+    VIDEO.sesKilidiAc(); VIDEO.yontem($("#vYon").value);
+    const a = { yontem: $("#vYon").value, ses: $("#vSes").value, konusmaci: $("#vKon").value, ton: $("#vTon").value, dil: $("#vDil").value, altyazi_dil: $("#vADil").value, altyazi: $("#vAlt").value, efekt: $("#vEf").value, adimlar: $("#vAd").value.trim(), tema: $("#vTema").value };
     DEPO.ayarYaz("video", a); VIDEO_DURDUR = false; $("#vBas").disabled = true; $("#vIs").hidden = false; $("#vRes").innerHTML = ""; $("#vLog").textContent = "";
     const log = (t, ust) => { const L = $("#vLog"); if (!L) return; if (ust && L.textContent.endsWith("\n") && L._son && t.startsWith(L._son)) { L.textContent = L.textContent.replace(/[^\n]*\n$/, t + "\n"); } else L.textContent += t + "\n"; L._son = ust ? t.slice(0, 18) : null; L.scrollTop = 1e9; };
     const ilerle = u => { const b = $("#vBar"); if (b) { b.style.width = (u * 100).toFixed(1) + "%"; $("#vYuzde").textContent = `Video: %${Math.round(u * 100)}`; } };

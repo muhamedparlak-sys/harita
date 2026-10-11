@@ -236,6 +236,14 @@ const VIDEO = (() => {
   function parcaBul(PARCA, t) { for (const p of PARCA) if (t < p.t0 + p.sure) return p; return PARCA[PARCA.length - 1]; }
   function cizZaman(ctx, M, PARCA, t) { const p = parcaBul(PARCA, t), u = Math.min(1, Math.max(0, (t - p.t0) / p.sure)); kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip); }
 
+  let ACX = null, YONTEM = "oto";
+  /* iOS'ta ses motoru yalnızca bir dokunuşla açılır: Üret'e dokunulduğunda çağrılır */
+  function sesKilidiAc() { try { if (!ACX || ACX.state === "closed") ACX = new (window.AudioContext || window.webkitAudioContext)(); ACX.resume();
+      const b = ACX.createBuffer(1, 1, ACX.sampleRate), k = ACX.createBufferSource(); k.buffer = b; k.connect(ACX.destination); k.start(0); } catch (e) { } }
+  const tepe = x => { let m = 0; for (let i = 0; i < x.length; i += 7) { const v = Math.abs(x[i]); if (v > m) m = v; } return m; };
+  async function sesTepe(blob) { try { const ab = await blob.arrayBuffer(), ac = new OfflineAudioContext(1, 1, SR);
+      const b = await new Promise((ok, no) => { const p = ac.decodeAudioData(ab, ok, no); if (p && p.then) p.then(ok, no); });
+      let m = 0; for (let c = 0; c < b.numberOfChannels; c++) m = Math.max(m, tepe(b.getChannelData(c))); return m; } catch (e) { return null; } }
   async function kodlayiciSec() {
     if (!("VideoEncoder" in window) || !("AudioEncoder" in window) || !window.Mp4Muxer) return null;
     let v = null;
@@ -252,9 +260,16 @@ const VIDEO = (() => {
     const cv = document.createElement("canvas"); cv.width = WV; cv.height = HV; const ctx = cv.getContext("2d", { alpha: false });
     let kilit = null; try { kilit = await navigator.wakeLock.request("screen"); } catch (e) { }
     try {
-      const K_ = window.__GERCEK_ZAMANLI ? null : await kodlayiciSec();
-      if (K_) return await webcodecs(ctx, cv, M, PARCA, T, mix, K_, log, ilerle, durdur);
-      log("Bu tarayıcıda hızlı kodlama yok; gerçek zamanlı kayda geçildi (video süresi kadar sürer, uygulamayı açık tutun).");
+      const K_ = (window.__GERCEK_ZAMANLI || YONTEM === "gercek") ? null : await kodlayiciSec();
+      const mixTepe = tepe(mix.L);
+      if (K_) {
+        let b = null;
+        try { b = await webcodecs(ctx, cv, M, PARCA, T, mix, K_, log, ilerle, durdur); }
+        catch (e) { if (/Durduruldu/.test(e.message)) throw e; log("Hızlı kodlama başarısız: " + e.message); }
+        if (b) { if (mixTepe < .005) return b; const t = await sesTepe(b); log(`Ses denetimi: ${t == null ? "çözülemedi" : t > .002 ? "ses var" : "SES YOK"}`);
+          if (t == null || t > .002) return b; }
+        log("Videonun sesi boş çıktı; gerçek zamanlı kayıtla yeniden üretiliyor (video süresi kadar sürer, uygulamayı açık tutun)."); ilerle(0);
+      } else log("Gerçek zamanlı kayıt (video süresi kadar sürer, uygulamayı açık tutun).");
       return await gercekZamanli(ctx, cv, M, PARCA, T, mix, log, ilerle, durdur);
     } finally { try { kilit && kilit.release(); } catch (e) { } }
   }
@@ -267,7 +282,15 @@ const VIDEO = (() => {
     let hata = null;
     const ve = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: e => hata = e });
     ve.configure({ codec: K_.v.kod, width: WV, height: HV, bitrate: 8e6, framerate: FPS, ...(K_.v.mux === "avc" ? { avc: { format: "avc" } } : {}) });
-    const ae = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: e => hata = e });
+    let sesParca = 0, ilkSes = true;
+    const ASC = new Uint8Array([0x11, 0x90]); /* AAC-LC, 48 kHz, 2 kanal */
+    const ae = new AudioEncoder({ output: (c, m) => {
+      if (K_.s.mux === "aac") {
+        let d = new Uint8Array(c.byteLength); c.copyTo(d);
+        if (d.length > 7 && d[0] === 0xFF && (d[1] & 0xF0) === 0xF0) { const bas = (d[1] & 1) ? 7 : 9; d = d.subarray(bas); c = new EncodedAudioChunk({ type: c.type, timestamp: c.timestamp, duration: c.duration, data: d }); }
+        if (ilkSes) { const dc = (m && m.decoderConfig) || {}; if (!dc.description || !dc.description.byteLength) m = { decoderConfig: { codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 2, description: ASC } }; }
+      }
+      ilkSes = false; sesParca++; muxer.addAudioChunk(c, m); }, error: e => hata = e });
     ae.configure({ codec: K_.s.kod, sampleRate: SR, numberOfChannels: 2, bitrate: 192000 });
     const N = Math.min(mix.L.length, Math.ceil(F / FPS * SR)), B = 4800;
     for (let i = 0; i < N; i += B) { const m = Math.min(B, N - i), d = new Float32Array(m * 2); d.set(mix.L.subarray(i, i + m), 0); d.set(mix.R.subarray(i, i + m), m);
@@ -281,16 +304,18 @@ const VIDEO = (() => {
       while (ve.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 4));
       if (k % 15 === 0) { ilerle(k / F); await new Promise(r => setTimeout(r, 0)); }
     }
-    await ve.flush(); await ae.flush(); if (hata) throw hata; muxer.finalize(); ve.close(); ae.close();
+    await ve.flush(); await ae.flush(); if (hata) throw hata; if (!sesParca) throw new Error("Ses kodlanamadı"); muxer.finalize(); ve.close(); ae.close();
     ilerle(1); log(`Kodlama ${((performance.now() - t0) / 1000).toFixed(0)} sn sürdü.`);
     return new Blob([muxer.target.buffer], { type: "video/mp4" });
   }
 
   async function gercekZamanli(ctx, cv, M, PARCA, T, mix, log, ilerle, durdur) {
     if (!window.MediaRecorder || !cv.captureStream) throw new Error("Bu tarayıcı video kaydını desteklemiyor. iOS 16.4 ya da daha yeni bir sürüm gerekir.");
-    const ac = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SR }); await ac.resume();
+    const ac = ACX && ACX.state !== "closed" ? ACX : new (window.AudioContext || window.webkitAudioContext)(); try { await ac.resume(); } catch (e) { }
+    if (ac.state !== "running") throw new Error("Ses motoru başlatılamadı. Üret düğmesine yeniden dokunun.");
     const buf = ac.createBuffer(2, mix.L.length, SR); buf.getChannelData(0).set(mix.L); buf.getChannelData(1).set(mix.R);
     const src = ac.createBufferSource(); src.buffer = buf; const hedef = ac.createMediaStreamDestination(); src.connect(hedef);
+    const sus = ac.createGain(); sus.gain.value = 0; src.connect(sus); sus.connect(ac.destination);
     cizZaman(ctx, M, PARCA, 0);
     const akis = new MediaStream([...cv.captureStream(30).getVideoTracks(), ...hedef.stream.getAudioTracks()]);
     const tur = ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm"].find(t => MediaRecorder.isTypeSupported(t)) || "";
@@ -301,7 +326,7 @@ const VIDEO = (() => {
     await new Promise((ok, no) => { const dong = () => { if (durdur()) { no(new Error("Durduruldu")); return; } const t = ac.currentTime - bas;
         if (t >= T) { ok(); return; } cizZaman(ctx, M, PARCA, Math.max(0, t)); ilerle(Math.max(0, t) / T); requestAnimationFrame(dong); }; requestAnimationFrame(dong); })
       .finally(() => { try { rec.stop(); } catch (e) { } try { src.stop(); } catch (e) { } });
-    await bitti; ac.close(); ilerle(1);
+    await bitti; try { src.disconnect(); } catch (e) { } ilerle(1);
     return new Blob(P, { type: (rec.mimeType || tur || "video/mp4").split(";")[0] });
   }
 
@@ -316,5 +341,5 @@ const VIDEO = (() => {
       return await new Promise(ok => sh.toBlob(ok, "image/png"));
     } finally { M.kapat(); }
   }
-  return { uret, kontrolTablosu, okunus, kelimeler, gruplar, svgCiz, cerceveAc, kare };
+  return { sesKilidiAc, yontem: v => { YONTEM = v; }, uret, kontrolTablosu, okunus, kelimeler, gruplar, svgCiz, cerceveAc, kare };
 })();
