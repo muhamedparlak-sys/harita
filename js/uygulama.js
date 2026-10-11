@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "7 · 11 Ekim";
+const SURUM = "8 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -333,13 +333,28 @@ function yerAra() { pencere("Yer ara", `<div class="satir" style="flex-wrap:nowr
 
 /* ---------- kart içe aktarma ---------- */
 const ISTEM = `Bu kaynaklardaki hikâyeyi Instagram için 60 saniyelik, Save the Cat yapısında bir harita hikâyesine çevir. Aşağıdaki biçimi BİREBİR kullan; başka açıklama ekleme.
-Kurallar: Yalnızca kaynaklardaki olgular; uydurma yok. Şimdiki zaman. Kısa, canlı, merak uyandıran cümleler; somut sayı ve ayrıntı. Okunması zor yazımları açık yaz (7/8 Mart → yedi Mart'ı sekize bağlayan gece).
-Kelime sınırı: HOOK 8 · S1 12 · S2 14 · S3 12 · S4 14 · S5 16 · S6 12 · S7 18 · S8 16 · SORU 12.
-HOOK: S7'deki en çarpıcı an, sayı ya da soru. S3 ve S6 yeni merak açar. S8 sonucu ve bugünü anlatır. SORU izleyiciye yorum yazdıracak bir sorudur.
-Her sahne satırının sonuna " | yer: " ile o sahnede geçen yer adlarını, " | tarih: " ile tarihi ekle. Sonra her satırın İngilizcesini _EN ekiyle ver.
+
+DOĞRULUK
+- Yalnızca kaynaklardaki olgular. Kaynakta olmayan ayrıntı ekleme: hava durumu (sis, fırtına), duygu, diyalog, süre, sayı uydurma.
+- Sayıları ve süreleri kaynaktaki gibi ver; yuvarlarsan "yaklaşık", "… aşkın" de. Kaynaklar farklı sayı veriyorsa daha temkinli olanı kullan.
+- Olayların sırasını ve aralarındaki zamanı koru: saatler sonra olan bir şeye "hemen ardından" deme.
+- Abartma: HOOK merak uyandırsın ama yanlış olmasın ("koca donanmayı batırdı" değil, "üç zırhlıyı batırdı").
+- Kaynakta emin olunamayan ya da kaynaklar arasında çelişen her noktayı DOĞRULANACAK satırına yaz.
+
+ÜSLUP
+- Şimdiki zaman. Kısa, canlı, merak uyandıran cümleler; somut sayı ve ayrıntı.
+- Sahne metinlerinde sayıları ve tarihleri yazıyla yaz, seslendirilecekler (on sekiz Mart, altı yüz denizci). Okunması zor yazımları açık yaz (7/8 Mart → yedi Mart'ı sekize bağlayan gece).
+- Kelime sınırı (sınırı aşma): HOOK 8 · S1 12 · S2 14 · S3 12 · S4 14 · S5 16 · S6 12 · S7 18 · S8 16 · SORU 12.
+- HOOK: S7'deki en çarpıcı an, sayı ya da soru. S3 ve S6 yeni merak açar. S7 doruk ve kayıp, sayılarla. S8 sonucu ve bugünü anlatır. SORU izleyiciye yorum yazdıracak bir sorudur.
+
+SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında)
+- " | yer: " → o sahnede haritada gösterilecek yerler; virgülle ayrılmış, haritada bulunabilecek bilinen adlar (ör. Kilitbahir, Erenköy Koyu, Çanakkale Boğazı). En çok 4 yer. Hikâyenin ana bölgesinin dışında kalan bir yer varsa (ör. bugünkü müze şehri) onu yer olarak yazma, yalnızca metinde geçsin.
+- " | tarih: " → ekranın köşesinde etiket olarak görünür, seslendirilmez: RAKAMLA ve kısa yaz, en çok 4 kelime (ör. 18 Mart 1915 · 7/8 Mart 1915 gecesi · 8–17 Mart 1915 · 18 Mart 1915, 13.54 · Bugün).
+- _EN satırlarına yer ve tarih ekleme; yalnızca çeviri.
 
 BAŞLIK:
-YABANCI: yabancı özel adlar ve Türkçe okunuşu (Irresistible = İrrezistıbıl; Bouvet = Buve)
+YABANCI: metinde geçen yabancı özel adlar ve Türkçe okunuşu (Irresistible = İrrezistıbıl; Bouvet = Buve)
+DOĞRULANACAK: kaynaktan kontrol edilmesi gereken noktalar; noktalı virgülle ayır (yoksa boş bırak)
 HOOK:
 S1:  | yer:  | tarih:
 S2:  | yer:  | tarih:
@@ -351,10 +366,18 @@ S7:  | yer:  | tarih:
 S8:  | yer:  | tarih:
 SORU:
 HOOK_EN:
-S1_EN: … S8_EN:
+S1_EN:
+S2_EN:
+S3_EN:
+S4_EN:
+S5_EN:
+S6_EN:
+S7_EN:
+S8_EN:
 SORU_EN:`;
 function kartCoz(t) { const o = { sahne: {}, en: {} };
   for (const ham of t.split(/\r?\n/)) { const sat = ham.replace(/^[\s*\-•#]+/, "").replace(/\*\*/g, "");
+    const d0 = sat.match(/^DO[ĞG]RULANACAK\s*[:：]\s*(.*)$/i); if (d0) { o.dogrulanacak = d0[1].split(";").map(x => x.trim()).filter(x => x && !/^(yok|-|—)$/i.test(x)); continue; }
     const m = sat.match(/^(BAŞLIK|BASLIK|YABANCI|HOOK|SORU|S\s*([1-9]\d?))(_EN)?\s*[:：]\s*(.*)$/i); if (!m) continue;
     const anah = m[1].toUpperCase().replace(/\s/g, ""), en = !!m[3], [metin, ...ek] = m[4].split("|").map(x => x.trim());
     if (anah.startsWith("BA")) o.baslik = metin; else if (anah === "YABANCI") o.yabanci = m[4];
@@ -375,7 +398,9 @@ async function kartUygula(o, yerEkle, log) {
         if (P.length < s.yer.split(",").filter(x => x.trim()).length) log("  bazı yerler bulunamadı");
       } catch (e) { log("  bulunamadı: " + e.message); } } }
   const h = V.steps[0].hook || (V.steps[0].hook = { adim: 7, an: .6, ses: "" }); if (o.hook) h.ses = o.hook; if (o.en.hook) h.ses_en = o.en.hook;
-  if (o.soru) V.meta.soru = o.soru; if (o.en.soru) V.meta.soru_en = o.en.soru; vuruslar(); degisti(); ciz(); }
+  if (o.soru) V.meta.soru = o.soru; if (o.en.soru) V.meta.soru_en = o.en.soru;
+  if (o.dogrulanacak && o.dogrulanacak.length) { V.meta.dogrulanacak = [...new Set([...(V.meta.dogrulanacak || []), ...o.dogrulanacak])]; log && log(`Doğrulanacak ${o.dogrulanacak.length} nokta “Hikâye” sekmesine eklendi.`); }
+  vuruslar(); degisti(); ciz(); }
 function kartPencere() { pencere("Kartı içe aktar", `<p class="ipucu">NotebookLM'e (ya da başka bir yapay zekâya) aşağıdaki istemi verin, çıktıyı buraya yapıştırın. Seslendirme, tarih, İngilizce metin, okunuşlar ve kapanış sorusu sahnelere yerleşir.</p>
   <div class="satir"><button id="istemKop">İstemi kopyala</button></div><details><summary>İstemi göster</summary><pre class="log" id="istem"></pre></details>
   <label>Çıktı<textarea id="kartMetin" rows="10" placeholder="BAŞLIK: …&#10;HOOK: …&#10;S1: … | yer: … | tarih: …"></textarea></label>
