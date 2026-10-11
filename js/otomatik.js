@@ -11,7 +11,14 @@
   const iY = y => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) * 180 / Math.PI;
   const kucuk = s => (s || "").toLocaleLowerCase("tr-TR").trim();
   const TUR = { "büyük gemi": "big", "gemi": "big", "zırhlı": "big", "kruvazör": "big", "küçük gemi": "small", "mayın gemisi": "small", "tekne": "small", "muhrip": "small",
-    "denizaltı": "sub", "kara": "dot", "ordu": "dot", "birlik": "dot", "kişi": "dot", "kervan": "dot", "süvari": "dot", "uçak": "dot" };
+    "denizaltı": "sub", "kara": "dot", "birlik": "dot", "kişi": "dot", "kervan": "dot" };
+  /* motorun ikonları (Türkçe adı → ikon anahtarı). Hareket türü olarak kullanılırsa ikon rota boyunca ilerler. */
+  const IKON = { "at": "at", "atlı": "at", "süvari": "suvari", "asker": "asker", "piyade": "asker", "ordu": "ordu", "tank": "tank", "araba": "araba", "kamyon": "araba",
+    "tren": "tren", "uçak": "ucak", "yelkenli": "yelkenli", "kalyon": "yelkenli", "kadırga": "yelkenli", "gemi ikonu": "gemi", "denizaltı ikonu": "denizalti",
+    "kılıç": "kilic", "çatışma": "catisma", "savaş": "catisma", "kale": "kale", "kule": "kule", "çapa": "capa", "liman": "capa", "çadır": "cadir", "ordugâh": "cadir",
+    "yangın": "yangin", "bayrak": "bayrak", "kalkan": "kalkan", "ölüm": "olum", "kayıp": "olum", "taç": "tac", "taht": "tac", "bomba": "bomba", "cami": "cami",
+    "kilise": "kilise", "köprü": "kopru", "fabrika": "fabrika", "fener": "fener", "hedef": "hedef", "dağ": "dag", "nişan": "nisan", "madalya": "nisan" };
+  const DENIZ_IKON = new Set(["yelkenli", "gemi", "denizalti"]);
   const TARAF = { "kızıl": "o", "kirmizi": "o", "kırmızı": "o", "lacivert": "i", "mavi": "i", "nötr": "", "notr": "" };
   const BAYRAK_AD = { "türk": "tr", "türkiye": "tr", "osmanlı": "osm", "ingiliz": "gb", "ingiltere": "gb", "britanya": "gb", "fransız": "fr", "fransa": "fr",
     "alman": "de", "almanya": "de", "rus": "ru", "rusya": "ru", "italyan": "it", "italya": "it", "yunan": "gr", "yunanistan": "gr", "amerikan": "us", "abd": "us",
@@ -22,9 +29,12 @@
     return (t || "").split(";").map(x => x.trim()).filter(Boolean).map(x => {
       const m = x.match(/^(.+?)\s*[\[(]([^\])]*)[\])]\s*(.+)$/); let ad, oz = "", yol;
       if (m) { ad = m[1].trim(); oz = kucuk(m[2]); yol = ok(m[3]); } else { const y = ok(x); const ilk = y[0].split(/\s+/); ad = ""; yol = y; }
-      let taraf = "", tur = "big";
-      for (const p of oz.split(/[,;/]/).map(x => x.trim())) { if (p in TARAF) taraf = TARAF[p]; else if (TUR[p]) tur = TUR[p]; else { const k = Object.keys(TUR).find(k => p.includes(k)); if (k) tur = TUR[k]; } }
-      return { ad, taraf, tur, yol };
+      let taraf = "", tur = "big", ikon = null, bayrak = null;
+      for (const p of oz.split(/[,;/]/).map(x => x.trim()).filter(Boolean)) {
+        const b = p.match(/^bayrak\s+(.+)$/); if (b) { bayrak = BAYRAK_AD[b[1].trim()] || b[1].trim(); continue; }
+        if (p in TARAF) taraf = TARAF[p]; else if (TUR[p]) tur = TUR[p]; else if (IKON[p]) { ikon = IKON[p]; tur = DENIZ_IKON.has(ikon) ? "small" : "dot"; }
+        else { const k = Object.keys(TUR).find(k => p.includes(k)); if (k) tur = TUR[k]; } }
+      return { ad, taraf, tur, ikon, bayrak, yol };
     }).filter(h => h.yol.length >= 2);
   }
   function olayCoz(t) {
@@ -32,12 +42,16 @@
     for (let x of (t || "").split(";").map(x => x.trim()).filter(Boolean)) {
       const k = kucuk(x); let m;
       if ((m = x.match(/^büyük\s+patlama\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[1].trim(), k: 2.2 });
-      else if ((m = x.match(/^(patlama|yangın|infilak)\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[2].trim(), k: 1 });
+      else if ((m = x.match(/^(patlama|infilak)\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[2].trim(), k: 1 });
+      else if ((m = x.match(/^ikon\s+(.+?)\s*(?:\[([^\]]*)\])?\s+(\S.*)$/i)) && IKON[kucuk(m[1])]) {
+        let taraf = "", etiket = ""; for (const p of (m[2] || "").split(",").map(x => x.trim()).filter(Boolean)) { if (kucuk(p) in TARAF) taraf = TARAF[kucuk(p)]; else etiket = p; }
+        O.push({ tur: "ikon", ikon: IKON[kucuk(m[1])], yer: m[3].trim(), taraf, etiket }); }
       else if ((m = x.match(/^(atış|ateş|bombardıman|top atışı)\s+(.+)$/i))) { const y = ok(m[2]); O.push({ tur: "atis", yer: y[0], hedef: y[1] || null }); }
       else if ((m = x.match(/^(batış|batar|batırılır|batma)\s+(.+)$/i))) O.push({ tur: "batis", gemi: m[2].trim() });
       else if ((m = x.match(/^(vurgu|odak)\s+(.+)$/i))) O.push({ tur: "vurgu", yer: m[2].trim() });
       else if ((m = x.match(/^(mayın|mayın hattı)\s+(.+)$/i))) { const y = ok(m[2]); O.push({ tur: "mayin", yer: y[0], hedef: y[1] || null }); }
       else if ((m = x.match(/^bayrak\s+(\S+)\s+(.+)$/i))) { const kod = BAYRAK_AD[kucuk(m[1])] || kucuk(m[1]); O.push({ tur: "bayrak", kod, yer: m[2].trim() }); }
+      else if ((m = x.match(/^(\S+)\s+(.+)$/)) && IKON[kucuk(m[1])]) O.push({ tur: "ikon", ikon: IKON[kucuk(m[1])], yer: m[2].trim(), taraf: "", etiket: "" });
       else O.push({ tur: "?", ham: x });
     }
     return O;
@@ -114,9 +128,10 @@
     for (const [j, h] of H_.entries()) {
       const A = []; for (const y of h.yol) { const p = await bul(y); if (p) A.push(p); } if (A.length < 2) { log(`  rota kurulamadı: ${h.ad || h.yol.join(" → ")}`); continue; }
       let P = A, notu = "";
-      if (h.tur !== "dot" && M && H) { const D = denizYolu(M, H, A); if (D && D.length >= 2) { P = D; notu = " (denizden)"; } else notu = " (düz; deniz yolu bulunamadı)"; }
+      if (h.tur !== "dot" && !(h.ikon && !DENIZ_IKON.has(h.ikon)) && M && H) { const D = denizYolu(M, H, A); if (D && D.length >= 2) { P = D; notu = " (denizden)"; } else notu = " (düz; deniz yolu bulunamadı)"; }
       const t0 = +(.04 + j * .08).toFixed(2), t1 = +Math.min(.85, .55 + j * .08).toFixed(2);
       const sh = { n: h.ad, s: h.taraf, k: h.tur, p: P, t: [t0, t1] }; if (h.ad) sh.lab = [0, -14, "middle"]; if (h.tur === "dot") sh.kara = true;
+      if (h.ikon) { sh.ikon = h.ikon; if (h.ad) sh.lab = [0, -22, "middle"]; } if (h.bayrak && (c.bayraklar || []).includes(h.bayrak)) sh.bayrak = h.bayrak;
       if (st.ships.some(x => x.n && x.n === h.ad)) st.ships = st.ships.filter(x => x.n !== h.ad);
       st.ships.push(sh); eklendi.push(`rota ${h.ad || ""}${notu}`);
     }
@@ -130,6 +145,7 @@
         else log(`  batış: “${o.gemi}” bu sahnenin hareketlerinde yok`); }
       else if (o.tur === "vurgu") { const p = await bul(o.yer); if (p) { (st.vurgu = st.vurgu || []).push([p[0], p[1], 3, +Math.max(.2, t - .3).toFixed(2), +Math.min(1, t + .25).toFixed(2), "", 3]); eklendi.push("vurgu"); } }
       else if (o.tur === "bayrak") { const p = await bul(o.yer); if (p) { const kod = (c.bayraklar || []).includes(o.kod) ? o.kod : null; if (kod) { (st.bayrak = st.bayrak || []).push([p[0], p[1], kod, +(.12 + j * .04).toFixed(2)]); eklendi.push(`bayrak ${kod}`); } else log(`  bilinmeyen bayrak: ${o.kod}`); } }
+      else if (o.tur === "ikon") { const p = await bul(o.yer); if (p) { const v = [p[0], p[1], o.ikon, o.taraf, 1, +(.1 + j * .06).toFixed(2), 1]; if (o.etiket) v.push(o.etiket); (st.ikon = st.ikon || []).push(v); eklendi.push(`ikon ${o.ikon}`); } }
       else if (o.tur === "mayin") { const a = await bul(o.yer), b = o.hedef ? await bul(o.hedef) : null;
         if (a && b) { const k = 26, R = []; for (let i = 0; i < k; i++) R.push([+(a[0] + (b[0] - a[0]) * i / (k - 1)).toFixed(4), +(a[1] + (b[1] - a[1]) * i / (k - 1)).toFixed(4)]); (st.mines = st.mines || []).push(R); eklendi.push("mayın hattı"); } }
       else log(`  anlaşılmayan olay: ${o.ham}`);
@@ -141,5 +157,5 @@
       st.cam = { lo: +((lo0 + lo1) / 2).toFixed(4), la: +((la0 + la1) / 2).toFixed(4), w: +Math.min(M.lo1 - M.lo0, Math.max((lo1 - lo0) * 1.5, (la1 - la0) * 2.2, (M.lo1 - M.lo0) * .12, .05)).toFixed(3) }; }
     return eklendi;
   }
-  kok.OTOMATIK = { kur, hareketCoz, olayCoz, denizYolu };
+  kok.OTOMATIK = { kur, hareketCoz, olayCoz, denizYolu, IKON };
 })(typeof window !== "undefined" ? window : globalThis);

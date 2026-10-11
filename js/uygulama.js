@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "10 · 11 Ekim";
+const SURUM = "11 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -350,13 +350,27 @@ DOĞRULUK
 SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, hareket, olay)
 - " | yer: " → o sahnede haritada gösterilecek yerler; virgülle ayrılmış, haritada bulunabilecek bilinen adlar (ör. Kilitbahir, Erenköy Koyu, Çanakkale Boğazı). En çok 4 yer. Hikâyenin ana bölgesinin dışında kalan bir yer varsa (ör. bugünkü müze şehri) onu yer olarak yazma, yalnızca metinde geçsin.
 - " | tarih: " → ekranın köşesinde etiket olarak görünür, seslendirilmez: RAKAMLA ve kısa yaz, en çok 4 kelime (ör. 18 Mart 1915 · 7/8 Mart 1915 gecesi · 8–17 Mart 1915 · 18 Mart 1915, 13.54 · Bugün).
-- " | hareket: " → o sahnede yer değiştirenler (haritada animasyon olur): Ad [taraf, tür] Başlangıç → Varış. Birden çoksa noktalı virgülle ayır; gerekirse ara nokta ekle (A → B → C).
-  taraf: kızıl ya da lacivert (anlatılan/kahraman taraf kızıl; bir taraf hikâye boyunca hep aynı renk). tür: büyük gemi, küçük gemi, denizaltı ya da kara (ordu, kişi, kervan).
-  Örnek: Nusret [kızıl, küçük gemi] Nara Burnu → Erenköy Koyu
-- " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır:
-  patlama YER · büyük patlama YER · atış YER → HEDEF · batış GEMİ ADI (o gemi aynı satırın hareketinde olmalı) · vurgu YER · bayrak ÜLKE YER (Türk, Osmanlı, İngiliz, Fransız, Alman, Rus, İtalyan, Yunan, Amerikan, Avustralya, Yeni Zelanda) · mayın YER → YER
-  Örnek: atış Kilitbahir → Erenköy Koyu; batış Bouvet
-- hareket ve olay yalnızca kaynakta geçen şeyler içindir; sahnede hareket ya da olay yoksa o alanı boş bırak. Her sahnede en az bir hareket ya da olay olması videoyu canlı kılar, ama uydurma.
+- " | hareket: " → o sahnede yer değiştirenler; haritada rota boyunca ilerler. Biçim: Ad [taraf, tür] Başlangıç → Varış
+  Birden çoksa noktalı virgülle ayır; gerekirse ara nokta ekle (A → B → C). Gemiler denizden, kara birlikleri düz çizgiyle gider.
+- " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır (biçimler aşağıdaki ARAÇ KUTUSU'nda).
+- hareket ve olay yalnızca kaynakta geçen şeyler içindir; sahnede yoksa boş bırak. Her sahnede en az bir hareket ya da olay videoyu canlı kılar, ama uydurma.
+
+ARAÇ KUTUSU (yalnızca bunları kullan; başka bir şey yazarsan haritada görünmez)
+Taraf: kızıl (anlatılan/kahraman taraf) ya da lacivert (karşı taraf); nötr için yazma. Bir taraf hikâye boyunca hep aynı renk.
+Hareket türleri:
+  gemi işaretleri: büyük gemi · küçük gemi · denizaltı
+  rota boyunca ilerleyen ikonlar: at · süvari · asker · ordu · tank · araba · tren · uçak · yelkenli · kara (yalnızca nokta)
+  harekete bayrak eklemek için köşeli paranteze "bayrak ÜLKE" yaz.
+  Örnekler: Nusret [kızıl, küçük gemi] Nara Burnu → Erenköy Koyu
+            Mustafa Kemal'in birliği [kızıl, asker, bayrak Osmanlı] Bigalı → Conkbayırı
+            Şark Ekspresi [lacivert, tren] Sofya → İstanbul
+Olaylar:
+  patlama YER · büyük patlama YER · atış YER → HEDEF · batış GEMİ ADI (o gemi aynı satırın hareketinde olmalı)
+  vurgu YER (yanıp sönen kalp atışı halkası) · mayın YER → YER (mayın hattı) · bayrak ÜLKE YER
+  ikon TÜR YER, istersen köşeli parantezde taraf ve etiket: ikon kale [kızıl, Kilitbahir Kalesi] Kilitbahir
+  Sabit ikon türleri: kale · kule · fener · köprü · cami · kilise · fabrika · çadır (ordugâh) · çapa (liman) · dağ · yangın · bomba · kılıç · çatışma · kalkan · ölüm (kayıp) · taç · nişan (madalya) · hedef · bayrak
+Bayrak ülkeleri: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
+Ses efektleri olaylardan kendiliğinden gelir (patlama, top atışı, batış, kalp atışı, ikon ve bayrak belirmesi, sahne geçişi, deniz ve rüzgâr); ayrıca yazma.
 - _EN satırlarına yer, tarih, hareket ve olay ekleme; yalnızca çeviri.
 
 BAŞLIK:
