@@ -39,13 +39,28 @@ const PIPER = (() => {
     })();
     return ortHazir;
   }
-  async function yuklu(ses) { try { const c = await caches.open(KAP); return !!(await c.match(taban() + SESLER[ses].yol)); } catch (e) { return false; } }
-  async function sil(ses) { try { const c = await caches.open(KAP); await c.delete(taban() + SESLER[ses].yol); await c.delete(taban() + SESLER[ses].yol + ".json"); delete oturum[ses]; } catch (e) { } }
+  const adres = S => S.url || (taban() + S.yol);
+  async function yuklu(ses) { try { const c = await caches.open(KAP); return !!(await c.match(adres(SESLER[ses]))); } catch (e) { return false; } }
+  async function sil(ses) { try { const c = await caches.open(KAP), S = SESLER[ses]; await c.delete(adres(S)); await c.delete(adres(S) + ".json"); delete oturum[ses];
+    if (S.url) { delete SESLER[ses]; yerelKaydet(); } } catch (e) { } }
+  /* bilgisayarda eğitilen kendi ses paketiniz (.onnx + .onnx.json): telefonda saklanır, listede görünür */
+  const yerelKaydet = () => { try { localStorage.setItem("piper_yerel", JSON.stringify(Object.fromEntries(Object.entries(SESLER).filter(([, v]) => v.url)))); } catch (e) { } };
+  try { Object.assign(SESLER, JSON.parse(localStorage.getItem("piper_yerel") || "{}")); } catch (e) { }
+  async function yerelEkle(onnx, json, ad) {
+    const cfg = JSON.parse(await json.text()); if (!cfg.audio || !cfg.espeak) throw new Error("Bu .json dosyası bir Piper ses paketi ayarı değil.");
+    const anahtar = "yerel_" + (ad || onnx.name.replace(/\.onnx$/i, "")).toLocaleLowerCase("tr-TR").replace(/[^a-z0-9_]+/g, "_");
+    const url = new URL("__yerel_ses/" + anahtar + ".onnx", location.href).href, c = await caches.open(KAP);
+    await c.put(url, new Response(onnx, { headers: { "Content-Type": "application/octet-stream" } }));
+    await c.put(url + ".json", new Response(JSON.stringify(cfg), { headers: { "Content-Type": "application/json" } }));
+    const dil = String(cfg.espeak.voice || "tr").startsWith("en") ? "en" : "tr";
+    SESLER[anahtar] = { ad: (ad || "Benim sesim") + (dil === "en" ? " (İngilizce)" : "") + " · kendi paketiniz", url, dil };
+    delete oturum[anahtar]; yerelKaydet(); return anahtar;
+  }
   async function oturumAl(ses, ilerle) {
     if (oturum[ses]) return oturum[ses];
     await hazirla(); const S = SESLER[ses]; if (!S) throw new Error("Bilinmeyen ses: " + ses);
-    const cfg = JSON.parse(new TextDecoder().decode(await cekKayit(taban() + S.yol + ".json")));
-    const model = await cekKayit(taban() + S.yol, ilerle);
+    const cfg = JSON.parse(new TextDecoder().decode(await cekKayit(adres(S) + ".json")));
+    const model = await cekKayit(adres(S), ilerle);
     const s = await ort.InferenceSession.create(model, { executionProviders: ["wasm"] });
     return (oturum[ses] = { s, cfg });
   }
@@ -100,5 +115,5 @@ const PIPER = (() => {
     let a = 0, b = n - 1; while (a < n && e[a] < .05 * m) a++; while (b > a && e[b] < .05 * m) b--;
     return [a * fr / sr, (b + 1) * fr / sr];
   }
-  return { SESLER, oku, yuklu, sil, hazirla, oturumAl };
+  return { SESLER, oku, yuklu, sil, hazirla, oturumAl, yerelEkle };
 })();

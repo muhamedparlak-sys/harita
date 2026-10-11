@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "9 · 11 Ekim";
+const SURUM = "10 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -420,7 +420,7 @@ function kartPencere() { pencere("Kartı içe aktar", `<p class="ipucu">Notebook
   $("#istem").textContent = ISTEM; $("#istemKop").onclick = e => kopyala(ISTEM, e.target);
   $("#kartUy").onclick = async () => { const o = kartCoz($("#kartMetin").value), ns = Object.keys(o.sahne).length; if (!ns && !o.hook) return bildir("Kart biçimi tanınmadı. Satırlar “S1: …” gibi başlamalı.", 4);
     $("#kartUy").disabled = true; const L = $("#kartLog"); L.hidden = false; const log = t => { L.textContent += t + "\n"; L.scrollTop = 1e9; };
-    log(`${ns} sahne, hook ${o.hook ? "var" : "yok"}, soru ${o.soru ? "var" : "yok"}`); await kartUygula(o, $("#kartYer").checked, log); log("Tamam. Sahneleri tek tek kontrol edin; rotaları haritaya dokunarak çizin."); }; }
+    log(`${ns} sahne, hook ${o.hook ? "var" : "yok"}, soru ${o.soru ? "var" : "yok"}`); await kartUygula(o, $("#kartYer").checked, log); log("Tamam. Sahneleri tek tek kontrol edin; otomatik rotaları gözden geçirin, eksik hareketleri haritaya dokunarak ekleyin."); }; }
 
 /* ---------- seslendirme kabini ---------- */
 function parcalar() { const L = [], st = V.steps, h = st[0].hook;
@@ -474,9 +474,9 @@ let VIDEO_DURDUR = false;
 async function videoPencere() {
   const yukluler = {}; for (const k of Object.keys(PIPER.SESLER)) yukluler[k] = await PIPER.yuklu(k);
   const ayar = (await DEPO.ayar("video")) || {};
-  const sesOps = (dil) => Object.entries(PIPER.SESLER).filter(([, v]) => v.dil === dil).map(([k, v]) => `<option value="${k}">${esc(v.ad)}${yukluler[k] ? "" : " · indirilecek (60 MB)"}</option>`).join("");
+  const sesOps = (dil) => Object.entries(PIPER.SESLER).filter(([, v]) => v.dil === dil).sort((a, b) => (b[1].url ? 1 : 0) - (a[1].url ? 1 : 0)).map(([k, v]) => `<option value="${k}">${esc(v.ad)}${yukluler[k] || v.url ? "" : " · indirilecek (60 MB)"}</option>`).join("");
   pencere("Video üret", `<label>Seslendirme<select id="vSes"><option value="tts">Telefon sesi (telefonda üretilen yapay ses)</option><option value="kendi">Kendi kaydım (seslendirme kabini)</option><option value="yok">Seslendirmesiz</option></select></label>
-    <div id="vTtsAyar" class="izgara2"><label>Ses<select id="vKon"><optgroup label="Türkçe">${sesOps("tr")}</optgroup><optgroup label="İngilizce">${sesOps("en")}</optgroup></select></label>
+    <div id="vTtsAyar" class="izgara2"><label>Ses<select id="vKon"><optgroup label="Türkçe">${sesOps("tr")}</optgroup><optgroup label="İngilizce">${sesOps("en")}</optgroup></select><button id="vPaket" style="margin-top:6px">+ Ses paketi ekle (.onnx)</button></label>
     <label>Canlılık<select id="vTon"><option value="sakin">Sakin</option><option value="canli" selected>Canlı</option><option value="cok">Çok canlı</option></select></label></div>
     <div class="izgara2"><label>Seslendirme dili<select id="vDil"><option value="tr">Türkçe</option><option value="en">İngilizce (sahnelerdeki İngilizce metin)</option></select></label>
     <label>Altyazı dili<select id="vADil"><option value="">Sesle aynı (kelime kelime)</option><option value="tr">Türkçe</option><option value="en">İngilizce</option></select></label>
@@ -493,6 +493,13 @@ async function videoPencere() {
       : "Ses yok: süreler metin uzunluğundan hesaplanır; efektler ve ambiyans kalır.";
     if ($("#vDil").value === "en" && s === "tts" && PIPER.SESLER[$("#vKon").value].dil !== "en") $("#vNot").innerHTML += "<br><b class='uyari'>İngilizce seslendirme için İngilizce bir ses seçin.</b>"; };
   $("#vSes").onchange = not; $("#vDil").onchange = not; $("#vKon").onchange = not; not();
+  $("#vPaket").onclick = () => { const i = document.createElement("input"); i.type = "file"; i.multiple = true; i.accept = ".onnx,.json,application/json,application/octet-stream";
+    i.onchange = async () => { const F = [...i.files], o = F.find(f => /\.onnx$/i.test(f.name)), j = F.find(f => /\.json$/i.test(f.name));
+      if (!o || !j) return bildir("İki dosyayı birlikte seçin: tr_TR-benim-medium.onnx ve tr_TR-benim-medium.onnx.json", 5);
+      const ad = await sor("Bu sesin adı", "Benim sesim"); if (ad === null) return;
+      try { const k = await PIPER.yerelEkle(o, j, ad || "Benim sesim"); bildir("Ses paketi eklendi"); await videoPencere(); $("#vSes").value = "tts"; $("#vKon").value = k; $("#vKon").dispatchEvent(new Event("change")); }
+      catch (e) { bildir("Eklenemedi: " + e.message, 5); } };
+    i.click(); };
   $("#vBas").onclick = async () => {
     VIDEO.sesKilidiAc(); VIDEO.yontem($("#vYon").value);
     const a = { yontem: $("#vYon").value, ses: $("#vSes").value, konusmaci: $("#vKon").value, ton: $("#vTon").value, dil: $("#vDil").value, altyazi_dil: $("#vADil").value, altyazi: $("#vAlt").value, efekt: $("#vEf").value, adimlar: $("#vAd").value.trim(), tema: $("#vTema").value };
