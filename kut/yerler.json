@@ -2,12 +2,19 @@
 "Kilitbahir":[26.37797, 40.14678, "Kilitbahir, Eceabat, Çanakkale, Marmara Bölgesi, 17910, Türkiye"],
 "Seddülbahir":[26.18892, 40.04467, "Seddülbahir, Eceabat, Çanakkale, Marmara Bölgesi, Türkiye"],
 "Gelibolu":[26.67225, 40.40541, "Gelibolu, Çanakkale, Marmara Bölgesi, Türkiye"],
-"Çanakkale":[26.92783, 40.05499, "Çanakkale, Marmara Bölgesi, Türkiye"],
+"Çanakkale":[26.405, 40.152, "Çanakkale (şehir merkezi)"],
 "Gökçeada":[25.90846, 40.20039, "Gökçeada, Çanakkale, Marmara Bölgesi, 17760, Türkiye"],
 "Bozcaada":[26.07019, 39.83473, "Bozcaada, Çanakkale, Marmara Bölgesi, 17680, Türkiye"],
 "Lepanto":[21.82875, 38.39261, "Ναύπακτος, Δημοτική Ενότητα Ναυπάκτου, Δήμος Ναυπακτίας, Περιφερειακή Ενότητα Αιτωλοακαρνα"],
 "Patras":[21.73508, 38.24624, "Balyabadra, Δημοτική Ενότητα Πατρέων, Δήμος Πατρέων, Περιφερειακή Ενότητα Αχαΐας, Περιφέρε"],
 "Girne":[33.32053, 35.33963, "Girne, Girne Belediyesi, Girne ilçesi, Kuzey Kıbrıs, Kıbrıs"],
 "Lefkoşa":[33.36388, 35.17465, "Lefkoşa, Lefkoşa Belediyesi, Lefkoşa kazası, Güney Kıbrıs, 1107, Kıbrıs"],
-"Mağusa":[33.93879, 35.12053, "Gazimağusa, Gazimağusa Belediyesi, Gazimağusa ilçesi, Kuzey Kıbrıs, 99450, Kıbrıs"]
+"Mağusa":[33.93879, 35.12053, "Gazimağusa, Gazimağusa Belediyesi, Gazimağusa ilçesi, Kuzey Kıbrıs, 99450, Kıbrıs"],
+"Kumkale":[26.2, 40.004, "Kumkale (örnek hikâyeden)"],
+"Erenköy Koyu":[26.3, 40.032, "Erenköy Koyu (örnek hikâyeden)"],
+"Kepez":[26.36, 40.094, "Kepez (örnek hikâyeden)"],
+"Nara Burnu":[26.408, 40.198, "Nara Burnu (örnek hikâyeden)"],
+"Seddülbahir Kalesi":[26.1935, 40.0425, "Seddülbahir Kalesi (örnek hikâyeden)"],
+"Morto Koyu":[26.222, 40.0505, "Morto Koyu (örnek hikâyeden)"],
+"Ertuğrul Koyu":[26.2, 40.031, "Ertuğrul Koyu (örnek hikâyeden)"]
 }

@@ -40,28 +40,42 @@ const DEPO = (() => {
 
   /* ---------- yer arama (önce yerler.json ve önbellek, sonra OpenStreetMap) ---------- */
   let sonArama = 0;
-  async function yer(ad) {
-    if (!Object.keys(YERLER).length) { try { YERLER = await (await fetch("kut/yerler.json")).json(); } catch (e) { } Object.assign(YERLER, (await al("ayar", "yerler")) || {}); }
-    if (YERLER[ad]) return YERLER[ad];
+  /* kutu [lo0, lo1, la0, la1]: önce bu alanın içinde aranır (aynı adlı başka yerlere gitmesin), yoksa her yerde */
+  const icinde = (r, k) => !k || (r[0] >= k[0] && r[0] <= k[1] && r[1] >= k[2] && r[1] <= k[3]);
+  async function ara(ad, k) {
     const bekle = 1100 - (Date.now() - sonArama); if (bekle > 0) await new Promise(r => setTimeout(r, bekle)); sonArama = Date.now();
-    const q = new URLSearchParams({ q: ad, format: "json", limit: 1, "accept-language": "tr" });
-    const r = await fetch("https://nominatim.openstreetmap.org/search?" + q); if (!r.ok) throw new Error("Yer araması yapılamadı");
-    const j = await r.json(); if (!j.length) return null;
-    YERLER[ad] = [+(+j[0].lon).toFixed(5), +(+j[0].lat).toFixed(5), j[0].display_name.slice(0, 90)];
-    const d = (await al("ayar", "yerler")) || {}; d[ad] = YERLER[ad]; await yaz("ayar", "yerler", d);
-    return YERLER[ad];
+    const o = { q: ad, format: "json", limit: 1, "accept-language": "tr" }; if (k) Object.assign(o, { viewbox: `${k[0]},${k[3]},${k[1]},${k[2]}`, bounded: 1 });
+    const r = await fetch("https://nominatim.openstreetmap.org/search?" + new URLSearchParams(o)); if (!r.ok) throw new Error("Yer araması yapılamadı");
+    const j = await r.json(); return j.length ? [+(+j[0].lon).toFixed(5), +(+j[0].lat).toFixed(5), j[0].display_name.slice(0, 90)] : null;
   }
-  async function noktalar(metin) {
+  async function yer(ad, kutu) {
+    if (!Object.keys(YERLER).length) { try { YERLER = await (await fetch("kut/yerler.json")).json(); } catch (e) { } Object.assign(YERLER, (await al("ayar", "yerler")) || {}); }
+    const kk = kutu ? `${ad}@${kutu.map(v => v.toFixed(1)).join(",")}` : ad;
+    if (YERLER[ad] && icinde(YERLER[ad], kutu)) return YERLER[ad];
+    if (YERLER[kk]) return YERLER[kk];
+    let r = kutu ? await ara(ad, kutu) : null;
+    const yalin = ad.replace(/\s+(koyu|körfezi|burnu|limanı|kalesi|açığı|adası|tabyası|feneri|köyü|ovası|sırtı|tepesi)$/i, "").trim();
+    if (!r && kutu && yalin !== ad) r = await ara(yalin, kutu);
+    const anahtar = r ? kk : ad;
+    if (!r) { if (YERLER[ad] && icinde(YERLER[ad], kutu)) return YERLER[ad]; r = YERLER[ad] || await ara(ad, null); if (r && !icinde(r, kutu)) return null; }
+    if (!r) return null;
+    YERLER[anahtar] = r; const d = (await al("ayar", "yerler")) || {}; d[anahtar] = r; await yaz("ayar", "yerler", d);
+    return r;
+  }
+  async function noktalar(metin, kutu) {
     const P = [];
     for (const t of metin.split(",").map(x => x.trim()).filter(Boolean)) {
       const m = t.match(/^(-?[\d.]+)\s*[, ]\s*(-?[\d.]+)$/);
       if (m) { P.push([t, +m[1], +m[2]]); continue; }
-      const r = await yer(t); if (r) P.push([t, r[0], r[1]]);
+      const r = await yer(t, kutu); if (r) P.push([t, r[0], r[1]]);
     }
     return P;
   }
-  async function sec(metin) {
-    const P = await noktalar(metin), kat = await kutuphane();
+  async function kutuHesapla(haritalar) { const kat = await kutuphane(), M = haritalar.map(h => kat[h]).filter(Boolean); if (!M.length) return null;
+    const k = [Math.min(...M.map(m => m.lo0)), Math.max(...M.map(m => m.lo1)), Math.min(...M.map(m => m.la0)), Math.max(...M.map(m => m.la1))];
+    const pw = (k[1] - k[0]) * .15, ph = (k[3] - k[2]) * .15; return [k[0] - pw, k[1] + pw, k[2] - ph, k[3] + ph]; }
+  async function sec(metin, kutu) {
+    const P = await noktalar(metin, kutu), kat = await kutuphane();
     const uy = Object.entries(kat).sort((a, b) => (a[1].lo1 - a[1].lo0) - (b[1].lo1 - b[1].lo0))
       .filter(([, m]) => P.length && P.every(([, lo, la]) => m.lo0 <= lo && lo <= m.lo1 && m.la0 <= la && la <= m.la1)).map(([a]) => a);
     return { haritalar: uy, noktalar: P };
@@ -144,5 +158,5 @@ main>section:not(#story),main>.top{display:none!important}
   const sesOnbYaz = (k, v) => yaz("sesonbellek", k, v);
   const ayar = k => al("ayar", k), ayarYaz = (k, v) => yaz("ayar", k, v);
   return { kutuphane, kutuphaneSifirla, haritaPng, onizleUrl, haritaKaydet, haritaSil, okunusSozluk, okunusEkle, yer, noktalar, sec, VURUS, guvenli,
-    hikayeler, hikaye, hikayeKaydet, hikayeSil, yeniHikaye, iceAktar, disaAktar, kayitKaydet, kayit, kayitSil, kayitlar, sayfaKur, sesOnb, sesOnbYaz, ayar, ayarYaz };
+    kutuHesapla, hikayeler, hikaye, hikayeKaydet, hikayeSil, yeniHikaye, iceAktar, disaAktar, kayitKaydet, kayit, kayitSil, kayitlar, sayfaKur, sesOnb, sesOnbYaz, ayar, ayarYaz };
 })();

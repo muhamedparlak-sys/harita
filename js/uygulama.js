@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "8 · 11 Ekim";
+const SURUM = "9 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -347,23 +347,30 @@ DOĞRULUK
 - Kelime sınırı (sınırı aşma): HOOK 8 · S1 12 · S2 14 · S3 12 · S4 14 · S5 16 · S6 12 · S7 18 · S8 16 · SORU 12.
 - HOOK: S7'deki en çarpıcı an, sayı ya da soru. S3 ve S6 yeni merak açar. S7 doruk ve kayıp, sayılarla. S8 sonucu ve bugünü anlatır. SORU izleyiciye yorum yazdıracak bir sorudur.
 
-SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında)
+SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, hareket, olay)
 - " | yer: " → o sahnede haritada gösterilecek yerler; virgülle ayrılmış, haritada bulunabilecek bilinen adlar (ör. Kilitbahir, Erenköy Koyu, Çanakkale Boğazı). En çok 4 yer. Hikâyenin ana bölgesinin dışında kalan bir yer varsa (ör. bugünkü müze şehri) onu yer olarak yazma, yalnızca metinde geçsin.
 - " | tarih: " → ekranın köşesinde etiket olarak görünür, seslendirilmez: RAKAMLA ve kısa yaz, en çok 4 kelime (ör. 18 Mart 1915 · 7/8 Mart 1915 gecesi · 8–17 Mart 1915 · 18 Mart 1915, 13.54 · Bugün).
-- _EN satırlarına yer ve tarih ekleme; yalnızca çeviri.
+- " | hareket: " → o sahnede yer değiştirenler (haritada animasyon olur): Ad [taraf, tür] Başlangıç → Varış. Birden çoksa noktalı virgülle ayır; gerekirse ara nokta ekle (A → B → C).
+  taraf: kızıl ya da lacivert (anlatılan/kahraman taraf kızıl; bir taraf hikâye boyunca hep aynı renk). tür: büyük gemi, küçük gemi, denizaltı ya da kara (ordu, kişi, kervan).
+  Örnek: Nusret [kızıl, küçük gemi] Nara Burnu → Erenköy Koyu
+- " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır:
+  patlama YER · büyük patlama YER · atış YER → HEDEF · batış GEMİ ADI (o gemi aynı satırın hareketinde olmalı) · vurgu YER · bayrak ÜLKE YER (Türk, Osmanlı, İngiliz, Fransız, Alman, Rus, İtalyan, Yunan, Amerikan, Avustralya, Yeni Zelanda) · mayın YER → YER
+  Örnek: atış Kilitbahir → Erenköy Koyu; batış Bouvet
+- hareket ve olay yalnızca kaynakta geçen şeyler içindir; sahnede hareket ya da olay yoksa o alanı boş bırak. Her sahnede en az bir hareket ya da olay olması videoyu canlı kılar, ama uydurma.
+- _EN satırlarına yer, tarih, hareket ve olay ekleme; yalnızca çeviri.
 
 BAŞLIK:
 YABANCI: metinde geçen yabancı özel adlar ve Türkçe okunuşu (Irresistible = İrrezistıbıl; Bouvet = Buve)
 DOĞRULANACAK: kaynaktan kontrol edilmesi gereken noktalar; noktalı virgülle ayır (yoksa boş bırak)
 HOOK:
-S1:  | yer:  | tarih:
-S2:  | yer:  | tarih:
-S3:  | yer:  | tarih:
-S4:  | yer:  | tarih:
-S5:  | yer:  | tarih:
-S6:  | yer:  | tarih:
-S7:  | yer:  | tarih:
-S8:  | yer:  | tarih:
+S1:  | yer:  | tarih:  | hareket:  | olay:
+S2:  | yer:  | tarih:  | hareket:  | olay:
+S3:  | yer:  | tarih:  | hareket:  | olay:
+S4:  | yer:  | tarih:  | hareket:  | olay:
+S5:  | yer:  | tarih:  | hareket:  | olay:
+S6:  | yer:  | tarih:  | hareket:  | olay:
+S7:  | yer:  | tarih:  | hareket:  | olay:
+S8:  | yer:  | tarih:  | hareket:  | olay:
 SORU:
 HOOK_EN:
 S1_EN:
@@ -382,21 +389,25 @@ function kartCoz(t) { const o = { sahne: {}, en: {} };
     const anah = m[1].toUpperCase().replace(/\s/g, ""), en = !!m[3], [metin, ...ek] = m[4].split("|").map(x => x.trim());
     if (anah.startsWith("BA")) o.baslik = metin; else if (anah === "YABANCI") o.yabanci = m[4];
     else if (anah === "HOOK") en ? o.en.hook = metin : o.hook = metin; else if (anah === "SORU") en ? o.en.soru = metin : o.soru = metin;
-    else { const i = +m[2] - 1; if (en) o.en[i] = metin; else { const s = { ses: metin }; for (const e of ek) { const k = e.match(/^(yer|tarih|rota)\s*:\s*(.*)$/i); if (k) s[k[1].toLowerCase()] = k[2]; } o.sahne[i] = s; } } }
+    else { const i = +m[2] - 1; if (en) o.en[i] = metin; else { const s = { ses: metin }; for (const e of ek) { const k = e.match(/^(yer|tarih|rota|hareket|olay)\s*:\s*(.*)$/i); if (k) s[k[1].toLocaleLowerCase("tr-TR")] = k[2]; } o.sahne[i] = s; } } }
   return o; }
 async function kartUygula(o, yerEkle, log) {
   if (o.baslik) { const eski = V.meta.title, P = V.meta.paylasim || {}; V.meta.title = V.meta.h1 = o.baslik; if (P[eski] && eski !== o.baslik) { P[o.baslik] = P[eski]; delete P[eski]; } }
   if (o.yabanci) { V.meta.okunus = V.meta.okunus || {}; for (const p of o.yabanci.split(/[;,]/)) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) V.meta.okunus[k] = v; } }
+  const kutu = await DEPO.kutuHesapla(HK.haritalar);
   const n = Math.max(8, ...Object.keys(o.sahne).map(k => +k + 1)); while (V.steps.length < n) { const k = JSON.parse(JSON.stringify(V.steps.at(-1))); delete k.hook; Object.assign(k, { ses: "", text: "", date: "", ships: [], booms: [], shots: [] }); V.steps.push(k); }
   for (const [i, s] of Object.entries(o.sahne)) { const st = V.steps[+i]; st.ses = s.ses; if (!st.text) st.text = s.ses; if (s.tarih) st.date = s.tarih; if (o.en[i]) st.ses_en = o.en[i];
     if (yerEkle && s.yer) { log(`S${+i + 1}: ${s.yer}`);
-      try { const r = await DEPO.sec(s.yer), P = r.noktalar;
+      try { const r = await DEPO.sec(s.yer, kutu), P = r.noktalar;
         for (const [ad, lo, la] of P) if (!(st.pts || []).some(p => p[2] === ad)) (st.pts = st.pts || []).push([lo, la, ad, "start"]);
-        const uy = r.haritalar.filter(h => HK.haritalar.includes(h)); if (uy.length) st.map = uy[0]; else if (r.haritalar.length) log(`  uyarı: bu yerler hikâyenin haritalarında yok; kütüphanede kapsayan: ${r.haritalar.join(", ")}`);
+        const uy = r.haritalar.filter(h => HK.haritalar.includes(h)); if (uy.length) st.map = uy[0]; else if (r.haritalar.length) log(`  uyarı: bu yerler hikâyenin haritalarının dışında; kapsayan harita: ${r.haritalar.join(", ")} (Haritalar'dan ekleyebilirsiniz)`);
         if (P.length) { const los = P.map(p => p[1]), las = P.map(p => p[2]), lo0 = Math.min(...los), lo1 = Math.max(...los), la0 = Math.min(...las), la1 = Math.max(...las);
           const mw = KAT[st.map] ? (KAT[st.map].lo1 - KAT[st.map].lo0) * .12 : .3; st.cam = { lo: +((lo0 + lo1) / 2).toFixed(4), la: +((la0 + la1) / 2).toFixed(4), w: +Math.max((lo1 - lo0) * 1.8, (la1 - la0) * 2.6, .3, mw).toFixed(3) }; }
         if (P.length < s.yer.split(",").filter(x => x.trim()).length) log("  bazı yerler bulunamadı");
-      } catch (e) { log("  bulunamadı: " + e.message); } } }
+      } catch (e) { log("  bulunamadı: " + e.message); } }
+    if (yerEkle && (s.hareket || s.olay)) {
+      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, kat: KAT, bayraklar: VAR.bayraklar, log });
+        if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } } }
   const h = V.steps[0].hook || (V.steps[0].hook = { adim: 7, an: .6, ses: "" }); if (o.hook) h.ses = o.hook; if (o.en.hook) h.ses_en = o.en.hook;
   if (o.soru) V.meta.soru = o.soru; if (o.en.soru) V.meta.soru_en = o.en.soru;
   if (o.dogrulanacak && o.dogrulanacak.length) { V.meta.dogrulanacak = [...new Set([...(V.meta.dogrulanacak || []), ...o.dogrulanacak])]; log && log(`Doğrulanacak ${o.dogrulanacak.length} nokta “Hikâye” sekmesine eklendi.`); }

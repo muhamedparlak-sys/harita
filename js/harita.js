@@ -111,5 +111,5 @@ const HARITA = (() => {
           for (let s = 0; s <= 10; s++) { const t = s / 10, lo = a[0] + (b[0] - a[0]) * t, la = a[1] + (b[1] - a[1]) * t; if (!sea(lo, la)) { S.push(`S${si + 1} ${sh.n || "(adsız)"}: karada ${lo.toFixed(4)}, ${la.toFixed(4)}`); bad++; break; } } } } }
     return { S, bad };
   }
-  return { uret, denetle, deniz, tiff };
+  return { uret, denetle, deniz, tiff, pikseller };
 })();
