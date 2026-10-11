@@ -351,6 +351,7 @@ function draw(p){ P=p; const N=ST.length, i=clamp(Math.floor(p),0,N-1), f=clamp(
   GS.forEach((g,k)=>{ const o=k===i?fin:(k===i-1?1-seg(f,0,.14):0); g.setAttribute("opacity",o.toFixed(2)); g.style.display=o<=0?"none":""; });
   place(c,f); if(q&&GS[i-1].style.display!=="none"){ if(same) q.rect=r; place(q,.999); }
   TAGP.textContent=c.perde.toLocaleUpperCase("tr-TR"); TAG.textContent=c.date;
+  { const bos=VW-(VID?48:32), w1=TW(TAGP.textContent,14,.12), w2=TW(c.date||"",VID?26:22); TAGP.setAttribute("font-size",(14*Math.min(1,bos/Math.max(1,w1))).toFixed(1)); TAG.setAttribute("font-size",((VID?26:22)*Math.min(1,bos/Math.max(1,w2))).toFixed(1)); }
   if(VID){ const u=ease(seg(f,0,.12)); for(const e of [TAGP,TAG]){ e.setAttribute("transform",`translate(${((1-u)*-60).toFixed(1)} 0)`); e.setAttribute("opacity",u.toFixed(2)); } } }
 
 /* ---------- yükleme ---------- */

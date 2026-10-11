@@ -28,14 +28,14 @@
   function hareketCoz(t) {
     return (t || "").split(";").map(x => x.trim()).filter(Boolean).map(x => {
       const m = x.match(/^(.+?)\s*[\[(]([^\])]*)[\])]\s*(.+)$/); let ad, oz = "", yol;
-      if (m) { ad = m[1].trim(); oz = kucuk(m[2]); yol = ok(m[3]); } else { const y = ok(x); const ilk = y[0].split(/\s+/); ad = ""; yol = y; }
+      if (m) { ad = m[1].trim(); oz = kucuk(m[2]); yol = ok(m[3]); } else { yol = ok(x); ad = ""; if (yol.length < 2) return { yol: [] }; }
       let taraf = "", tur = "big", ikon = null, bayrak = null;
       for (const p of oz.split(/[,;/]/).map(x => x.trim()).filter(Boolean)) {
         const b = p.match(/^bayrak\s+(.+)$/); if (b) { bayrak = BAYRAK_AD[b[1].trim()] || b[1].trim(); continue; }
         if (p in TARAF) taraf = TARAF[p]; else if (TUR[p]) tur = TUR[p]; else if (IKON[p]) { ikon = IKON[p]; tur = DENIZ_IKON.has(ikon) ? "small" : "dot"; }
         else { const k = Object.keys(TUR).find(k => p.includes(k)); if (k) tur = TUR[k]; } }
       return { ad, taraf, tur, ikon, bayrak, yol };
-    }).filter(h => h.yol.length >= 2);
+    }).filter(h => h.yol.length >= 1);
   }
   function olayCoz(t) {
     const O = [];
@@ -100,6 +100,14 @@
     for (let k = 0; k <= n; k++) { const x = Math.round(a[0] + (b[0] - a[0]) * k / n), y = Math.round(a[1] + (b[1] - a[1]) * k / n); if (!I.deniz[y * I.w + x] || I.ceza[y * I.w + x] > 2) return false; } return true; }
   function sadelestir(I, P) { if (P.length < 3) return P; const S = [P[0]]; let i = 0;
     while (i < P.length - 1) { let j = P.length - 1; while (j > i + 1 && !gorur(I, P[i], P[j])) j--; S.push(P[j]); i = j; } return S; }
+  /* ince haritada en yakın deniz pikseli (gemiler karaya oturmasın) */
+  function denizeIt(M, H, p) {
+    const [x0, y0] = px(M, H, ...p), X = Math.round(x0), Y = Math.round(y0), deniz = (x, y) => x >= 0 && y >= 0 && x < H.W && y < H.H && H.V[y * H.W + x] < 128;
+    if (X < 0 || Y < 0 || X >= H.W || Y >= H.H || deniz(X, Y)) return p;
+    for (let r = 2; r < 260; r += 2) for (let k = 0; k < 24; k++) { const a = k / 24 * 2 * Math.PI, x = Math.round(X + r * Math.cos(a)), y = Math.round(Y + r * Math.sin(a));
+      if (deniz(x, y)) { /* kıyıdan biraz açığa */ const x2 = Math.round(X + (r + 6) * Math.cos(a)), y2 = Math.round(Y + (r + 6) * Math.sin(a)); return deniz(x2, y2) ? geo(M, H, x2, y2) : geo(M, H, x, y); } }
+    return p;
+  }
   function denizYolu(M, H, A) {
     const I = izgara(H), out = [];
     for (let k = 0; k + 1 < A.length; k++) {
@@ -127,9 +135,12 @@
     const H_ = hareketCoz(s.hareket), O = olayCoz(s.olay), n = H_.length;
     st.ships = st.ships || [];
     for (const [j, h] of H_.entries()) {
-      const A = []; for (const y of h.yol) { const p = await bul(y); if (p) A.push(p); } if (A.length < 2) { log(`  rota kurulamadı: ${h.ad || h.yol.join(" → ")}`); continue; }
+      const A = []; for (const y of h.yol) { const p = await bul(y); if (p && !(A.length && Math.hypot(A[A.length - 1][0] - p[0], A[A.length - 1][1] - p[1]) < 1e-4)) A.push(p); }
+      if (!A.length) { log(`  rota kurulamadı: ${h.ad || h.yol.join(" → ")} (yerler bulunamadı)`); continue; }
+      const denizde = h.tur !== "dot" && !(h.ikon && !DENIZ_IKON.has(h.ikon)) && M && H;
       let P = A, notu = "";
-      if (h.tur !== "dot" && !(h.ikon && !DENIZ_IKON.has(h.ikon)) && M && H) { const D = denizYolu(M, H, A); if (D && D.length >= 2) { P = D; notu = " (denizden)"; } else notu = " (düz; deniz yolu bulunamadı)"; }
+      if (A.length === 1) { P = denizde ? [denizeIt(M, H, A[0])] : A; notu = " (yerinde duruyor)"; }
+      else if (denizde) { const D = denizYolu(M, H, A); if (D && D.length >= 2) { P = D; notu = " (denizden)"; } else { P = A.map(p => denizeIt(M, H, p)); notu = " (düz)"; } }
       const t0 = +(.04 + j * .08).toFixed(2), t1 = +Math.min(.85, .55 + j * .08).toFixed(2);
       const sh = { n: h.ad, s: h.taraf, k: h.tur, p: P, t: [t0, t1] }; if (h.ad) sh.lab = [0, -14, "middle"]; if (h.tur === "dot") sh.kara = true;
       if (h.ikon) { sh.ikon = h.ikon; if (h.ad) sh.lab = [0, -22, "middle"]; } if (h.bayrak && (c.bayraklar || []).includes(h.bayrak)) sh.bayrak = h.bayrak;
@@ -156,7 +167,7 @@
     const T = [...(st.pts || []).map(p => [p[0], p[1]])]; for (const sh of st.ships) for (const p of sh.p || []) T.push(p);
     for (const b of st.booms || []) T.push([b[0], b[1]]);
     if (T.length && M && (H_.length || O.length)) { const los = T.map(p => p[0]), las = T.map(p => p[1]), lo0 = Math.min(...los), lo1 = Math.max(...los), la0 = Math.min(...las), la1 = Math.max(...las);
-      st.cam = { lo: +((lo0 + lo1) / 2).toFixed(4), la: +((la0 + la1) / 2).toFixed(4), w: +Math.min(M.lo1 - M.lo0, Math.max((lo1 - lo0) * 1.5, (la1 - la0) * 2.2, (M.lo1 - M.lo0) * .12, .05)).toFixed(3) }; }
+      st.cam = { lo: +((lo0 + lo1) / 2).toFixed(4), la: +((la0 + la1) / 2).toFixed(4), w: +Math.min(M.lo1 - M.lo0, Math.max((lo1 - lo0) * 1.5, (la1 - la0) * 2.2, (M.lo1 - M.lo0) * .3, .05)).toFixed(3) }; }
     return eklendi;
   }
   kok.OTOMATIK = { kur, hareketCoz, olayCoz, denizYolu, IKON };

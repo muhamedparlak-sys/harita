@@ -45,8 +45,12 @@ const DEPO = (() => {
   async function ara(ad, k) {
     const bekle = 1100 - (Date.now() - sonArama); if (bekle > 0) await new Promise(r => setTimeout(r, bekle)); sonArama = Date.now();
     const o = { q: ad, format: "json", limit: 1, "accept-language": "tr" }; if (k) Object.assign(o, { viewbox: `${k[0]},${k[3]},${k[1]},${k[2]}`, bounded: 1 });
-    const r = await fetch("https://nominatim.openstreetmap.org/search?" + new URLSearchParams(o)); if (!r.ok) throw new Error("Yer araması yapılamadı");
-    const j = await r.json(); return j.length ? [+(+j[0].lon).toFixed(5), +(+j[0].lat).toFixed(5), j[0].display_name.slice(0, 90)] : null;
+    let j = null;
+    for (let deneme = 0; deneme < 3 && !j; deneme++) {
+      if (deneme) { await new Promise(r => setTimeout(r, 1500 * deneme)); sonArama = Date.now(); }
+      try { const r = await fetch("https://nominatim.openstreetmap.org/search?" + new URLSearchParams(o)); if (r.ok) j = JSON.parse(await r.text()); } catch (e) { j = null; } }
+    if (!j) throw new Error("yer arama servisine ulaşılamadı");
+    return j.length ? [+(+j[0].lon).toFixed(5), +(+j[0].lat).toFixed(5), j[0].display_name.slice(0, 90)] : null;
   }
   async function yer(ad, kutu) {
     if (!Object.keys(YERLER).length) { try { YERLER = await (await fetch("kut/yerler.json")).json(); } catch (e) { } Object.assign(YERLER, (await al("ayar", "yerler")) || {}); }

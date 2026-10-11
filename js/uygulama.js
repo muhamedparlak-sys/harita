@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "13 · 11 Ekim";
+const SURUM = "14 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -357,6 +357,8 @@ SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, har
 - " | tarih: " → ekranın köşesinde etiket olarak görünür, seslendirilmez: RAKAMLA ve kısa yaz, en çok 4 kelime (ör. 18 Mart 1915 · 7/8 Mart 1915 gecesi · 8–17 Mart 1915 · 18 Mart 1915, 13.54 · Bugün).
 - " | hareket: " → o sahnede yer değiştirenler; haritada rota boyunca ilerler. Biçim: Ad [taraf, tür] Başlangıç → Varış
   Birden çoksa noktalı virgülle ayır; gerekirse ara nokta ekle (A → B → C). Gemiler denizden, kara birlikleri düz çizgiyle gider.
+  Yerinde duran (demirli, savaşan, batan) gemi için tek yer yaz: Goliath [lacivert, büyük gemi] Morto Koyu
+  Yer olarak geniş deniz ya da bölge adı (Ege Denizi, Akdeniz, Gelibolu Yarımadası) yazma; haritada bir nokta yaz (Gökçeada açığı, Kumkale açığı, Morto Koyu).
 - " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır (biçimler aşağıdaki ARAÇ KUTUSU'nda).
 - " | hava: " → sahnenin ışığı ve havası, virgülle (ör. gece, yağmur). Saat ve mevsimden çıkar: gece yapılan iş → gece; sabaha karşı → şafak; akşam olayı → akşam; kaynakta sis, yağmur, kar, fırtına geçiyorsa onları ekle. Kaynakta hava bilgisi yoksa ve olay gündüzse boş bırak; hava durumu uydurma.
 - ÖNEMLİ: Haritadaki bütün animasyon, efekt ve ses yalnızca bu alanlardan otomatik kurulur; kullanıcı haritada elle hiçbir şey eklemeyecek. Bu yüzden her sahnede hareket, olay ve hava alanlarını kaynağın izin verdiği ölçüde MUTLAKA doldur. Her sahnede en az bir hareket ya da olay olsun; sahnede gerçekten hiçbir şey yer değiştirmiyorsa bir olay (vurgu, ikon, bayrak) kullan.
@@ -382,7 +384,7 @@ Bayrak ülkeleri: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · �
 Ses efektleri olaylardan ve havadan kendiliğinden gelir (patlama, top atışı, batış, kalp atışı, gök gürültüsü, yağmur, rüzgâr, gece, ikon ve bayrak belirmesi, sahne geçişi, deniz); ayrıca yazma.
 - _EN satırlarına yer, tarih, hareket, olay ve hava ekleme; yalnızca çeviri.
 
-BAŞLIK:
+BAŞLIK: (en çok 6 kelime; ekranın üstünde ve videonun adında görünür)
 YABANCI: metinde geçen yabancı özel adlar ve Türkçe okunuşu (Irresistible = İrrezistıbıl; Bouvet = Buve)
 DOĞRULANACAK: kaynaktan kontrol edilmesi gereken noktalar; noktalı virgülle ayır (yoksa boş bırak)
 HOOK:
@@ -436,15 +438,25 @@ async function kartUygula(o, yerEkle, log) {
   if (o.soru) V.meta.soru = o.soru; if (o.en.soru) V.meta.soru_en = o.en.soru;
   if (o.dogrulanacak && o.dogrulanacak.length) { V.meta.dogrulanacak = [...new Set([...(V.meta.dogrulanacak || []), ...o.dogrulanacak])]; log && log(`Doğrulanacak ${o.dogrulanacak.length} nokta “Hikâye” sekmesine eklendi.`); }
   vuruslar(); degisti(); ciz(); }
-function kartPencere() { pencere("Kartı içe aktar", `<p class="ipucu">NotebookLM'e (ya da başka bir yapay zekâya) aşağıdaki istemi verin, çıktıyı buraya yapıştırın. Seslendirme, tarih, İngilizce metin, okunuşlar ve kapanış sorusu sahnelere yerleşir.</p>
+const GORSEL = ["pts", "seas", "ships", "booms", "shots", "vurgu", "ikon", "bayrak", "simsek", "mines", "hava", "vcamFix", "nus", "net", "blast", "all"];
+function sahneTemizle(st) { for (const k of GORSEL) delete st[k]; st.pts = []; st.seas = []; st.ships = []; st.text = ""; st.date = ""; st.ses = ""; delete st.ses_en; }
+async function kartPencere() { pencere("Kartı içe aktar", `<p class="ipucu">NotebookLM'e (ya da başka bir yapay zekâya) aşağıdaki istemi kaynakla birlikte verin, çıktıyı buraya yapıştırın. Metinler, tarihler, okunuşlar, soru, rotalar, olaylar ve hava sahnelere kendiliğinden yerleşir.</p>
   <div class="satir"><button id="istemKop">İstemi kopyala</button></div><details><summary>İstemi göster</summary><pre class="log" id="istem"></pre></details>
   <label>Çıktı<textarea id="kartMetin" rows="10" placeholder="BAŞLIK: …&#10;HOOK: …&#10;S1: … | yer: … | tarih: …"></textarea></label>
-  <label class="satir" style="color:var(--ink);display:flex"><input type="checkbox" id="kartYer" checked style="width:auto"> Yer adlarını haritaya ekle ve kamerayı ayarla (internet gerekir)</label>
+  <label>Nereye<select id="kartKip"><option value="yeni">Yeni hikâye olarak (önerilen)</option><option value="ustune">Açık hikâyenin (“${esc(V.meta.title || AD)}”) üzerine yaz</option></select></label>
+  <div id="kartHar"><p class="ipucu" style="margin:0">Haritalar (yerlerin bulunduğu bölge; birden çok seçilebilir):</p>${await haritaKutulari(HK.haritalar)}</div>
   <button class="ana" id="kartUy">Aktar</button><pre class="log" id="kartLog" hidden></pre>`);
-  $("#istem").textContent = ISTEM; $("#istemKop").onclick = e => kopyala(ISTEM, e.target);
+  kutuTikla(); $("#istem").textContent = ISTEM; $("#istemKop").onclick = e => kopyala(ISTEM, e.target);
+  $("#kartKip").onchange = e => { $("#kartHar").hidden = e.target.value !== "yeni"; };
   $("#kartUy").onclick = async () => { const o = kartCoz($("#kartMetin").value), ns = Object.keys(o.sahne).length; if (!ns && !o.hook) return bildir("Kart biçimi tanınmadı. Satırlar “S1: …” gibi başlamalı.", 4);
+    const kip = $("#kartKip").value, H = $$("#dlgIc .hk.sec").map(d => d.dataset.h);
+    if (kip === "yeni" && !H.length) return bildir("En az bir harita seçin", 3);
+    if (kip === "ustune" && !await onayla(`“${V.meta.title || AD}” hikâyesinin bütün sahneleri silinip karttan yeniden kurulacak. Devam edilsin mi?`, "Üzerine yaz")) return;
     $("#kartUy").disabled = true; const L = $("#kartLog"); L.hidden = false; const log = t => { L.textContent += t + "\n"; L.scrollTop = 1e9; };
-    log(`${ns} sahne, hook ${o.hook ? "var" : "yok"}, soru ${o.soru ? "var" : "yok"}`); await kartUygula(o, $("#kartYer").checked, log); log("Tamam. Sahneleri tek tek kontrol edin; otomatik rotaları gözden geçirin, eksik hareketleri haritaya dokunarak ekleyin."); }; }
+    if (kip === "yeni") { const ad = await DEPO.yeniHikaye(o.baslik || "Yeni hikâye", H); await yukle(ad); log(`Yeni hikâye: ${o.baslik || ad}`); }
+    else { GECMIS.push(JSON.stringify(HK)); V.steps.forEach(sahneTemizle); delete V.meta.soru; delete V.meta.soru_en; V.meta.dogrulanacak = []; log("Eski sahne içeriği temizlendi."); }
+    log(`${ns} sahne, hook ${o.hook ? "var" : "yok"}, soru ${o.soru ? "var" : "yok"}`); await kartUygula(o, true, log);
+    log("Tamam. Video için üstteki “Video” düğmesine dokunun."); bildir("Kart aktarıldı"); }; }
 
 /* ---------- seslendirme kabini ---------- */
 function parcalar() { const L = [], st = V.steps, h = st[0].hook;
