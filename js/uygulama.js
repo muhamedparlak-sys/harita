@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "19 · 11 Ekim";
+const SURUM = "20 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -351,20 +351,22 @@ DOĞRULUK
 ÜSLUP VE TON
 - Soğukkanlı, kesik, askerî harekât dili. Duygusal sıfatlar (kahramanca, haince, korkusuzca, muazzam, destansı vb.) YASAK; gerilimi olgu, sayı ve zaman yaratır.
 - Şimdiki zaman; cümleler kısa ve yüklem odaklı.
+- SORU CÜMLESİ YASAK: HOOK, S1–S8 ve _EN çevirilerinde retorik ya da yapay soru kurma ("fark edecek mi?", "kurtulan var mı?", "başarabilecekler mi?", "peki sonra?" vb.). Soru işareti (?) metnin tamamında YALNIZCA en sondaki SORU: ve SORU_EN: satırlarında yer alabilir. "Acaba", "mi/mı" ile kurulan dolaylı soru ve soru ima eden yarım cümle de yasaktır.
+- Gerilimi soruyla değil olguyla kur: eylem, zaman baskısı, mesafe, sayı ve somut tehdit. "Fark edecek mi?" değil "İki devriye muhribinin arasından fark edilmeden sıyrılıyor." · "Kurtulan var mı?" değil "Yedi yüz denizciden beş yüz yetmişi suda kayboluyor." · "Başarabilecekler mi?" değil "Şafağa kırk dakika var; boğazda tek ışık yok."
 - Sahne metinlerinde sayıları ve tarihleri yazıyla yaz, seslendirilecekler (on sekiz Mart, beş yüz yetmiş denizci). Okunması zor yazımları açık yaz (7/8 Mart → yedi Mart'ı sekize bağlayan gece).
 - Kelime sınırı (aşma): HOOK 8 · S1 12 · S2 14 · S3 12 · S4 14 · S5 16 · S6 12 · S7 18 · S8 16 · SORU 12.
 
 SAHNE GÖREVLERİ (Save the Cat)
-- HOOK: S7'deki en büyük kayıp, kritik hasar ya da şaşırtıcı çelişki.
+- HOOK: S7'deki en büyük kayıp, kritik hasar ya da şaşırtıcı çelişki; soru değil, düz bir olgu cümlesi.
 - S1 Tehdit/Açılış: büyük gücün harekete geçişi; mutlaka yer değiştiren bir unsur (hareket satırı dolu).
 - S2 Karşı hamle: savunmanın ya da küçük gücün yola çıkışı veya gizli mevzilenmesi.
-- S3 Gerilim/Şüphe: ilk tespit riski, keşif ya da kritik şüphe.
+- S3 Gerilim/Tespit riski: ilk tespit riski ya da keşif; riski soruyla değil somut mesafe, ışık, nöbetçi ya da süreyle ver.
 - S4 Kırılma/Kilitlenme: menzile giriş, telsiz/parola teması ya da tuzak anı.
 - S5 İlk temas/Darbe: ilk ateş, torpido atışı ya da temas anı.
-- S6 Kriz: alınan yara, manevra kaybı, "kurtulan var mı?" sorusu.
+- S6 Kriz: alınan yara, yatma açısı, manevra kaybı, suya düşen denizciler; çaresizliği olguyla ver, soru kurma.
 - S7 Doruk/Kayıp: batış ya da imha, resmî kayıp sayısı, diğer tarafın çekilmesi.
 - S8 Sonuç ve bugün: stratejik sonuç ve o batığın/noktanın bugünkü durumu.
-- SORU: yorumlarda stratejik tartışma açacak "Ya öyle olmasaydı?" türü bir soru.
+- SORU: yorumlarda stratejik tartışma açacak "Ya öyle olmasaydı?" türü bir soru. Hikâyedeki TEK soru cümlesi budur; soru işareti yalnızca burada ve SORU_EN'de kullanılır.
 - Kaynakta bir görevin karşılığı yoksa uydurma; o sahneyi hikâyenin gerçek akışına göre kullan.
 
 SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, hareket, olay, hava)
@@ -447,6 +449,7 @@ function kartCoz(t) { const o = { sahne: {}, en: {} };
 async function kartUygula(o, yerEkle, log) {
   if (o.baslik) { const eski = V.meta.title, P = V.meta.paylasim || {}; V.meta.title = V.meta.h1 = o.baslik; if (P[eski] && eski !== o.baslik) { P[o.baslik] = P[eski]; delete P[eski]; } }
   if (o.yabanci) { V.meta.okunus = V.meta.okunus || {}; for (const p of o.yabanci.split(/[;,]/)) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) V.meta.okunus[k] = v; } }
+  { const sq = [["HOOK", o.hook], ...Object.entries(o.sahne).map(([i, s]) => [`S${+i + 1}`, s.ses])].filter(([, x]) => /\?/.test(x || "")).map(([k]) => k); if (sq.length) log(`uyarı: ${sq.join(", ")} soru cümlesi içeriyor (şablona göre soru yalnızca SORU satırında olmalı)`); }
   const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map();
   const n = Math.max(8, ...Object.keys(o.sahne).map(k => +k + 1)); while (V.steps.length < n) { const k = JSON.parse(JSON.stringify(V.steps.at(-1))); delete k.hook; Object.assign(k, { ses: "", text: "", date: "", ships: [], booms: [], shots: [] }); V.steps.push(k); }
   for (const [i, s] of Object.entries(o.sahne)) { const st = V.steps[+i]; st.ses = s.ses; if (!st.text) st.text = s.ses; if (s.tarih) st.date = s.tarih; if (o.en[i]) st.ses_en = o.en[i];
