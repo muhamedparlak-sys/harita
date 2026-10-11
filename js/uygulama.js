@@ -499,6 +499,10 @@ async function ornekYukle() { const hk = await (await fetch("ornek/Bogaz_gecilme
   const L = await DEPO.hikayeler(), son = await DEPO.ayar("son");
   if (!L.length) await ornekYukle(); else await yukle(L.includes(son) ? son : L[0]);
   aracSec("sec");
-  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => { });
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    const vardi = !!navigator.serviceWorker.controller; let yenilendi = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (vardi && !yenilendi) { yenilendi = true; bildir("Uygulama güncellendi; yeniden yükleniyor…"); setTimeout(() => location.reload(), 800); } });
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => { r.update(); document.addEventListener("visibilitychange", () => { if (!document.hidden) r.update(); }); }).catch(() => { });
+  }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
 })();
