@@ -17,8 +17,18 @@
     "tren": "tren", "uçak": "ucak", "yelkenli": "yelkenli", "kalyon": "yelkenli", "kadırga": "yelkenli", "gemi ikonu": "gemi", "denizaltı ikonu": "denizalti",
     "kılıç": "kilic", "çatışma": "catisma", "savaş": "catisma", "kale": "kale", "kule": "kule", "çapa": "capa", "liman": "capa", "çadır": "cadir", "ordugâh": "cadir",
     "yangın": "yangin", "bayrak": "bayrak", "kalkan": "kalkan", "ölüm": "olum", "kayıp": "olum", "taç": "tac", "taht": "tac", "bomba": "bomba", "cami": "cami",
-    "kilise": "kilise", "köprü": "kopru", "fabrika": "fabrika", "fener": "fener", "hedef": "hedef", "dağ": "dag", "nişan": "nisan", "madalya": "nisan" };
-  const DENIZ_IKON = new Set(["yelkenli", "gemi", "denizalti"]);
+    "kilise": "kilise", "köprü": "kopru", "fabrika": "fabrika", "fener": "fener", "hedef": "hedef", "dağ": "dag", "nişan": "nisan", "madalya": "nisan",
+    "hoparlör": "hoparlor", "megafon": "hoparlor", "telsiz": "telsiz", "uydu": "uydu", "yel değirmeni": "degirmen", "değirmen": "degirmen", "rüzgâr türbini": "turbin", "rüzgar türbini": "turbin", "türbin": "turbin",
+    "saray": "saray", "ev": "ev", "köy": "koy", "şehir": "sehir", "kent": "sehir", "kasaba": "koy", "ambar": "ambar", "çiftlik": "ambar", "silo": "silo", "okul": "okul", "hastane": "hastane",
+    "banka": "banka", "anıt": "anit", "sütun": "anit", "kapı": "kapi", "çan": "can", "orman": "orman", "ağaç": "agac", "ada": "ada", "su": "su", "kuyu": "su", "pınar": "su", "balık": "balik",
+    "havaalanı": "havaalani", "havalimanı": "havaalani", "radar": "radar", "dürbün": "durbun", "gözetleme": "durbun", "gözcü": "durbun", "maden": "maden", "petrol": "petrol",
+    "mezar": "mezar", "sağlık": "saglik", "yaralı": "saglik", "anlaşma": "anlasma", "barış": "anlasma", "belge": "belge", "antlaşma": "belge", "emir": "belge",
+    "helikopter": "helikopter", "paraşüt": "parasut", "füze": "fuze", "roket": "fuze", "vapur": "vapur", "feribot": "vapur" };
+  /* metnin başındaki en uzun ikon adını bulur: "yel değirmeni [kızıl] Bozcaada" → ["degirmen", "[kızıl] Bozcaada"] */
+  function ikonBas(x) { const k = kucuk(x).replace(/â/g, "a"); let en = null;
+    for (const a of Object.keys(IKON)) { const a2 = a.replace(/â/g, "a"); if (k.startsWith(a2) && (k.length === a2.length || /[\s\[(]/.test(k[a2.length])) && (!en || a2.length > en.length)) en = a2; }
+    if (!en) return null; const key = Object.keys(IKON).find(a => a.replace(/â/g, "a") === en); return [IKON[key], x.trim().slice(en.length).trim()]; }
+  const DENIZ_IKON = new Set(["yelkenli", "gemi", "denizalti", "vapur"]);
   const TARAF = { "kızıl": "o", "kirmizi": "o", "kırmızı": "o", "lacivert": "i", "mavi": "i", "nötr": "", "notr": "" };
   const BAYRAK_AD = { "türk": "tr", "türkiye": "tr", "osmanlı": "osm", "ingiliz": "gb", "ingiltere": "gb", "britanya": "gb", "fransız": "fr", "fransa": "fr",
     "alman": "de", "almanya": "de", "rus": "ru", "rusya": "ru", "italyan": "it", "italya": "it", "yunan": "gr", "yunanistan": "gr", "amerikan": "us", "abd": "us",
@@ -49,15 +59,15 @@
       else if ((m = x.match(/^(ışıldak|projektör|projektor|selektör|selektor)\s+(.+)$/i))) { const y = ok(m[2]); O.push({ tur: "isildak", yer: y[0], hedef: y[1] || null }); }
       else if ((m = x.match(/^(anons|hoparlör|seslenir|seslenme|çağrı|konuşma|haykırır)\s+(.+)$/i))) O.push({ tur: "anons", yer: m[2].trim() });
       else if ((m = x.match(/^(.+?)\s+(batar|batıyor|batırılır|batırıldı|battı|batmaya başlar)$/i))) O.push({ tur: "batis", gemi: m[1].trim() });
-      else if ((m = x.match(/^ikon\s+(.+?)\s*(?:\[([^\]]*)\])?\s+(\S.*)$/i)) && IKON[kucuk(m[1])]) {
+      else if ((m = x.match(/^ikon\s+(.+)$/i)) && ikonBas(m[1]) && (m = [m[0], ...ikonBas(m[1])]) && (m = [m[0], m[1], ...(m[2].match(/^(?:[\[(]([^\])]*)[\])])?\s*(.+)$/) || []).slice(1)]) && m[3]) {
         let taraf = "", etiket = ""; for (const p of (m[2] || "").split(",").map(x => x.trim()).filter(Boolean)) { if (kucuk(p) in TARAF) taraf = TARAF[kucuk(p)]; else etiket = p; }
-        O.push({ tur: "ikon", ikon: IKON[kucuk(m[1])], yer: m[3].trim(), taraf, etiket }); }
+        O.push({ tur: "ikon", ikon: m[1], yer: m[3].trim(), taraf, etiket }); }
       else if ((m = x.match(/^(atış|ateş|bombardıman|top atışı|topçu ateşi)\s+(.+)$/i))) { const y = ok(m[2]); O.push({ tur: "atis", yer: y[0], hedef: y[1] || null, salvo: /bombardıman|topçu/i.test(m[1]) ? 3 : 1 }); }
       else if ((m = x.match(/^(batış|batar|batırılır|batma|batan)\s*:?\s+(.+)$/i))) O.push({ tur: "batis", gemi: m[2].trim() });
       else if ((m = x.match(/^(vurgu|odak)\s+(.+)$/i))) O.push({ tur: "vurgu", yer: m[2].trim() });
       else if ((m = x.match(/^(mayın|mayın hattı)\s+(.+)$/i))) { const y = ok(m[2]); O.push({ tur: "mayin", yer: y[0], hedef: y[1] || null }); }
       else if ((m = x.match(/^bayrak\s+(\S+)\s+(.+)$/i))) { const kod = BAYRAK_AD[kucuk(m[1])] || kucuk(m[1]); O.push({ tur: "bayrak", kod, yer: m[2].trim() }); }
-      else if ((m = x.match(/^(\S+)\s+(.+)$/)) && IKON[kucuk(m[1])]) O.push({ tur: "ikon", ikon: IKON[kucuk(m[1])], yer: m[2].trim(), taraf: "", etiket: "" });
+      else if ((m = ikonBas(x)) && m[1] && !/^[\[(]/.test(m[1])) O.push({ tur: "ikon", ikon: m[0], yer: m[1], taraf: "", etiket: "" });
       else O.push({ tur: "?", ham: x });
     }
     return O;

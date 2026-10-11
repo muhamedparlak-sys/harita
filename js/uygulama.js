@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "18 · 11 Ekim";
+const SURUM = "19 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -339,20 +339,33 @@ function yerAra() { pencere("Yer ara", `<div class="satir" style="flex-wrap:nowr
   $("#yaBtn").onclick = ara; $("#yaQ").onkeydown = e => { if (e.key === "Enter") ara(); }; setTimeout(() => $("#yaQ").focus(), 80); }
 
 /* ---------- kart içe aktarma ---------- */
-const ISTEM = `Bu kaynaklardaki hikâyeyi Instagram için 60 saniyelik, Save the Cat yapısında bir harita hikâyesine çevir. Aşağıdaki biçimi BİREBİR kullan; başka açıklama ekleme.
+const ISTEM = `Sen bir askerî harekât odasında brifing veren subaysın. Bu kaynaklardaki hikâyeyi Instagram/Shorts için 60 saniyelik, Save the Cat yapısında bir harita hikâyesine çevir. Aşağıdaki BİÇİM'i BİREBİR kullan: başına ya da sonuna açıklama, selamlama, not, başlık, kod bloğu, kalın yazı ekleme; her satır "ANAHTAR:" ile başlasın.
 
 DOĞRULUK
 - Yalnızca kaynaklardaki olgular. Kaynakta olmayan ayrıntı ekleme: hava durumu (sis, fırtına), duygu, diyalog, süre, sayı uydurma.
-- Sayıları ve süreleri kaynaktaki gibi ver; yuvarlarsan "yaklaşık", "… aşkın" de. Kaynaklar farklı sayı veriyorsa daha temkinli olanı kullan.
+- Sayıları ve süreleri kaynaktaki gibi ver; kesin değilse ya da yuvarlarsan "yaklaşık", "… aşkın" de. Kaynaklar farklı sayı veriyorsa daha temkinli olanı kullan.
 - Olayların sırasını ve aralarındaki zamanı koru: saatler sonra olan bir şeye "hemen ardından" deme.
 - Abartma: HOOK merak uyandırsın ama yanlış olmasın ("koca donanmayı batırdı" değil, "üç zırhlıyı batırdı").
 - Kaynakta emin olunamayan ya da kaynaklar arasında çelişen her noktayı DOĞRULANACAK satırına yaz.
 
-ÜSLUP
-- Şimdiki zaman. Kısa, canlı, merak uyandıran cümleler; somut sayı ve ayrıntı.
-- Sahne metinlerinde sayıları ve tarihleri yazıyla yaz, seslendirilecekler (on sekiz Mart, altı yüz denizci). Okunması zor yazımları açık yaz (7/8 Mart → yedi Mart'ı sekize bağlayan gece).
-- Kelime sınırı (sınırı aşma): HOOK 8 · S1 12 · S2 14 · S3 12 · S4 14 · S5 16 · S6 12 · S7 18 · S8 16 · SORU 12.
-- HOOK: S7'deki en çarpıcı an, sayı ya da soru. S3 ve S6 yeni merak açar. S7 doruk ve kayıp, sayılarla. S8 sonucu ve bugünü anlatır. SORU izleyiciye yorum yazdıracak bir sorudur.
+ÜSLUP VE TON
+- Soğukkanlı, kesik, askerî harekât dili. Duygusal sıfatlar (kahramanca, haince, korkusuzca, muazzam, destansı vb.) YASAK; gerilimi olgu, sayı ve zaman yaratır.
+- Şimdiki zaman; cümleler kısa ve yüklem odaklı.
+- Sahne metinlerinde sayıları ve tarihleri yazıyla yaz, seslendirilecekler (on sekiz Mart, beş yüz yetmiş denizci). Okunması zor yazımları açık yaz (7/8 Mart → yedi Mart'ı sekize bağlayan gece).
+- Kelime sınırı (aşma): HOOK 8 · S1 12 · S2 14 · S3 12 · S4 14 · S5 16 · S6 12 · S7 18 · S8 16 · SORU 12.
+
+SAHNE GÖREVLERİ (Save the Cat)
+- HOOK: S7'deki en büyük kayıp, kritik hasar ya da şaşırtıcı çelişki.
+- S1 Tehdit/Açılış: büyük gücün harekete geçişi; mutlaka yer değiştiren bir unsur (hareket satırı dolu).
+- S2 Karşı hamle: savunmanın ya da küçük gücün yola çıkışı veya gizli mevzilenmesi.
+- S3 Gerilim/Şüphe: ilk tespit riski, keşif ya da kritik şüphe.
+- S4 Kırılma/Kilitlenme: menzile giriş, telsiz/parola teması ya da tuzak anı.
+- S5 İlk temas/Darbe: ilk ateş, torpido atışı ya da temas anı.
+- S6 Kriz: alınan yara, manevra kaybı, "kurtulan var mı?" sorusu.
+- S7 Doruk/Kayıp: batış ya da imha, resmî kayıp sayısı, diğer tarafın çekilmesi.
+- S8 Sonuç ve bugün: stratejik sonuç ve o batığın/noktanın bugünkü durumu.
+- SORU: yorumlarda stratejik tartışma açacak "Ya öyle olmasaydı?" türü bir soru.
+- Kaynakta bir görevin karşılığı yoksa uydurma; o sahneyi hikâyenin gerçek akışına göre kullan.
 
 SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, hareket, olay, hava)
 - " | yer: " → o sahnede haritada gösterilecek yerler; virgülle ayrılmış, haritada bulunabilecek bilinen adlar (ör. Kilitbahir, Erenköy Koyu, Çanakkale Boğazı). En çok 4 yer. Hikâyenin ana bölgesinin dışında kalan bir yer varsa (ör. bugünkü müze şehri) onu yer olarak yazma, yalnızca metinde geçsin.
@@ -362,6 +375,7 @@ SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, har
   Yerinde duran (demirli, savaşan, batan) gemi için tek yer yaz: Goliath [lacivert, büyük gemi] Morto Koyu
   Yer olarak geniş deniz ya da bölge adı (Ege Denizi, Akdeniz, Gelibolu Yarımadası) yazma; haritada bir nokta yaz (Gökçeada açığı, Kumkale açığı, Morto Koyu).
 - " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır (biçimler aşağıdaki ARAÇ KUTUSU'nda).
+- Boş kalan alanı silme: iki dik çizgi arasını boş bırak (| olay:  | hava: ).
 - " | hava: " → sahnenin ışığı ve havası, virgülle (ör. gece, yağmur). Saat ve mevsimden çıkar: gece yapılan iş → gece; sabaha karşı → şafak; akşam olayı → akşam; kaynakta sis, yağmur, kar, fırtına geçiyorsa onları ekle. Kaynakta hava bilgisi yoksa ve olay gündüzse boş bırak; hava durumu uydurma.
 - ÖNEMLİ: Haritadaki bütün animasyon, efekt ve ses yalnızca bu alanlardan otomatik kurulur; kullanıcı haritada elle hiçbir şey eklemeyecek. Bu yüzden her sahnede hareket, olay ve hava alanlarını kaynağın izin verdiği ölçüde MUTLAKA doldur. Her sahnede en az bir hareket ya da olay olsun; sahnede gerçekten hiçbir şey yer değiştirmiyorsa bir olay (vurgu, ikon, bayrak) kullan.
 - Açılış izleyiciyi tutar: S1'de mutlaka yer değiştiren bir hareket olsun (gelen filo, yürüyen ordu, yola çıkan gemi); HOOK, S7'nin en hareketli anından seçilsin. Durağan bir açılış izleyiciyi kaçırır.
@@ -371,7 +385,7 @@ ARAÇ KUTUSU (yalnızca bunları kullan; başka bir şey yazarsan haritada gör�
 Taraf: kızıl (anlatılan/kahraman taraf) ya da lacivert (karşı taraf); nötr için yazma. Bir taraf hikâye boyunca hep aynı renk.
 Hareket türleri:
   gemi işaretleri: büyük gemi · küçük gemi · denizaltı
-  rota boyunca ilerleyen ikonlar: at · süvari · asker · ordu · tank · araba · tren · uçak · yelkenli · kara (yalnızca nokta)
+  rota boyunca ilerleyen ikonlar: at · süvari · asker · ordu · tank · araba · tren · uçak · helikopter · paraşüt · füze · yelkenli · vapur · kara (yalnızca nokta)
   harekete bayrak eklemek için köşeli paranteze "bayrak ÜLKE" yaz.
   Örnekler: Nusret [kızıl, küçük gemi] Nara Burnu → Erenköy Koyu
             Mustafa Kemal'in birliği [kızıl, asker, bayrak Osmanlı] Bigalı → Conkbayırı
@@ -384,7 +398,11 @@ Olaylar (kartta yazdığın sırayla olur; gelenler önce varır, olay yerinden 
   anons GEMİ/YER (hoparlör ve ses dalgaları: seslenen, emir veren, uyaran biri)
   mayın YER → YER (mayın hattı) · bayrak ÜLKE YER · yıldırım YER (şimşek çakar, gök gürler; kaynakta fırtına/yıldırım geçiyorsa)
   ikon TÜR YER, istersen köşeli parantezde taraf ve etiket: ikon kale [kızıl, Kilitbahir Kalesi] Kilitbahir
-  Sabit ikon türleri: kale · kule · fener · köprü · cami · kilise · fabrika · çadır (ordugâh) · çapa (liman) · dağ · yangın · bomba · kılıç · çatışma · kalkan · ölüm (kayıp) · taç · nişan (madalya) · hedef · bayrak · hoparlör · telsiz
+  Sabit ikon türleri:
+    yapılar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar (çiftlik) · silo · okul · hastane · banka · anıt · kapı · çan
+    doğa: dağ · orman · ağaç · ada · su (kuyu, pınar) · balık
+    askerî: çadır (ordugâh) · çapa (liman) · havaalanı · radar · dürbün (gözetleme) · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol
+    durum: ölüm (kayıp) · mezar · sağlık (yaralı) · anlaşma · belge (antlaşma, emir) · taç · nişan (madalya) · bayrak · hoparlör · telsiz · uydu
 AKTÖRLER (önemli):
   Hareket satırında adı geçen her gemi, birlik ya da araç bir AKTÖRDÜR ve sonraki sahnelerde son bulunduğu yerde kalır; batana ya da yeniden hareket edene kadar haritada durur. Duran aktörü her sahnede yeniden yazmana gerek yok; yalnızca yer değiştirdiğinde yaz.
   Olaylarda yer yerine aktör adı yaz: torpido Muavenet-i Milliye → Goliath · bombardıman Goliath → Seddülbahir · işaret Goliath · batış Goliath. Aktörün adını her yerde aynı yaz.
@@ -420,11 +438,11 @@ SORU_EN:`;
 function kartCoz(t) { const o = { sahne: {}, en: {} };
   for (const ham of t.split(/\r?\n/)) { const sat = ham.replace(/^[\s*\-•#]+/, "").replace(/\*\*/g, "");
     const d0 = sat.match(/^DO[ĞG]RULANACAK\s*[:：]\s*(.*)$/i); if (d0) { o.dogrulanacak = d0[1].split(";").map(x => x.trim()).filter(x => x && !/^(yok|-|—)$/i.test(x)); continue; }
-    const m = sat.match(/^(BAŞLIK|BASLIK|YABANCI|HOOK|SORU|S\s*([1-9]\d?))(_EN)?\s*[:：]\s*(.*)$/i); if (!m) continue;
+    const m = sat.match(/^(BAŞLIK|BASLIK|YABANCI|HOOK|SORU|S\s*([1-9]\d?))(_EN)?\s*(?:\([^)]*\))?\s*[:：]\s*(.*)$/i); if (!m) continue;
     const anah = m[1].toUpperCase().replace(/\s/g, ""), en = !!m[3], [metin, ...ek] = m[4].split("|").map(x => x.trim());
     if (anah.startsWith("BA")) o.baslik = metin; else if (anah === "YABANCI") o.yabanci = m[4];
     else if (anah === "HOOK") en ? o.en.hook = metin : o.hook = metin; else if (anah === "SORU") en ? o.en.soru = metin : o.soru = metin;
-    else { const i = +m[2] - 1; if (en) o.en[i] = metin; else { const s = { ses: metin }; for (const e of ek) { const k = e.match(/^(yer|tarih|rota|hareket|olay|hava)\s*:\s*(.*)$/i); if (k) s[k[1].toLocaleLowerCase("tr-TR")] = k[2]; } o.sahne[i] = s; } } }
+    else { const i = +m[2] - 1; if (en) o.en[i] = metin; else { const s = { ses: metin }; for (const e of ek) { const k = e.match(/^(yer|tarih|rota|hareket|olay|hava)\s*:\s*(.*)$/i); if (k) s[k[1].toLocaleLowerCase("tr-TR")] = /^(yok|-+|—|–|boş|yok\.)$/i.test(k[2].trim()) ? "" : k[2].trim(); } o.sahne[i] = s; } } }
   return o; }
 async function kartUygula(o, yerEkle, log) {
   if (o.baslik) { const eski = V.meta.title, P = V.meta.paylasim || {}; V.meta.title = V.meta.h1 = o.baslik; if (P[eski] && eski !== o.baslik) { P[o.baslik] = P[eski]; delete P[eski]; } }
