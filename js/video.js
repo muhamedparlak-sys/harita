@@ -222,7 +222,8 @@ const VIDEO = (() => {
       log(`Toplam ${T.toFixed(1)} sn. Ses karıştırılıyor…`);
       const ses = new Float32Array(Math.ceil((T + .2) * SR)); for (const [t, x] of SESLER) { const i0 = Math.floor(t * SR); for (let k = 0; k < x.length && i0 + k < ses.length; k++) ses[i0 + k] += x[k]; }
       const EG = { on: .6, kisik: .32, guclu: .9 }[a.efekt] ?? (efOn ? .6 : 0);
-      const mix = EFEKT.miks(T + .05, OLAY, SESLER.length ? ses : null, { efektG: efOn ? EG : 0, ambG: efOn ? .10 * EG / .6 : 0, ducKat: .72 });
+      const yataklar = PARCA.map(p => ({ t0: p.t0, t1: p.t0 + p.sure, hava: (steps[p.i] || {}).hava || [] }));
+      const mix = EFEKT.miks(T + .05, OLAY, SESLER.length ? ses : null, { efektG: efOn ? EG : 0, ambG: efOn ? .10 * EG / .6 : 0, ducKat: .72, yataklar });
       try { await document.fonts.load(`800 64px Inter`); } catch (e) { }
       const blob = await kodla(M, PARCA, T, mix, log, ilerle, durdur);
       /* altyazı (.srt) ve seslendirme metni */

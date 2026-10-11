@@ -43,6 +43,7 @@
       const k = kucuk(x); let m;
       if ((m = x.match(/^büyük\s+patlama\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[1].trim(), k: 2.2 });
       else if ((m = x.match(/^(patlama|infilak)\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[2].trim(), k: 1 });
+      else if ((m = x.match(/^(yıldırım|şimşek)\s+(.+)$/i))) O.push({ tur: "simsek", yer: m[2].trim() });
       else if ((m = x.match(/^ikon\s+(.+?)\s*(?:\[([^\]]*)\])?\s+(\S.*)$/i)) && IKON[kucuk(m[1])]) {
         let taraf = "", etiket = ""; for (const p of (m[2] || "").split(",").map(x => x.trim()).filter(Boolean)) { if (kucuk(p) in TARAF) taraf = TARAF[kucuk(p)]; else etiket = p; }
         O.push({ tur: "ikon", ikon: IKON[kucuk(m[1])], yer: m[3].trim(), taraf, etiket }); }
@@ -145,6 +146,7 @@
         else log(`  batış: “${o.gemi}” bu sahnenin hareketlerinde yok`); }
       else if (o.tur === "vurgu") { const p = await bul(o.yer); if (p) { (st.vurgu = st.vurgu || []).push([p[0], p[1], 3, +Math.max(.2, t - .3).toFixed(2), +Math.min(1, t + .25).toFixed(2), "", 3]); eklendi.push("vurgu"); } }
       else if (o.tur === "bayrak") { const p = await bul(o.yer); if (p) { const kod = (c.bayraklar || []).includes(o.kod) ? o.kod : null; if (kod) { (st.bayrak = st.bayrak || []).push([p[0], p[1], kod, +(.12 + j * .04).toFixed(2)]); eklendi.push(`bayrak ${kod}`); } else log(`  bilinmeyen bayrak: ${o.kod}`); } }
+      else if (o.tur === "simsek") { const p = await bul(o.yer); if (p) { (st.simsek = st.simsek || []).push([p[0], p[1], t]); eklendi.push("yıldırım"); } }
       else if (o.tur === "ikon") { const p = await bul(o.yer); if (p) { const v = [p[0], p[1], o.ikon, o.taraf, 1, +(.1 + j * .06).toFixed(2), 1]; if (o.etiket) v.push(o.etiket); (st.ikon = st.ikon || []).push(v); eklendi.push(`ikon ${o.ikon}`); } }
       else if (o.tur === "mayin") { const a = await bul(o.yer), b = o.hedef ? await bul(o.hedef) : null;
         if (a && b) { const k = 26, R = []; for (let i = 0; i < k; i++) R.push([+(a[0] + (b[0] - a[0]) * i / (k - 1)).toFixed(4), +(a[1] + (b[1] - a[1]) * i / (k - 1)).toFixed(4)]); (st.mines = st.mines || []).push(R); eklendi.push("mayın hattı"); } }

@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "11 · 11 Ekim";
+const SURUM = "12 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -77,7 +77,7 @@ $("#reelBtn").onclick = () => { if (OYNA) return durdurOyna(); $("#reelBtn").tex
 /* ---------- araçlar ---------- */
 const IPUCLAR = { sec: "", yer: "Yer adı: haritaya dokunun.", deniz: "Deniz ya da koy adı: haritaya dokunun.", rota: "Rota: noktalara sırayla dokunun, sonra “Rotayı bitir”.",
   patlama: "Patlama: yere dokunun (zaman çubuğundaki anda olur).", atis: "Atış: önce atan yere, sonra hedefe dokunun.", vurgu: "Vurgu: merkeze dokunun (yanıp sönen halka).",
-  ikon: "İkon: türü seçip haritaya dokunun.", bayrak: "Bayrak: ülkeyi seçip haritaya dokunun.", kamera: "Kamera: sahnenin merkezine dokunun. Gez kipinde iki parmakla yakınlaştırabilirsiniz." };
+  ikon: "İkon: türü seçip haritaya dokunun.", simsek: "Yıldırım: düşeceği yere dokunun (zaman çubuğundaki anda; gök gürültüsü sesiyle).", bayrak: "Bayrak: ülkeyi seçip haritaya dokunun.", kamera: "Kamera: sahnenin merkezine dokunun. Gez kipinde iki parmakla yakınlaştırabilirsiniz." };
 const SECENEK = { rota: ["taraf", "tur"], ikon: ["taraf", "ikonSec"], bayrak: ["bayrakSec"], atis: [], vurgu: [] };
 function aracSec(a) { ARAC = a; $$("#araclar [data-a]").forEach(x => x.classList.toggle("on", x.dataset.a === a)); GECICI = []; geciciCiz();
   const ip = $("#ipucu"); ip.hidden = !IPUCLAR[a]; ip.textContent = IPUCLAR[a] || ""; ip.classList.toggle("ust", a === "rota"); $("#rotaBar").hidden = a !== "rota";
@@ -104,6 +104,7 @@ async function dokunus(cx, cy) {
   else if (ARAC === "vurgu") ekle("vurgu", [lo, la, 3, f(), Math.min(1, +(f() + .5).toFixed(2)), "", 3]);
   else if (ARAC === "ikon") { const et = await sor("İkon etiketi (boş bırakılabilir)", ""); if (et === null) return; const v = [lo, la, $("#ikonSec").value, $("#taraf").value, 1, f(), 1]; if (et) v.push(et); ekle("ikon", v); }
   else if (ARAC === "bayrak") ekle("bayrak", [lo, la, $("#bayrakSec").value, f()]);
+  else if (ARAC === "simsek") ekle("simsek", [lo, la, f()]);
   else if (ARAC === "kamera") { if (MOD === "dikey") S().vcamFix = { lo: +lo.toFixed(4), la: +la.toFixed(4), w: +(S().vcamFix?.w || S().cam.w * .6).toFixed(4) }; else { S().cam.lo = +lo.toFixed(4); S().cam.la = +la.toFixed(4); } degisti(); if (SEKME === "sahne") sagCiz(); bildir("Kamera taşındı"); }
 }
 /* Gez kipi: tek parmakla kaydırma, iki parmakla yakınlaştırma (kamera canlı değişir) */
@@ -150,6 +151,7 @@ function vuruslar() { V.steps.forEach((s, i) => { s.vurus = i + 1; s.perde = V.m
 function hookGoster() { const h = V.steps[0].hook; if (!h || !HAZIR) return; try { W().__solo = true; W().__draw((h.adim - 1) + h.an); } catch (e) { } $("#zamanyaz").textContent = "Hook"; }
 
 /* ---------- panel: sahne düzenleyici ---------- */
+const HAVA_SEC = [["gece", "Gece"], ["şafak", "Şafak"], ["akşam", "Akşam"], ["sis", "Sis"], ["yağmur", "Yağmur"], ["kar", "Kar"], ["rüzgâr", "Rüzgâr"], ["yıldırım", "Yıldırım"], ["fırtına", "Fırtına"]];
 const SEMA = {
   pts: { ad: "Yer adları", alan: [[2, "ad", "text"], [3, "yön", "sel", ["start", "end", "middle"]]] },
   seas: { ad: "Deniz / koy adları", alan: [[2, "ad", "text"], [3, "tip", "sel", ["", "b"]]] },
@@ -158,7 +160,8 @@ const SEMA = {
   shots: { ad: "Atışlar", alan: [[4, "t0", "num"], [5, "t1", "num"]] },
   vurgu: { ad: "Vurgular (kalp atışı)", alan: [[2, "km", "num"], [3, "t0", "num"], [4, "t1", "num"], [5, "taraf", "sel", ["", "o", "i"]], [6, "atış", "num"]] },
   ikon: { ad: "İkonlar", alan: [[2, "tür", "ikon"], [3, "taraf", "sel", ["", "o", "i"]], [4, "boyut", "num"], [5, "t0", "num"], [7, "etiket", "text"]] },
-  bayrak: { ad: "Bayraklar", alan: [[2, "kod", "bayrak"], [3, "t0", "num"], [5, "boyut", "num"]] } };
+  bayrak: { ad: "Bayraklar", alan: [[2, "kod", "bayrak"], [3, "t0", "num"], [5, "boyut", "num"]] },
+  simsek: { ad: "Yıldırım düşen yerler", alan: [[2, "an", "num"]] } };
 const ETIKET = { "": "—", start: "sağda", end: "solda", middle: "ortada", b: "koy (italik)", o: "kızıl", i: "lacivert", big: "büyük gemi", small: "küçük gemi", sub: "denizaltı", dot: "kara" };
 function secHTML(v, ops, ek = "") { return `<select ${ek}>${ops.map(o => `<option ${o === v ? "selected" : ""} value="${esc(o)}">${esc(ETIKET[o] ?? o)}</option>`).join("")}</select>`; }
 function alanHTML(tip, v, ops, ek) { if (tip === "text") return `<input ${ek} value="${esc(v)}">`; if (tip === "num") return `<input ${ek} type="number" inputmode="decimal" step="0.05" value="${v ?? ""}">`;
@@ -183,6 +186,7 @@ function sagCiz() { if (SEKME !== "sahne") return; const el = $("#panel");
   let html = `<h3>S${i + 1} · ${esc(VAR.vurus[i] || "Ek sahne")}</h3><div class="ipucu">${esc(IPUCU[i] || "")} Seslendirme en çok ${b} kelime.</div>
     <div class="izgara2"><label>Harita<select id="sHar">${HK.haritalar.map(h => `<option ${h === s.map ? "selected" : ""}>${esc(h)}</option>`).join("")}</select></label>
     <label>Tarih etiketi<input id="sTarih" value="${esc(s.date)}"></label></div>
+    <div><h3 style="margin-bottom:6px">Hava ve ışık</h3><div class="satir" id="sHava">${HAVA_SEC.map(([k, ad]) => `<button data-h="${k}" class="${(s.hava || []).includes(k) ? "on" : ""}" style="min-height:32px;font-size:13px;border-radius:999px">${ad}</button>`).join("")}</div></div>
     <label>Seslendirme <span id="sSay">${sayac(kelime(s.ses), b)}</span><textarea id="sSes" rows="3">${esc(s.ses)}</textarea></label><div class="okunus" id="sOk"></div>
     <label>İngilizce seslendirme (isteğe bağlı)<textarea id="sEn" rows="2">${esc(s.ses_en || "")}</textarea></label>
     <label>Sayfa metni (web sayfasında görünür)<textarea id="sMetin" rows="3">${esc(s.text)}</textarea></label>
@@ -204,6 +208,7 @@ function sagCiz() { if (SEKME !== "sahne") return; const el = $("#panel");
   el.innerHTML = html;
   $("#sHar").onchange = e => { s.map = e.target.value; const m = KAT[s.map]; if (m) s.cam = { lo: +((m.lo0 + m.lo1) / 2).toFixed(4), la: +((m.la0 + m.la1) / 2).toFixed(4), w: +((m.lo1 - m.lo0) * .8).toFixed(3) }; delete s.vcamFix; degisti(); sagCiz(); };
   $("#sTarih").onchange = e => { s.date = e.target.value; degisti(); };
+  $$("#sHava [data-h]").forEach(b => b.onclick = () => { const k = b.dataset.h, H = new Set(s.hava || []); H.has(k) ? H.delete(k) : H.add(k); s.hava = [...H]; if (!s.hava.length) delete s.hava; b.classList.toggle("on", H.has(k)); degisti(); });
   $("#sSes").oninput = e => { s.ses = e.target.value; okunusGoster(s.ses, "#sOk"); $("#sSay").innerHTML = sayac(kelime(s.ses), b); sadeceKaydet(); };
   $("#sMetin").oninput = e => { s.text = e.target.value; sadeceKaydet(); }; $("#sEn").oninput = e => { s.ses_en = e.target.value; sadeceKaydet(); };
   for (const [id, k] of [["cLo", "lo"], ["cLa", "la"], ["cW", "w"]]) $("#" + id).onchange = e => { s.cam[k] = +e.target.value; degisti(); };
@@ -347,12 +352,13 @@ DOĞRULUK
 - Kelime sınırı (sınırı aşma): HOOK 8 · S1 12 · S2 14 · S3 12 · S4 14 · S5 16 · S6 12 · S7 18 · S8 16 · SORU 12.
 - HOOK: S7'deki en çarpıcı an, sayı ya da soru. S3 ve S6 yeni merak açar. S7 doruk ve kayıp, sayılarla. S8 sonucu ve bugünü anlatır. SORU izleyiciye yorum yazdıracak bir sorudur.
 
-SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, hareket, olay)
+SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, hareket, olay, hava)
 - " | yer: " → o sahnede haritada gösterilecek yerler; virgülle ayrılmış, haritada bulunabilecek bilinen adlar (ör. Kilitbahir, Erenköy Koyu, Çanakkale Boğazı). En çok 4 yer. Hikâyenin ana bölgesinin dışında kalan bir yer varsa (ör. bugünkü müze şehri) onu yer olarak yazma, yalnızca metinde geçsin.
 - " | tarih: " → ekranın köşesinde etiket olarak görünür, seslendirilmez: RAKAMLA ve kısa yaz, en çok 4 kelime (ör. 18 Mart 1915 · 7/8 Mart 1915 gecesi · 8–17 Mart 1915 · 18 Mart 1915, 13.54 · Bugün).
 - " | hareket: " → o sahnede yer değiştirenler; haritada rota boyunca ilerler. Biçim: Ad [taraf, tür] Başlangıç → Varış
   Birden çoksa noktalı virgülle ayır; gerekirse ara nokta ekle (A → B → C). Gemiler denizden, kara birlikleri düz çizgiyle gider.
 - " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır (biçimler aşağıdaki ARAÇ KUTUSU'nda).
+- " | hava: " → sahnenin ışığı ve havası, virgülle (ör. gece, yağmur). Yalnızca kaynakta geçiyorsa ya da olayın saatinden açıkça biliniyorsa yaz (gece baskını → gece); gündüz ve açık hava için boş bırak.
 - hareket ve olay yalnızca kaynakta geçen şeyler içindir; sahnede yoksa boş bırak. Her sahnede en az bir hareket ya da olay videoyu canlı kılar, ama uydurma.
 
 ARAÇ KUTUSU (yalnızca bunları kullan; başka bir şey yazarsan haritada görünmez)
@@ -369,22 +375,24 @@ Olaylar:
   vurgu YER (yanıp sönen kalp atışı halkası) · mayın YER → YER (mayın hattı) · bayrak ÜLKE YER
   ikon TÜR YER, istersen köşeli parantezde taraf ve etiket: ikon kale [kızıl, Kilitbahir Kalesi] Kilitbahir
   Sabit ikon türleri: kale · kule · fener · köprü · cami · kilise · fabrika · çadır (ordugâh) · çapa (liman) · dağ · yangın · bomba · kılıç · çatışma · kalkan · ölüm (kayıp) · taç · nişan (madalya) · hedef · bayrak
+  yıldırım YER (şimşek çakar, gök gürler; kaynakta fırtına/yıldırım geçiyorsa)
+Hava ve ışık (hava alanı): gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına (yağmur + rüzgâr + yıldırım). Görüntüsü ve sesi birlikte gelir.
 Bayrak ülkeleri: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
-Ses efektleri olaylardan kendiliğinden gelir (patlama, top atışı, batış, kalp atışı, ikon ve bayrak belirmesi, sahne geçişi, deniz ve rüzgâr); ayrıca yazma.
-- _EN satırlarına yer, tarih, hareket ve olay ekleme; yalnızca çeviri.
+Ses efektleri olaylardan ve havadan kendiliğinden gelir (patlama, top atışı, batış, kalp atışı, gök gürültüsü, yağmur, rüzgâr, gece, ikon ve bayrak belirmesi, sahne geçişi, deniz); ayrıca yazma.
+- _EN satırlarına yer, tarih, hareket, olay ve hava ekleme; yalnızca çeviri.
 
 BAŞLIK:
 YABANCI: metinde geçen yabancı özel adlar ve Türkçe okunuşu (Irresistible = İrrezistıbıl; Bouvet = Buve)
 DOĞRULANACAK: kaynaktan kontrol edilmesi gereken noktalar; noktalı virgülle ayır (yoksa boş bırak)
 HOOK:
-S1:  | yer:  | tarih:  | hareket:  | olay:
-S2:  | yer:  | tarih:  | hareket:  | olay:
-S3:  | yer:  | tarih:  | hareket:  | olay:
-S4:  | yer:  | tarih:  | hareket:  | olay:
-S5:  | yer:  | tarih:  | hareket:  | olay:
-S6:  | yer:  | tarih:  | hareket:  | olay:
-S7:  | yer:  | tarih:  | hareket:  | olay:
-S8:  | yer:  | tarih:  | hareket:  | olay:
+S1:  | yer:  | tarih:  | hareket:  | olay:  | hava:
+S2:  | yer:  | tarih:  | hareket:  | olay:  | hava:
+S3:  | yer:  | tarih:  | hareket:  | olay:  | hava:
+S4:  | yer:  | tarih:  | hareket:  | olay:  | hava:
+S5:  | yer:  | tarih:  | hareket:  | olay:  | hava:
+S6:  | yer:  | tarih:  | hareket:  | olay:  | hava:
+S7:  | yer:  | tarih:  | hareket:  | olay:  | hava:
+S8:  | yer:  | tarih:  | hareket:  | olay:  | hava:
 SORU:
 HOOK_EN:
 S1_EN:
@@ -403,7 +411,7 @@ function kartCoz(t) { const o = { sahne: {}, en: {} };
     const anah = m[1].toUpperCase().replace(/\s/g, ""), en = !!m[3], [metin, ...ek] = m[4].split("|").map(x => x.trim());
     if (anah.startsWith("BA")) o.baslik = metin; else if (anah === "YABANCI") o.yabanci = m[4];
     else if (anah === "HOOK") en ? o.en.hook = metin : o.hook = metin; else if (anah === "SORU") en ? o.en.soru = metin : o.soru = metin;
-    else { const i = +m[2] - 1; if (en) o.en[i] = metin; else { const s = { ses: metin }; for (const e of ek) { const k = e.match(/^(yer|tarih|rota|hareket|olay)\s*:\s*(.*)$/i); if (k) s[k[1].toLocaleLowerCase("tr-TR")] = k[2]; } o.sahne[i] = s; } } }
+    else { const i = +m[2] - 1; if (en) o.en[i] = metin; else { const s = { ses: metin }; for (const e of ek) { const k = e.match(/^(yer|tarih|rota|hareket|olay|hava)\s*:\s*(.*)$/i); if (k) s[k[1].toLocaleLowerCase("tr-TR")] = k[2]; } o.sahne[i] = s; } } }
   return o; }
 async function kartUygula(o, yerEkle, log) {
   if (o.baslik) { const eski = V.meta.title, P = V.meta.paylasim || {}; V.meta.title = V.meta.h1 = o.baslik; if (P[eski] && eski !== o.baslik) { P[o.baslik] = P[eski]; delete P[eski]; } }
@@ -419,6 +427,7 @@ async function kartUygula(o, yerEkle, log) {
           const mw = KAT[st.map] ? (KAT[st.map].lo1 - KAT[st.map].lo0) * .12 : .3; st.cam = { lo: +((lo0 + lo1) / 2).toFixed(4), la: +((la0 + la1) / 2).toFixed(4), w: +Math.max((lo1 - lo0) * 1.8, (la1 - la0) * 2.6, .3, mw).toFixed(3) }; }
         if (P.length < s.yer.split(",").filter(x => x.trim()).length) log("  bazı yerler bulunamadı");
       } catch (e) { log("  bulunamadı: " + e.message); } }
+    if (s.hava !== undefined) { const H = s.hava.split(/[,;]/).map(x => x.trim().toLocaleLowerCase("tr-TR")).filter(x => x && !/^(yok|-|—|gündüz)$/.test(x)); if (H.length) st.hava = H; else delete st.hava; }
     if (yerEkle && (s.hareket || s.olay)) {
       try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, kat: KAT, bayraklar: VAR.bayraklar, log });
         if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } } }

@@ -79,16 +79,47 @@ const EFEKT = (() => {
     const x = map(n, (i, t) => (br[i] * .8 + surf[i] * .18 * (.55 + .45 * Math.pow(Math.sin(2 * Math.PI * t / 7.3 + 1.3), 2))) * Math.min(1, Math.min(t, d - t) / .06) * .9);
     return st(x, map(n, (i, t) => Math.sin(2 * Math.PI * t / 11) * .3)); }
 
-  const URET = { gecis, whoosh, vurus, patlama, buyukpatlama: () => patlama(2.4, 3.2), atis, batis, kalp1: () => kalp(1), kalp2: () => kalp(.72), pop, bayrak };
-  const SEVIYE = { gecis: .85, whoosh: .55, vurus: .9, patlama: .7, buyukpatlama: .85, atis: .55, batis: .7, kalp1: .8, kalp2: .8, pop: .45, bayrak: .4 };
+  /* ---------------- hava sesleri ---------------- */
+  function gok(d = 3.6) { const n = N(d), cr = hp(gurultu(d), 1500), ru = lp(gurultu(d), 110, 3), md = lp(gurultu(d), 4, 1); const mm = Math.max(1e-9, tepe(md));
+    const x = map(n, (i, t) => cr[i] * Math.exp(-t * 38) * .9 + ru[i] * Math.min(1, t / .08) * Math.exp(-t * .9) * (.55 + .45 * md[i] / mm) * 2.4);
+    return st(norm(yanki(x, .35), .95), (rnd() - .5) * .4); }
+  function yagmurSes(d) { const n = N(d), L = hp(lp(gurultu(d), 7000), 900), R = hp(lp(gurultu(d), 7000), 900);
+    const D = new Float32Array(n); for (let k = 0; k < d * 55; k++) { const i0 = Math.floor(rnd() * n), f0 = 2200 + rnd() * 3500, a = .3 + rnd() * .7; for (let j = 0; j < N(.012) && i0 + j < n; j++) { const t = j / SR; D[i0 + j] += Math.sin(2 * Math.PI * f0 * t) * Math.exp(-t * 420) * a; } }
+    const Dl = hp(D, 1500); norm(L, 1); norm(R, 1); norm(Dl, 1);
+    return { L: map(n, i => L[i] * .55 + Dl[i] * .45), R: map(n, i => R[i] * .55 + Dl[(i + 97) % n] * .45) }; }
+  function ruzgarSes(d, yumusak) { const n = N(d), b = bp(gurultu(d), yumusak ? 150 : 220, yumusak ? 600 : 1100), g = lp(gurultu(d), .35, 1), gm = Math.max(1e-9, tepe(g));
+    const ws = bp(gurultu(d), 520, 760); norm(b, 1); norm(ws, 1);
+    const x = map(n, i => { const gust = .35 + .65 * Math.max(0, g[i] / gm * .5 + .5); return b[i] * gust + ws[i] * .25 * gust * gust; });
+    return st(x, map(n, (i, t) => Math.sin(2 * Math.PI * t / 9) * .5)); }
+  function geceSes(d) { const n = N(d), x = new Float32Array(n);
+    for (let t0 = rnd() * .4; t0 < d; t0 += .55 + rnd() * .5) { const f0 = 4100 + rnd() * 400, a = .4 + rnd() * .6; for (let c = 0; c < 3; c++) { const i0 = N(t0 + c * .055); for (let j = 0; j < N(.03) && i0 + j < n; j++) { const t = j / SR; x[i0 + j] += Math.sin(2 * Math.PI * f0 * t) * Math.sin(Math.PI * t / .03) * a; } } }
+    const dr = lp(gurultu(d), 180, 3); norm(dr, 1); norm(x, 1); return st(map(n, i => x[i] * .5 + dr[i] * .25), .15); }
+  const HAVA_N = { "gece": "gece", "karanlık": "gece", "şafak": "safak", "sabah": "safak", "akşam": "aksam", "gün batımı": "aksam", "sis": "sis", "pus": "sis", "duman": "sis",
+    "yağmur": "yagmur", "yagmur": "yagmur", "sağanak": "yagmur", "kar": "kar", "tipi": "kar", "rüzgâr": "ruzgar", "rüzgar": "ruzgar", "ruzgar": "ruzgar",
+    "fırtına": "firtina", "firtina": "firtina", "yıldırım": "yildirim", "yildirim": "yildirim", "şimşek": "yildirim", "safak": "safak", "aksam": "aksam" };
+  const havaNorm = L => { const S = new Set((L || []).map(x => HAVA_N[String(x).toLocaleLowerCase("tr-TR").trim()]).filter(Boolean)); if (S.has("firtina")) { S.add("yagmur"); S.add("ruzgar"); } return S; };
+  function yatakEkle(L, R, yataklar) {
+    for (const y of yataklar || []) { const H = havaNorm(y.hava); if (!H.size) continue; const d = y.t1 - y.t0; if (d <= .2) continue;
+      const katman = []; const f = H.has("firtina");
+      if (H.has("yagmur")) katman.push([yagmurSes(d), f ? .2 : .15]);
+      if (H.has("ruzgar")) katman.push([ruzgarSes(d), f ? .2 : .13]);
+      else if (H.has("kar")) katman.push([ruzgarSes(d, true), .09]);
+      else if (H.has("sis")) katman.push([ruzgarSes(d, true), .05]);
+      if (H.has("gece") && !H.has("yagmur") && !H.has("kar")) katman.push([geceSes(d), .07]);
+      const i0 = N(y.t0), n = N(d), kenar = N(.45);
+      for (const [s, g] of katman) for (let i = 0; i < n && i0 + i < L.length; i++) { const e = Math.min(1, i / kenar, (n - i) / kenar) * g; L[i0 + i] += s.L[i] * e; R[i0 + i] += s.R[i] * e; } } }
+
+  const URET = { gok, gecis, whoosh, vurus, patlama, buyukpatlama: () => patlama(2.4, 3.2), atis, batis, kalp1: () => kalp(1), kalp2: () => kalp(.72), pop, bayrak };
+  const SEVIYE = { gok: .85, gecis: .85, whoosh: .55, vurus: .9, patlama: .7, buyukpatlama: .85, atis: .55, batis: .7, kalp1: .8, kalp2: .8, pop: .45, bayrak: .4 };
   const onb = {};
   function efekt(ad, k) { const key = ad === "patlama" ? ad + Math.round((k || 0) * 10) : ad; if (!onb[key]) onb[key] = ad === "patlama" ? patlama(k || 1) : URET[ad](); return onb[key]; }
   function yerlestir(L, R, s, t, g) { const i = Math.floor(Math.max(0, t) * SR); for (let k = 0; k < s.L.length && i + k < L.length; k++) { L[i + k] += s.L[k] * g; R[i + k] += s.R[k] * g; } }
 
   /* bütün reelin karışımı. olaylar [{t, ad, k}], ses: mono Float32Array (zamana yerleşmiş) */
-  function miks(sure, olaylar, ses, { efektG = 1, ambG = .10, ducKat = .72 } = {}) {
+  function miks(sure, olaylar, ses, { efektG = 1, ambG = .10, ducKat = .72, yataklar = [] } = {}) {
     const n = N(sure), L = new Float32Array(n), R = new Float32Array(n), fL = new Float32Array(n), fR = new Float32Array(n);
     if (efektG) for (const o of olaylar) if (URET[o.ad]) yerlestir(fL, fR, efekt(o.ad, o.k), o.t, SEVIYE[o.ad] || .6);
+    if (efektG) yatakEkle(fL, fR, yataklar);
     const duck = new Float32Array(n).fill(1);
     if (ses) { const a = new Float32Array(n); for (let i = 0; i < n && i < ses.length; i++) a[i] = Math.abs(ses[i]);
       /* konuşma varken efektler ve ambiyans belirgin biçimde kısılır; konuşma bitince yavaşça geri gelir */
@@ -116,7 +147,7 @@ const EFEKT = (() => {
     for (let i = 0; i < n; i++) if (keep[i]) { y.set(x.subarray(i * fr, (i + 1) * fr), o); o += fr; } y.set(x.subarray(n * fr), o);
     const yeni = t => t - kes.reduce((s, [a, d]) => s + Math.min(d, Math.max(0, t - a)), 0);
     return { x: y, W: W.map(w => [yeni(w[0]), w[1], w[2]]) }; }
-  return { SR, miks, efekt, ambiyans, dengele, sikistir, URET, wav: yazWav };
+  return { SR, miks, efekt, ambiyans, dengele, sikistir, URET, havaNorm, wav: yazWav };
   function yazWav(L, R) { const n = L.length, b = new DataView(new ArrayBuffer(44 + n * 4)), s = (o, t) => [...t].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
     s(0, "RIFF"); b.setUint32(4, 36 + n * 4, true); s(8, "WAVEfmt "); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 2, true); b.setUint32(24, SR, true); b.setUint32(28, SR * 4, true); b.setUint16(32, 4, true); b.setUint16(34, 16, true); s(36, "data"); b.setUint32(40, n * 4, true);
     for (let i = 0; i < n; i++) { b.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i])) * 32767, true); b.setInt16(46 + i * 4, Math.max(-1, Math.min(1, R[i])) * 32767, true); } return new Blob([b.buffer], { type: "audio/wav" }); }
