@@ -1,0 +1,13 @@
+{
+"akd":{"lo0":-1.0,"lo1":42.2,"la0":28.255385,"la1":48.672722,"w":2000,"h":1222,"aciklama":"Akdeniz, Ege, Karadeniz, Anadolu geneli","kaynak":"GEBCO 2024"},
+"dar":{"lo0":25.92,"lo1":26.52,"la0":39.9,"la1":40.37,"w":1600,"h":1639,"aciklama":"Çanakkale Boğazı içi yakın plan","kaynak":"GEBCO 2024"},
+"bogaz":{"lo0":25.56,"lo1":27.14,"la0":39.845441,"la1":40.582554,"w":1280,"h":782,"aciklama":"Çanakkale Boğazı, Gelibolu, Gökçeada","kaynak":"GEBCO 2024"},
+"marmara":{"lo0":26.0,"lo1":29.7,"la0":39.898152,"la1":41.610817,"w":1800,"h":1100,"aciklama":"Marmara Denizi ve kıyıları","kaynak":"GEBCO 2024"},
+"istanbul":{"lo0":28.85,"lo1":29.25,"la0":40.95,"la1":41.27,"w":1600,"h":1699,"aciklama":"İstanbul Boğazı ve Haliç yakın plan","kaynak":"gmrt"},
+"ege":{"lo0":22.0,"lo1":29.2,"la0":35.0,"la1":41.0,"w":1600,"h":1694,"aciklama":"Ege Denizi, adalar, Batı Anadolu kıyısı","kaynak":"gmrt"},
+"karadeniz":{"lo0":27.0,"lo1":42.0,"la0":40.4,"la1":47.2,"w":1600,"h":1007,"aciklama":"Karadeniz, Kırım, Kafkasya kıyısı","kaynak":"gmrt"},
+"dogu_akd":{"lo0":26.5,"lo1":37.0,"la0":30.5,"la1":37.6,"w":1600,"h":1307,"aciklama":"Doğu Akdeniz: Kıbrıs, Levant, Nil deltası, Rodos","kaynak":"gmrt"},
+"kibris":{"lo0":32.1,"lo1":34.7,"la0":34.45,"la1":35.8,"w":1600,"h":1016,"aciklama":"Kıbrıs adası yakın plan","kaynak":"gmrt"},
+"anadolu":{"lo0":25.5,"lo1":45.5,"la0":35.4,"la1":42.6,"w":1600,"h":742,"aciklama":"Anadolu yarımadası ve çevresi","kaynak":"gmrt"},
+"balkan":{"lo0":14.5,"lo1":30.5,"la0":38.0,"la1":48.0,"w":1600,"h":1372,"aciklama":"Balkanlar, Tuna, Adriyatik","kaynak":"gmrt"}
+}

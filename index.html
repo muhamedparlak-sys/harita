@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Harita Hikâyesi">
+<meta name="theme-color" content="#FAFBFA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141B1E" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="ikon/ikon-180.png">
+<link rel="icon" href="ikon/ikon-192.png">
+<link rel="stylesheet" href="fonts/inter.css">
+<title>Harita Hikâyesi</title>
+<style>
+/* Düzen: üstte harita sahnesi (sabit), altında araç şeridi ve zaman çubuğu, en altta sekmeli düzenleme paneli (kayar). */
+:root{
+  --bg:#EEF1EF; --panel:#FAFBFA; --raised:#FFFFFF; --ink:#17232A; --muted:#5D6B70; --line:#D3DBD9; --soft:#E4EAE8;
+  --acc:#1F5D7A; --acc-ink:#FFFFFF; --acc-soft:#DCEAF0; --o:#B4381F; --i:#14263D; --ok:#2E7D4F; --warn:#9A5B00; --bad:#B4381F; --bad-soft:#F6DDD6;
+  --gold:#E2A21F; --scrim:rgba(10,20,25,.42); --log-bg:#0F1A1F; --log-ink:#D7E3E6; --stage:#DFE7E9;
+  --sans:Inter,-apple-system,"SF Pro Text",system-ui,sans-serif; --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --r:12px; --tap:44px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F1517; --panel:#141B1E; --raised:#1B2427; --ink:#E4EAE8; --muted:#9AA8AC; --line:#2A3639; --soft:#20292C;
+  --acc:#7FB9D3; --acc-ink:#0B1A21; --acc-soft:#1A3240; --o:#FF9B78; --i:#C9D6E6; --ok:#6CC08F; --warn:#E8B04A; --bad:#FF8A70; --bad-soft:#3A2420;
+  --gold:#F0B93A; --scrim:rgba(0,0,0,.55); --log-bg:#0A1013; --log-ink:#C9D7DA; --stage:#1E2729; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0F1517; --panel:#141B1E; --raised:#1B2427; --ink:#E4EAE8; --muted:#9AA8AC; --line:#2A3639; --soft:#20292C;
+  --acc:#7FB9D3; --acc-ink:#0B1A21; --acc-soft:#1A3240; --o:#FF9B78; --i:#C9D6E6; --ok:#6CC08F; --warn:#E8B04A; --bad:#FF8A70; --bad-soft:#3A2420;
+  --gold:#F0B93A; --scrim:rgba(0,0,0,.55); --log-bg:#0A1013; --log-ink:#C9D7DA; --stage:#1E2729; color-scheme:dark; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.4 var(--sans);display:flex;flex-direction:column;overflow:hidden;
+  padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;overscroll-behavior:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--line);background:var(--raised);border-radius:10px;padding:0 12px;min-height:36px;cursor:pointer;touch-action:manipulation}
+button:active{background:var(--soft)}
+button.ana{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:600}
+button.on{background:var(--acc-soft);border-color:var(--acc);color:var(--acc);font-weight:600}
+button.tehlike{color:var(--bad)}
+button:disabled{opacity:.45}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+input,select,textarea{border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--raised);min-width:0;font-size:16px;width:100%}
+textarea{resize:vertical;line-height:1.45}
+label{display:grid;gap:4px;font-size:12.5px;color:var(--muted);font-weight:500}
+label>input,label>select,label>textarea{color:var(--ink)}
+h3{margin:0;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+[hidden]{display:none!important}
+
+/* üst çubuk */
+header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);flex:none}
+.baslik{flex:1;min-width:0;display:flex;align-items:center;gap:6px;border:0;background:none;padding:0 4px;font-weight:700;font-size:16px;text-align:left}
+.baslik span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.baslik small{font-weight:500;color:var(--muted);font-size:12px}
+#durum{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.ikon{width:40px;padding:0;display:grid;place-items:center;font-size:18px}
+
+/* sahne */
+#sahnealan{position:relative;flex:none;display:grid;place-items:center;background:var(--stage);overflow:hidden;padding:8px}
+#cerceve{position:relative;border-radius:8px;overflow:hidden;background:var(--stage);box-shadow:0 6px 22px -12px rgba(0,0,0,.45)}
+#on{border:0;display:block;transform-origin:0 0;position:absolute;left:0;top:0;pointer-events:none}
+#dokun{position:absolute;inset:0;touch-action:none}
+#dokun svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#ipucu.ust{top:8px;bottom:auto;right:auto;max-width:calc(100% - 120px);text-align:left}
+#ipucu{position:absolute;left:10px;right:10px;bottom:8px;font-size:12.5px;background:rgba(23,35,42,.86);color:#fff;padding:6px 10px;border-radius:9px;pointer-events:none;text-align:center}
+.yuzen{position:absolute;top:10px;right:10px;min-height:32px;font-size:12.5px;font-weight:600;background:var(--raised);opacity:.92}
+#rotaBar{position:absolute;left:8px;right:8px;bottom:8px;display:flex;gap:6px;justify-content:center}
+#rotaBar button{min-height:40px}
+#yukleniyor{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;color:var(--muted);pointer-events:none}
+
+/* araçlar */
+.serit{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);flex:none;scrollbar-width:none}
+.serit::-webkit-scrollbar{display:none}
+.serit button{flex:none;min-height:34px;font-size:13.5px;border-radius:999px;padding:0 13px}
+#secenekler{display:flex;gap:6px;padding:0 12px 8px;background:var(--panel);border-bottom:1px solid var(--line);flex:none;overflow-x:auto}
+#secenekler select{width:auto;flex:none;font-size:14px;padding:6px 8px}
+.zaman{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);flex:none}
+.zaman button{min-height:34px;font-size:13px;padding:0 10px;flex:none}
+.zaman input[type=range]{flex:1;width:auto;padding:0;border:0;background:none;accent-color:var(--acc);min-height:30px}
+#zamanyaz{font:12px var(--mono);color:var(--muted);min-width:72px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* sekmeler ve panel */
+#sekmeler{display:flex;gap:4px;padding:8px 12px;background:var(--panel);flex:none}
+#sekmeler button{flex:1;min-height:34px;font-size:13.5px}
+#panel{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;background:var(--bg)}
+body.yaziyor #sahnealan,body.yaziyor .serit,body.yaziyor #secenekler,body.yaziyor .zaman{display:none}
+.sahneler{display:grid;gap:6px}
+.sahne{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--raised);cursor:pointer}
+.sahne.sec{border-color:var(--acc);background:var(--acc-soft)}
+.sahne>b{font-size:14px;color:var(--acc)}
+.sahne div b{font-size:13.5px}
+.sahne small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sayac{font:600 11.5px var(--mono);padding:2px 7px;border-radius:999px;background:var(--soft);font-variant-numeric:tabular-nums}
+.sayac.iyi{color:var(--ok)} .sayac.az{color:var(--warn)} .sayac.cok{color:var(--bad);background:var(--bad-soft)}
+.satir{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.izgara2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.izgara3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.ipucu{font-size:13px;color:var(--muted);background:var(--soft);border-radius:10px;padding:9px 11px}
+.uyari{color:var(--warn)}
+.okunus{font-size:13px;color:var(--acc)}
+.grup{border:1px solid var(--line);border-radius:var(--r);background:var(--raised);overflow:hidden}
+.grup>.gb{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;border-bottom:1px solid var(--soft);font-weight:600;font-size:13px}
+.oge{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px 8px;align-items:end;padding:9px 11px;border-bottom:1px solid var(--soft)}
+.oge:last-child{border-bottom:0}
+.oge label{font-size:11px}
+.oge input,.oge select{font-size:15px;padding:6px 7px}
+.oge .sil{color:var(--bad);min-height:34px}
+details summary{font-size:13px;color:var(--muted);padding:6px 0}
+table.ok{width:100%;border-collapse:collapse;font-size:14px}
+table.ok td{padding:3px 2px}
+
+/* pencereler (alttan açılan sayfa) */
+dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:640px;max-height:92dvh;border-radius:18px 18px 0 0;background:var(--panel);color:var(--ink);box-shadow:0 -10px 40px -10px rgba(0,0,0,.4)}
+dialog::backdrop{background:var(--scrim)}
+dialog .ust{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+dialog h2{margin:0;font-size:17px}
+dialog .ic{padding:14px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:calc(92dvh - 60px)}
+#sorDlg{margin:auto;border-radius:16px;max-width:420px;width:calc(100% - 32px)}
+#sorDlg .ic{padding-bottom:16px}
+.liste{display:grid;gap:6px}
+.liste button{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:1px;text-align:left;min-height:52px;padding:7px 14px;font-size:15.5px;font-weight:600}
+.liste button small{font-weight:400}
+.liste button small{color:var(--muted);font-size:12px}
+.liste button.sec{border-color:var(--acc);background:var(--acc-soft)}
+pre.log{background:var(--log-bg);color:var(--log-ink);font:12px/1.45 var(--mono);padding:10px;border-radius:10px;max-height:220px;overflow:auto;white-space:pre-wrap;margin:0}
+.haritalar{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.hk{border:1px solid var(--line);border-radius:10px;padding:6px;display:grid;gap:3px;font-size:12px;background:var(--raised);cursor:pointer}
+.hk img{width:100%;height:84px;object-fit:cover;border-radius:6px;background:var(--soft)}
+.hk span{color:var(--muted)}
+.hk.sec{border-color:var(--acc);background:var(--acc-soft)}
+video{width:100%;max-height:60dvh;border-radius:10px;background:#000}
+.ilerleme{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
+.ilerleme b{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+.parca{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;padding:10px 0;border-bottom:1px solid var(--soft)}
+.parca .durum{font:600 11.5px var(--mono);margin-top:3px} .parca .durum.var{color:var(--ok)} .parca .durum.yok{color:var(--muted)}
+.denetim li{padding:5px 0;border-bottom:1px solid var(--soft);font-size:14px;list-style:none}
+.denetim li.u{color:var(--bad)} .denetim li.b{font-weight:700;border:0;padding-top:10px}
+.denetim{margin:0;padding:0}
+
+/* seslendirme kabini (tam ekran) */
+.prompter{position:fixed;inset:0;z-index:60;background:#0E171B;color:#fff;display:flex;flex-direction:column;gap:16px;
+  padding:calc(16px + env(safe-area-inset-top,0px)) 20px calc(16px + env(safe-area-inset-bottom,0px))}
+.prompter .pu{display:flex;justify-content:space-between;align-items:center;font:600 14px var(--sans);color:#9FB4BA}
+.prompter .kirmizi{display:inline-flex;gap:8px;align-items:center;color:#FF6B5B} .prompter .kirmizi i{width:11px;height:11px;border-radius:50%;background:#FF4B3A;animation:yan 1s infinite}
+@keyframes yan{50%{opacity:.25}}
+.prompter .metin{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;overflow:auto}
+.prompter .metin p{margin:0;font:700 clamp(26px,7.4vw,44px)/1.3 var(--sans);text-wrap:balance}
+.prompter .sira{font-size:14px;color:#9FB4BA}
+.prompter .seviye{height:8px;background:#22323A;border-radius:99px;overflow:hidden} .prompter .seviye b{display:block;height:100%;width:0;background:#4FD18B}
+.prompter .alt{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prompter .alt button{min-height:50px;font-size:16px;color:#17232A;background:#fff;border:0}
+.prompter .alt button.ana{grid-column:1/-1;min-height:64px;font-size:19px;background:#2B8A5E;color:#fff}
+
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+#toast.goster{opacity:1}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+@media (min-width:900px){ #panel{padding-inline:max(16px,calc(50% - 360px))} }
+</style>
+</head>
+<body>
+<header>
+  <button id="hikayeBtn" class="baslik" aria-label="Hikâyeler"><span id="hikayeAd">Yükleniyor…</span><small>▾</small></button>
+  <span id="durum"></span>
+  <button id="geriBtn" class="ikon" aria-label="Geri al" title="Geri al">↶</button>
+  <button id="videoBtn" class="ana">Video</button>
+  <button id="menuBtn" class="ikon" aria-label="Menü" title="Menü">⋯</button>
+</header>
+
+<section id="sahnealan" aria-label="Harita önizlemesi">
+  <div id="cerceve"><iframe id="on" title="Harita önizlemesi" tabindex="-1"></iframe><div id="dokun"><svg id="geciciSvg"></svg></div></div>
+  <div id="yukleniyor">Harita yükleniyor…</div>
+  <div id="ipucu" hidden></div>
+  <div id="rotaBar" hidden><button id="rotaGeri">Son noktayı sil</button><button id="rotaIptal">İptal</button><button id="rotaBitir" class="ana">Rotayı bitir</button></div>
+  <button id="modBtn" class="yuzen">Dikey 9:16</button>
+</section>
+
+<nav class="serit" id="araclar" aria-label="Harita araçları">
+  <button data-a="sec" class="on">Gez</button>
+  <button data-a="yer">Yer adı</button>
+  <button data-a="deniz">Deniz/koy</button>
+  <button data-a="rota">Rota</button>
+  <button data-a="patlama">Patlama</button>
+  <button data-a="atis">Atış</button>
+  <button data-a="vurgu">Vurgu</button>
+  <button data-a="ikon">İkon</button>
+  <button data-a="bayrak">Bayrak</button>
+  <button data-a="kamera">Kamera</button>
+</nav>
+<div id="secenekler" hidden>
+  <select id="taraf" aria-label="Taraf"><option value="o">Kızıl taraf</option><option value="i">Lacivert taraf</option><option value="">Nötr</option></select>
+  <select id="tur" aria-label="Rota işareti"><option value="big">Büyük gemi</option><option value="small">Küçük gemi</option><option value="sub">Denizaltı</option><option value="dot">Kara (nokta)</option></select>
+  <select id="ikonSec" aria-label="İkon"></select>
+  <select id="bayrakSec" aria-label="Bayrak"></select>
+</div>
+<div class="zaman">
+  <button id="oynatBtn">▶ Sahne</button>
+  <button id="reelBtn">▶ Reel</button>
+  <button id="sesliBtn" class="ikon" aria-label="Önizlemeyi iPhone sesiyle dinle" title="Önizlemeyi iPhone sesiyle dinle">🔈</button>
+  <input type="range" id="zaman" min="0" max="999" value="950" aria-label="Sahnenin anı">
+  <span id="zamanyaz"></span>
+</div>
+<nav id="sekmeler" aria-label="Paneller">
+  <button data-s="sahneler" class="on">Sahneler</button><button data-s="sahne">Sahne</button><button data-s="hikaye">Hikâye</button><button data-s="okunus">Okunuş</button>
+</nav>
+<main id="panel"></main>
+
+<dialog id="dlg"><div class="ust"><h2 id="dlgBaslik"></h2><button id="dlgKapat">Kapat</button></div><div class="ic" id="dlgIc"></div></dialog>
+<dialog id="sorDlg"><div class="ic" id="sorIc"></div></dialog>
+<div id="toast" role="status"></div>
+<input type="file" id="dosyaSec" accept=".json,application/json" hidden>
+
+<script src="vendor/mp4-muxer.js"></script>
+<script src="js/depo.js"></script>
+<script src="js/efekt.js"></script>
+<script src="js/piper.js"></script>
+<script src="js/video.js"></script>
+<script src="js/harita.js"></script>
+<script src="js/uygulama.js"></script>
+</body>
+</html>

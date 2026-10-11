@@ -1,0 +1,16 @@
+{
+  "name": "Harita Hikâyesi Stüdyosu",
+  "short_name": "Harita Hikâyesi",
+  "description": "Harita üzerinde geçen hikâyelerden dikey Instagram reeli ve kaydırmalı web sayfası üretir.",
+  "lang": "tr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EEF1EF",
+  "theme_color": "#1F5D7A",
+  "icons": [
+    {"src": "ikon/ikon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "ikon/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
