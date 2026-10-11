@@ -266,8 +266,8 @@ const VIDEO = (() => {
         let b = null;
         try { b = await webcodecs(ctx, cv, M, PARCA, T, mix, K_, log, ilerle, durdur); }
         catch (e) { if (/Durduruldu/.test(e.message)) throw e; log("Hızlı kodlama başarısız: " + e.message); }
-        if (b) { if (mixTepe < .005) return b; const t = await sesTepe(b); log(`Ses denetimi: ${t == null ? "çözülemedi" : t > .002 ? "ses var" : "SES YOK"}`);
-          if (t == null || t > .002) return b; }
+        if (b) { if (mixTepe < .005) return b; const t = await sesTepe(b); log(`Ses denetimi: ${t == null ? "doğrulanamadı" : t > .002 ? "ses var" : "SES YOK"}`);
+          if (t != null && t > .002) return b; }
         log("Videonun sesi boş çıktı; gerçek zamanlı kayıtla yeniden üretiliyor (video süresi kadar sürer, uygulamayı açık tutun)."); ilerle(0);
       } else log("Gerçek zamanlı kayıt (video süresi kadar sürer, uygulamayı açık tutun).");
       return await gercekZamanli(ctx, cv, M, PARCA, T, mix, log, ilerle, durdur);
