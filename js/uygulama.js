@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "16 · 11 Ekim";
+const SURUM = "18 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -376,12 +376,19 @@ Hareket türleri:
   Örnekler: Nusret [kızıl, küçük gemi] Nara Burnu → Erenköy Koyu
             Mustafa Kemal'in birliği [kızıl, asker, bayrak Osmanlı] Bigalı → Conkbayırı
             Şark Ekspresi [lacivert, tren] Sofya → İstanbul
-Olaylar:
-  patlama YER · büyük patlama YER · atış YER → HEDEF · batış GEMİ ADI (o gemi aynı satırın hareketinde olmalı)
-  vurgu YER (yanıp sönen kalp atışı halkası) · mayın YER → YER (mayın hattı) · bayrak ÜLKE YER
+Olaylar (kartta yazdığın sırayla olur; gelenler önce varır, olay yerinden ayrılanlar olaydan sonra çekilir):
+  atış A → B (tek top atışı; mermi kavis çizer, hedefte patlar) · bombardıman A → B (arka arkaya üç atış)
+  torpido A → B (suda ilerleyen torpido izi, hedefte patlama) · patlama YER · büyük patlama YER
+  batış GEMİ (gemi yan yatıp batar, batığı sonraki sahnelerde işaretli kalır) · vurgu YER (yanıp sönen kalp atışı halkası)
+  işaret GEMİ/YER (yanıp sönen işaret lambası: parola sorma, sinyal) · ışıldak GEMİ → HEDEF (geceyi tarayan ışık huzmesi)
+  anons GEMİ/YER (hoparlör ve ses dalgaları: seslenen, emir veren, uyaran biri)
+  mayın YER → YER (mayın hattı) · bayrak ÜLKE YER · yıldırım YER (şimşek çakar, gök gürler; kaynakta fırtına/yıldırım geçiyorsa)
   ikon TÜR YER, istersen köşeli parantezde taraf ve etiket: ikon kale [kızıl, Kilitbahir Kalesi] Kilitbahir
-  Sabit ikon türleri: kale · kule · fener · köprü · cami · kilise · fabrika · çadır (ordugâh) · çapa (liman) · dağ · yangın · bomba · kılıç · çatışma · kalkan · ölüm (kayıp) · taç · nişan (madalya) · hedef · bayrak
-  yıldırım YER (şimşek çakar, gök gürler; kaynakta fırtına/yıldırım geçiyorsa)
+  Sabit ikon türleri: kale · kule · fener · köprü · cami · kilise · fabrika · çadır (ordugâh) · çapa (liman) · dağ · yangın · bomba · kılıç · çatışma · kalkan · ölüm (kayıp) · taç · nişan (madalya) · hedef · bayrak · hoparlör · telsiz
+AKTÖRLER (önemli):
+  Hareket satırında adı geçen her gemi, birlik ya da araç bir AKTÖRDÜR ve sonraki sahnelerde son bulunduğu yerde kalır; batana ya da yeniden hareket edene kadar haritada durur. Duran aktörü her sahnede yeniden yazmana gerek yok; yalnızca yer değiştirdiğinde yaz.
+  Olaylarda yer yerine aktör adı yaz: torpido Muavenet-i Milliye → Goliath · bombardıman Goliath → Seddülbahir · işaret Goliath · batış Goliath. Aktörün adını her yerde aynı yaz.
+  Zaman: tarih alanına saat yazarsan (01.15) ve saat önceki sahneden farklıysa ekranda bir saat belirir, akrep ve yelkovan geçen zamanı gösterir.
 Hava ve ışık (hava alanı): gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına (yağmur + rüzgâr + yıldırım). Görüntüsü ve sesi birlikte gelir.
 Bayrak ülkeleri: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
 Ses efektleri olaylardan ve havadan kendiliğinden gelir (patlama, top atışı, batış, kalp atışı, gök gürültüsü, yağmur, rüzgâr, gece, ikon ve bayrak belirmesi, sahne geçişi, deniz); ayrıca yazma.
@@ -422,7 +429,7 @@ function kartCoz(t) { const o = { sahne: {}, en: {} };
 async function kartUygula(o, yerEkle, log) {
   if (o.baslik) { const eski = V.meta.title, P = V.meta.paylasim || {}; V.meta.title = V.meta.h1 = o.baslik; if (P[eski] && eski !== o.baslik) { P[o.baslik] = P[eski]; delete P[eski]; } }
   if (o.yabanci) { V.meta.okunus = V.meta.okunus || {}; for (const p of o.yabanci.split(/[;,]/)) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) V.meta.okunus[k] = v; } }
-  const kutu = await DEPO.kutuHesapla(HK.haritalar);
+  const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map();
   const n = Math.max(8, ...Object.keys(o.sahne).map(k => +k + 1)); while (V.steps.length < n) { const k = JSON.parse(JSON.stringify(V.steps.at(-1))); delete k.hook; Object.assign(k, { ses: "", text: "", date: "", ships: [], booms: [], shots: [] }); V.steps.push(k); }
   for (const [i, s] of Object.entries(o.sahne)) { const st = V.steps[+i]; st.ses = s.ses; if (!st.text) st.text = s.ses; if (s.tarih) st.date = s.tarih; if (o.en[i]) st.ses_en = o.en[i];
     if (yerEkle && s.yer) { log(`S${+i + 1}: ${s.yer}`);
@@ -434,17 +441,17 @@ async function kartUygula(o, yerEkle, log) {
         if (P.length < s.yer.split(",").filter(x => x.trim()).length) log("  bazı yerler bulunamadı");
       } catch (e) { log("  bulunamadı: " + e.message); } }
     if (s.hava !== undefined) { const H = s.hava.split(/[,;]/).map(x => x.trim().toLocaleLowerCase("tr-TR")).filter(x => x && !/^(yok|-|—|gündüz)$/.test(x)); if (H.length) st.hava = H; else delete st.hava; }
-    if (yerEkle && (s.hareket || s.olay)) {
-      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, kat: KAT, bayraklar: VAR.bayraklar, log });
+    if (yerEkle) {
+      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR });
         if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } }
     /* hiç hareket ya da olay yoksa ilk yere vurgu halkası: sahne hareketsiz kalmasın */
-    if (!["ships", "booms", "shots", "vurgu", "ikon", "simsek", "bayrak", "mines"].some(k => (st[k] || []).length) && (st.pts || []).length) {
+    if (!(st.ships || []).some(x => !x.fix) && !["booms", "shots", "vurgu", "ikon", "simsek", "bayrak", "mines", "torpido", "isaret", "anons", "isildak"].some(k => (st[k] || []).length) && (st.pts || []).length) {
       st.vurgu = [[st.pts[0][0], st.pts[0][1], 3, .08, .95, "", 4]]; log(`  S${+i + 1}: hareket yoktu, ${st.pts[0][2]} üzerine vurgu eklendi`); } }
   const h = V.steps[0].hook || (V.steps[0].hook = { adim: 7, an: .6, ses: "" }); if (o.hook) h.ses = o.hook; if (o.en.hook) h.ses_en = o.en.hook;
   if (o.soru) V.meta.soru = o.soru; if (o.en.soru) V.meta.soru_en = o.en.soru;
   if (o.dogrulanacak && o.dogrulanacak.length) { V.meta.dogrulanacak = [...new Set([...(V.meta.dogrulanacak || []), ...o.dogrulanacak])]; log && log(`Doğrulanacak ${o.dogrulanacak.length} nokta “Hikâye” sekmesine eklendi.`); }
   vuruslar(); degisti(); ciz(); }
-const GORSEL = ["pts", "seas", "ships", "booms", "shots", "vurgu", "ikon", "bayrak", "simsek", "mines", "hava", "vcamFix", "nus", "net", "blast", "all"];
+const GORSEL = ["pts", "seas", "ships", "booms", "shots", "vurgu", "ikon", "bayrak", "simsek", "mines", "hava", "vcamFix", "nus", "net", "blast", "all", "torpido", "isaret", "anons", "isildak"];
 function sahneTemizle(st) { for (const k of GORSEL) delete st[k]; st.pts = []; st.seas = []; st.ships = []; st.text = ""; st.date = ""; st.ses = ""; delete st.ses_en; }
 async function kartPencere() { pencere("Kartı içe aktar", `<p class="ipucu">NotebookLM'e (ya da başka bir yapay zekâya) aşağıdaki istemi kaynakla birlikte verin, çıktıyı buraya yapıştırın. Metinler, tarihler, okunuşlar, soru, rotalar, olaylar ve hava sahnelere kendiliğinden yerleşir.</p>
   <div class="satir"><button id="istemKop">İstemi kopyala</button></div><details><summary>İstemi göster</summary><pre class="log" id="istem"></pre></details>

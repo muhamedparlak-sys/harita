@@ -109,8 +109,19 @@ const EFEKT = (() => {
       const i0 = N(y.t0), n = N(d), kenar = N(.45);
       for (const [s, g] of katman) for (let i = 0; i < n && i0 + i < L.length; i++) { const e = Math.min(1, i / kenar, (n - i) / kenar) * g; L[i0 + i] += s.L[i] * e; R[i0 + i] += s.R[i] * e; } } }
 
-  const URET = { gok, gecis, whoosh, vurus, patlama, buyukpatlama: () => patlama(2.4, 3.2), atis, batis, kalp1: () => kalp(1), kalp2: () => kalp(.72), pop, bayrak };
-  const SEVIYE = { gok: .85, gecis: .85, whoosh: .55, vurus: .9, patlama: .7, buyukpatlama: .85, atis: .55, batis: .7, kalp1: .8, kalp2: .8, pop: .45, bayrak: .4 };
+  function torpido(d = 1.8) { const n = N(d), g = bp(gurultu(d), 300, 2400), m = lp(gurultu(d), 90, 3);
+    const x = map(n, (i, t) => { const e = Math.min(1, t / .08) * Math.exp(-Math.max(0, t - .15) * 1.6); return g[i] * e * (.6 + .4 * Math.sin(2 * Math.PI * 13 * t)) + m[i] * e * 1.4; });
+    return st(norm(yanki(x, .25), .6), map(n, i => -.5 + i / n)); }
+  function isaret(d = 1.1) { const n = N(d), x = new Float32Array(n);
+    for (const [a, b] of [[0, .09], [.16, .25], [.32, .52], [.6, .69], [.76, .96]]) for (let i = N(a); i < N(b) && i < n; i++) { const t = i / SR; x[i] = Math.sin(2 * Math.PI * 880 * t) * Math.min(1, (t - a) / .005, (b - t) / .005); }
+    return st(norm(lp(x, 3000), .22), .3); }
+  function anons(d = 1.0) { const n = N(d), x = map(n, (i, t) => { const f0 = 210 + 40 * Math.sin(2 * Math.PI * 3 * t); let v = 0; for (let h = 1; h < 9; h++) v += Math.sin(2 * Math.PI * f0 * h * t) / h; return v * Math.min(1, t / .03, (d - t) / .08) * (.6 + .4 * Math.sin(2 * Math.PI * 5.5 * t)); });
+    return st(norm(yanki(bp(x, 450, 2600), .3), .45)); }
+  function saat(d = 1.6) { const n = N(d), x = new Float32Array(n);
+    for (let k = 0; k < 4; k++) { const i0 = N(k * .38), f0 = k % 2 ? 2300 : 3100, ns = hp(gurultu(.03), 2000); for (let j = 0; j < ns.length && i0 + j < n; j++) { const t = j / SR; x[i0 + j] += (ns[j] * .6 + Math.sin(2 * Math.PI * f0 * t)) * Math.exp(-t * 160); } }
+    return st(norm(yanki(x, .15), .4)); }
+  const URET = { torpido, isaret, anons, saat, gok, gecis, whoosh, vurus, patlama, buyukpatlama: () => patlama(2.4, 3.2), atis, batis, kalp1: () => kalp(1), kalp2: () => kalp(.72), pop, bayrak };
+  const SEVIYE = { torpido: .7, isaret: .5, anons: .6, saat: .55, gok: .85, gecis: .85, whoosh: .55, vurus: .9, patlama: .7, buyukpatlama: .85, atis: .55, batis: .7, kalp1: .8, kalp2: .8, pop: .45, bayrak: .4 };
   const onb = {};
   function efekt(ad, k) { const key = ad === "patlama" ? ad + Math.round((k || 0) * 10) : ad; if (!onb[key]) onb[key] = ad === "patlama" ? patlama(k || 1) : URET[ad](); return onb[key]; }
   function yerlestir(L, R, s, t, g) { const i = Math.floor(Math.max(0, t) * SR); for (let k = 0; k < s.L.length && i + k < L.length; k++) { L[i + k] += s.L[k] * g; R[i + k] += s.R[k] * g; } }
