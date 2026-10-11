@@ -64,6 +64,12 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(-
 #cerceve{position:relative;border-radius:8px;overflow:hidden;background:var(--stage);box-shadow:0 6px 22px -12px rgba(0,0,0,.45)}
 #on{border:0;display:block;transform-origin:0 0;position:absolute;left:0;top:0;pointer-events:none}
 #dokun{position:absolute;inset:0;touch-action:none}
+/* reel güvenli alanları: üstte tarih etiketi, altta altyazı (videoyla aynı oranlar: 960 piksellik kadrajda üst 0–130, alt 600–760) */
+#guvenli{position:absolute;inset:0;pointer-events:none}
+#guvenli i{position:absolute;left:4%;right:4%;border:1.5px dashed rgba(255,213,74,.75);border-radius:6px}
+#guvenli .ust{top:2%;height:11.5%}
+#guvenli .alt{top:62.5%;height:16.7%}
+#guvenli span{position:absolute;right:5px;top:2px;font-size:8.5px;font-weight:600;letter-spacing:.04em;color:rgba(255,213,74,.95);text-shadow:0 1px 2px rgba(0,0,0,.6)}
 #dokun svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #ipucu.ust{top:8px;bottom:auto;right:auto;max-width:calc(100% - 120px);text-align:left}
 #ipucu{position:absolute;left:10px;right:10px;bottom:8px;font-size:12.5px;background:rgba(23,35,42,.86);color:#fff;padding:6px 10px;border-radius:9px;pointer-events:none;text-align:center}
@@ -171,11 +177,13 @@ video{width:100%;max-height:60dvh;border-radius:10px;background:#000}
 </header>
 
 <section id="sahnealan" aria-label="Harita önizlemesi">
-  <div id="cerceve"><iframe id="on" title="Harita önizlemesi" tabindex="-1"></iframe><div id="dokun"><svg id="geciciSvg"></svg></div></div>
+  <div id="cerceve"><iframe id="on" title="Harita önizlemesi" tabindex="-1"></iframe>
+    <div id="guvenli" aria-hidden="true"><i class="ust"></i><i class="alt"><span>altyazı</span></i></div>
+    <div id="dokun"><svg id="geciciSvg"></svg></div></div>
   <div id="yukleniyor">Harita yükleniyor…</div>
   <div id="ipucu" hidden></div>
   <div id="rotaBar" hidden><button id="rotaGeri">Son noktayı sil</button><button id="rotaIptal">İptal</button><button id="rotaBitir" class="ana">Rotayı bitir</button></div>
-  <button id="modBtn" class="yuzen">Dikey 9:16</button>
+  <button id="modBtn" class="yuzen">Yatay görünüm</button>
 </section>
 
 <nav class="serit" id="araclar" aria-label="Harita araçları">

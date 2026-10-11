@@ -145,6 +145,13 @@ function paint(m){ if(!m.ok) return; const V=m.V, N=V.length, W=m.w, C=COL, sea=
   for(let s=0;s<32;s++){ const f=1+(s-19.8)*.0102; land[s]=pk(Math.min(255,C.land[0]*f),Math.min(255,C.land[1]*f),Math.min(255,C.land[2]*f)); }
   for(let i=0;i<N;i++){ const v=V[i]; if(v<128) o[i]=sea[v]; else { const x=i%W, c=(x>0&&V[i-1]<128)||(x<W-1&&V[i+1]<128)||(i>=W&&V[i-W]<128)||(i<N-W&&V[i+W]<128); o[i]=c?co:land[(v-128)>>2]; } }
   m.x.putImageData(m.img,0,0); }
+/* gece paleti: deniz koyu lacivert, kara açık gri-mavi, kıyı parlak çizgi; kara ve deniz geceleyin de ayrılsın */
+function paintGece(m){ if(!m.ok||m.cN) return m.cN; const V=m.V, N=V.length, W=m.w, c=document.createElement("canvas"); c.width=m.w; c.height=m.h; const x=c.getContext("2d"), im=x.createImageData(m.w,m.h), o=new Uint32Array(im.data.buffer);
+  const sea=new Uint32Array(128), land=new Uint32Array(32), co=pk(120,222,255);
+  for(let e=0;e<128;e++){ const t=e/127; sea[e]=pk(lerp(30,5,t),lerp(70,16,t),lerp(110,34,t)); }
+  for(let k=0;k<32;k++){ const f=1+(k-19.8)*.03; land[k]=pk(Math.min(255,92*f),Math.min(255,102*f),Math.min(255,120*f)); }
+  for(let i=0;i<N;i++){ const v=V[i]; if(v<128) o[i]=sea[v]; else { const X=i%W, kiyi=(X>0&&V[i-1]<128)||(X<W-1&&V[i+1]<128)||(i>=W&&V[i-W]<128)||(i<N-W&&V[i+W]<128); o[i]=kiyi?co:land[(v-128)>>2]; } }
+  x.putImageData(im,0,0); return (m.cN=c); }
 const camRect=(m,c)=>{ const w=c.w*m.XS, h=w*CH/CW; return [clamp(mx(m,c.lo)-w/2,0,m.w-w), clamp(my(m,c.la)-h/2,0,m.h-h), w, h]; };
 
 /* dikey kadraj: adımın hareketlerini ve etiketlerini sığdıran en yakın plan.
@@ -200,7 +207,7 @@ ST.forEach((c,i)=>{ const g=GS[i], m=MAPS[c.map]; c.m=m; c.items=[]; c.S=[]; c.B
     const legs=(sh.L||[[sh.p,(sh.t||[0,0])[0],(sh.t||[0,0])[1]]]).map(([P,t0,t1])=>{ const q=P.map(p=>PX(p[0],p[1])), cum=[0]; for(let k=1;k<q.length;k++) cum.push(cum[k-1]+Math.hypot(q[k][0]-q[k-1][0],q[k][1]-q[k-1][1])); return {q,cum,len:cum[cum.length-1],t0,t1}; });
     const o={sh,legs,kind}; const lw=sh.lab&&sh.n?TW(sh.n,19)+Math.abs(sh.lab[0]):0;
     for(const L of legs) for(const q of L.q) foc(q[0],q[1],14+(sh.lab&&sh.lab[2]==="end"?lw:sh.lab&&sh.lab[2]==="middle"?lw/2:0),14+(sh.lab&&sh.lab[2]==="start"?lw:sh.lab&&sh.lab[2]==="middle"?lw/2:0),14+(sh.lab?Math.max(0,-sh.lab[1])+6:0),14+(sh.lab?Math.max(0,sh.lab[1]):0),1);
-    o.trail=el("path",{fill:"none","stroke-width":kind==="big"?2.2:1.7,"stroke-linecap":"round","stroke-linejoin":"round","stroke-opacity":.6,style:"stroke:"+col},gT); if(kind==="sub") o.trail.setAttribute("stroke-dasharray","5 5");
+    o.sw=kind==="big"?2.6:2.1; o.trail=el("path",{fill:"none","stroke-width":o.sw,"stroke-linecap":"round","stroke-linejoin":"round","stroke-opacity":.75,style:"stroke:"+col},gT); if(kind==="sub") o.trail.setAttribute("stroke-dasharray","5 5");
     o.g=el("g",{},gS);
     if(sh.ikon){ o.ik=el("g",{},o.g); el("circle",{r:13,"stroke-width":2,style:`fill:${col};stroke:var(--m-halo)`},o.ik); o.ikp=el("path",{d:ICONS[sh.ikon]||ICONS.hedef,transform:"translate(-9 -9) scale(.75)",style:"fill:var(--m-halo)"},o.ik); }
     o.hull=el("path",{d:sh.ikon?"M0 0":GLYPH[kind],"stroke-width":1.5,"stroke-linejoin":"round",style:"fill:"+col+";stroke:var(--m-halo)"},o.g); if(kind==="sub") el("rect",{x:-1.5,y:-1.6,width:5,height:3.2,rx:1.2,style:"fill:var(--m-halo)","fill-opacity":.85},o.g);
@@ -284,13 +291,16 @@ function hvNorm(x){ const k=String(x||"").toLocaleLowerCase("tr-TR").trim();
     "sis":"sis","pus":"sis","duman":"sis","yağmur":"yagmur","yagmur":"yagmur","sağanak":"yagmur","kar":"kar","tipi":"kar","rüzgâr":"ruzgar","rüzgar":"ruzgar","ruzgar":"ruzgar","fırtına":"firtina","firtina":"firtina",
     "yıldırım":"yildirim","yildirim":"yildirim","şimşek":"yildirim","gündüz":""}[k]??""; }
 const rnd=i=>{ const x=Math.sin(i*12.9898+78.233)*43758.5453; return x-Math.floor(x); };
+function gece(c,q,f,solo){ const a=c.HV&&c.HV.has("gece")?1:0, b=q&&q.HV&&q.HV.has("gece")?1:0; return (!q||solo)?a:lerp(b,a,seg(f,0,.18)); }
+/* gece neon renkleri: rotalar, gemiler ve yazılar koyu haritada parlasın */
+{ const st=document.createElement("style"); st.textContent=`:root[data-gece="1"]{--i:#43e0ff!important;--o:#ff5a3c!important;--ink:#f3f7fa!important;--m-halo:#071220!important;--gold:#ffd23f!important}`; document.head.append(st); }
 function havaCiz(c,q,f,solo,r){ if(!c.HV) return; const tek=!q||solo, u=tek?1:seg(f,0,.18);
   const w=k=>{ const a=c.HV.has(k)?1:0, b=q&&q.HV&&q.HV.has(k)?1:0; return tek?a:lerp(b,a,u); };
   const W_=CW, H_=CH, S=CW/1440; ctx.save();
   const renk=(k,col)=>{ const g=w(k); if(g<=0) return; ctx.globalCompositeOperation="multiply"; ctx.globalAlpha=g; ctx.fillStyle=col; ctx.fillRect(0,0,W_,H_); ctx.globalCompositeOperation="source-over"; };
   { const g=Math.max(w("yagmur"),w("kar")*.6,w("firtina")); if(g>0){ ctx.globalCompositeOperation="multiply"; ctx.globalAlpha=g; ctx.fillStyle=w("firtina")>0?"rgb(176,186,198)":"rgb(204,211,220)"; ctx.fillRect(0,0,W_,H_); ctx.globalCompositeOperation="source-over"; } }
-  renk("gece","rgb(68,84,128)"); renk("safak","rgb(255,222,186)"); renk("aksam","rgb(250,184,150)");
-  for(const [k,a,col] of [["gece",.42,"5,10,25"],["aksam",.22,"120,40,20"]]){ const g=w(k); if(g<=0) continue;
+  renk("safak","rgb(255,222,186)"); renk("aksam","rgb(250,184,150)");
+  for(const [k,a,col] of [["gece",.3,"2,6,16"],["aksam",.22,"120,40,20"]]){ const g=w(k); if(g<=0) continue;
     const v=ctx.createRadialGradient(W_/2,H_/2,Math.min(W_,H_)*.3,W_/2,H_/2,Math.hypot(W_,H_)*.62); v.addColorStop(0,`rgba(${col},0)`); v.addColorStop(1,`rgba(${col},${a*g})`); ctx.globalAlpha=1; ctx.fillStyle=v; ctx.fillRect(0,0,W_,H_); }
   let g=w("sis"); if(g>0){ ctx.globalAlpha=1; ctx.fillStyle=`rgba(232,236,238,${.26*g})`; ctx.fillRect(0,0,W_,H_);
     for(let i=0;i<8;i++){ const x=((rnd(i)+f*.06*(i%2?1:-1))%1+1)%1*W_*1.2-W_*.1, y=rnd(i+20)*H_, R=(.28+rnd(i+40)*.22)*Math.max(W_,H_);
@@ -345,8 +355,17 @@ function place(c,f){ const r=c.rect, kx=VW/r[2], ky=VH/r[3], sx=X=>(X-r[0])*kx, 
   labels(c,sx,sy); }
 function draw(p){ P=p; const N=ST.length, i=clamp(Math.floor(p),0,N-1), f=clamp(p-i,0,.999), c=ST[i], solo=!!window.__solo, q=i>0&&!solo?ST[i-1]:null, same=q&&q.m===c.m;
   const t=q&&!same?ease(seg(f,0,.2)):1; ctx.setTransform(1,0,0,1,0,0);
-  let r=camOf(c); if(same&&!sameCam(q,c)){ const a=camOf(q), u=ease(seg(f,0,.3)); r=a.map((v,k)=>lerp(v,r[k],u)); }
-  if(t<1){ q.rect=camOf(q); blit(q.m,q.rect,1); } c.rect=r; blit(c.m,r,t); havaCiz(c,q,f,solo,r);
+  /* Ken Burns: kamera her sahnede yavaşça yaklaşır (çift sahneler) ya da uzaklaşır (tek sahneler); ardışık sahneler kesintisiz bağlanır */
+  const KZ=window.__kbz!=null?window.__kbz:.08, yon=k=>window.__kbYon!=null?window.__kbYon:(k%2?-1:1);
+  const kb=(R,u,k)=>{ const e=ease(clamp(u,0,1)), z=yon(k)>0?1-KZ*e:1-KZ+KZ*e; return [R[0]+R[2]*(1-z)/2,R[1]+R[3]*(1-z)/2,R[2]*z,R[3]*z]; };
+  const U=window.__u!=null?window.__u:f;
+  let r=camOf(c); if(same&&!sameCam(q,c)){ const a=kb(camOf(q),1,i-1), u=ease(seg(f,0,.3)); r=a.map((v,k)=>lerp(v,r[k],u)); }
+  r=(same&&!sameCam(q,c))?(f<.3?r:kb(r,(U-.3)/.7,i)):kb(r,U,i);
+  const gw=gece(c,q,f,solo), ge=gw>.5?"1":""; if((document.documentElement.dataset.gece||"")!==ge) document.documentElement.dataset.gece=ge;
+  if(t<1){ q.rect=kb(camOf(q),1,i-1); blit(q.m,q.rect,1); if(gw>0&&q.m.ok){ ctx.globalAlpha=gw; ctx.drawImage(paintGece(q.m),q.rect[0],q.rect[1],q.rect[2],q.rect[3],0,0,CW,CH); ctx.globalAlpha=1; } }
+  c.rect=r; blit(c.m,r,t); if(gw>0&&c.m.ok){ ctx.globalAlpha=gw*t; ctx.drawImage(paintGece(c.m),r[0],r[1],r[2],r[3],0,0,CW,CH); ctx.globalAlpha=1; }
+  havaCiz(c,q,f,solo,r);
+  for(const o of c.S){ o.trail.setAttribute("stroke-width",(o.sw*(1+.8*gw)).toFixed(2)); o.trail.setAttribute("stroke-opacity",(.75+.2*gw).toFixed(2)); }
   const fin=solo?seg(f,0,.1):(i===0?1:seg(f,.03,.2));
   GS.forEach((g,k)=>{ const o=k===i?fin:(k===i-1?1-seg(f,0,.14):0); g.setAttribute("opacity",o.toFixed(2)); g.style.display=o<=0?"none":""; });
   place(c,f); if(q&&GS[i-1].style.display!=="none"){ if(same) q.rect=r; place(q,.999); }

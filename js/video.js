@@ -69,8 +69,8 @@ const VIDEO = (() => {
     const t0 = Date.now(); while (!(W.__draw && W.eval("Object.values(MAPS).every(m=>m.ok)"))) { if (Date.now() - t0 > 60000) throw new Error("Haritalar yüklenemedi"); await new Promise(r => setTimeout(r, 50)); }
     try { await W.document.fonts.ready; } catch (e) { }
     await resimlerHazir(W.document.getElementById("ov"));
-    const cs = W.getComputedStyle(W.document.documentElement), onb = {};
-    const degisken = k => onb[k] || (onb[k] = cs.getPropertyValue(k).trim() || "#000");
+    const kokE = W.document.documentElement, cs = W.getComputedStyle(kokE), onb = {};
+    const degisken = k => { const a = (kokE.dataset.gece || "") + k; return onb[a] || (onb[a] = cs.getPropertyValue(k).trim() || "#000"); };
     return { f, W, degisken, kapat: () => f.remove() };
   }
 
@@ -129,8 +129,8 @@ const VIDEO = (() => {
   }
 
   /* bir kare: harita tuvali + SVG katmanı + altyazı */
-  function kare(ctx, M, p, solo, G, t, kip) {
-    const W = M.W; W.__solo = solo; W.__draw(p);
+  function kare(ctx, M, p, solo, G, t, kip, u, hook) {
+    const W = M.W; W.__solo = solo; W.__u = u == null ? null : u; W.__kbz = hook ? .2 : null; W.__kbYon = hook ? 1 : null; W.__draw(p);
     const cv = W.document.getElementById("cv"); ctx.globalAlpha = 1; ctx.drawImage(cv, 0, 0, WV, HV);
     svgCiz(ctx, W.document.getElementById("ov"), M.degisken, "Inter, \"Instrument Sans\", -apple-system, sans-serif");
     if (G && G.length) altyaziCiz(ctx, G, t, kip);
@@ -237,7 +237,9 @@ const VIDEO = (() => {
   }
 
   function parcaBul(PARCA, t) { for (const p of PARCA) if (t < p.t0 + p.sure) return p; return PARCA[PARCA.length - 1]; }
-  function cizZaman(ctx, M, PARCA, t) { const p = parcaBul(PARCA, t), u = Math.min(1, Math.max(0, (t - p.t0) / p.sure)); kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip); }
+  function cizZaman(ctx, M, PARCA, t) { const p = parcaBul(PARCA, t), u = Math.min(1, Math.max(0, (t - p.t0) / p.sure));
+    /* hook ve soru kendi içinde yaklaşır; sahneler sahne ilerlemesini kullanır */
+    kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip, p.ad === "Hook" ? u : null, p.ad === "Hook"); }
 
   let ACX = null, YONTEM = "oto";
   /* iOS'ta ses motoru yalnızca bir dokunuşla açılır: Üret'e dokunulduğunda çağrılır */

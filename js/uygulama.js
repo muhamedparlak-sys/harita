@@ -2,11 +2,11 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "14 · 11 Ekim";
+const SURUM = "16 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
-let AD = null, HK = null, V = null, CUR = 0, MOD = "yatay", ARAC = "sec", GECICI = [], GECMIS = [], SEKME = "sahneler";
+let AD = null, HK = null, V = null, CUR = 0, MOD = (() => { try { return localStorage.getItem("onizleme_kip") || "dikey"; } catch (e) { return "dikey"; } })(), ARAC = "sec", GECICI = [], GECMIS = [], SEKME = "sahneler";
 let VAR = { ikonlar: [], bayraklar: [], vurus: DEPO.VURUS, okunus: {} }, KAT = {};
 let kayitT = null, yukT = null, OYNA = null, SESLI = false, HAZIR = false;
 
@@ -47,7 +47,7 @@ $("#geriBtn").onclick = geriAl;
 const W = () => $("#on").contentWindow;
 function boyutla() {
   const al = $("#sahnealan"), gen = al.clientWidth - 16, [w, h] = MOD === "dikey" ? [540, 960] : [1080, 660];
-  const yuk = Math.round(Math.min(MOD === "dikey" ? innerHeight * .40 : gen * h / w, innerHeight * .40));
+  const yuk = Math.round(MOD === "dikey" ? innerHeight * .5 : Math.min(gen * h / w, innerHeight * .40));
   const k = Math.min(gen / w, yuk / h); const f = $("#on"); f.width = w; f.height = h; f.style.transform = `scale(${k})`;
   $("#cerceve").style.width = Math.round(w * k) + "px"; $("#cerceve").style.height = Math.round(h * k) + "px"; al.style.height = Math.round(h * k + 16) + "px";
 }
@@ -56,7 +56,9 @@ $("#on").addEventListener("load", () => { const t0 = Date.now(); const bekle = (
 function goster() { if (!HAZIR) return; if (CUR < 0) { hookGoster(); $("#zamanyaz").textContent = "Hook"; return; }
   try { W().__solo = true; W().__draw(CUR + (+$("#zaman").value) / 1000); } catch (e) { } $("#zamanyaz").textContent = `S${CUR + 1} · ${(+$("#zaman").value / 1000).toFixed(2)}`; geciciCiz(); }
 $("#zaman").addEventListener("input", goster);
-$("#modBtn").onclick = () => { MOD = MOD === "dikey" ? "yatay" : "dikey"; $("#modBtn").textContent = MOD === "dikey" ? "Yatay" : "Dikey 9:16"; yenile(); };
+function modYaz() { $("#modBtn").textContent = MOD === "dikey" ? "Yatay görünüm" : "Reel görünümü 9:16"; $("#guvenli").hidden = MOD !== "dikey"; }
+$("#modBtn").onclick = () => { MOD = MOD === "dikey" ? "yatay" : "dikey"; try { localStorage.setItem("onizleme_kip", MOD); } catch (e) { } modYaz(); yenile(); };
+modYaz();
 addEventListener("resize", () => { boyutla(); });
 
 /* oynatma; isteğe bağlı iPhone sesiyle (önizleme içindir; videoya telefonda üretilen yapay ses girer) */
@@ -362,6 +364,7 @@ SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, har
 - " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır (biçimler aşağıdaki ARAÇ KUTUSU'nda).
 - " | hava: " → sahnenin ışığı ve havası, virgülle (ör. gece, yağmur). Saat ve mevsimden çıkar: gece yapılan iş → gece; sabaha karşı → şafak; akşam olayı → akşam; kaynakta sis, yağmur, kar, fırtına geçiyorsa onları ekle. Kaynakta hava bilgisi yoksa ve olay gündüzse boş bırak; hava durumu uydurma.
 - ÖNEMLİ: Haritadaki bütün animasyon, efekt ve ses yalnızca bu alanlardan otomatik kurulur; kullanıcı haritada elle hiçbir şey eklemeyecek. Bu yüzden her sahnede hareket, olay ve hava alanlarını kaynağın izin verdiği ölçüde MUTLAKA doldur. Her sahnede en az bir hareket ya da olay olsun; sahnede gerçekten hiçbir şey yer değiştirmiyorsa bir olay (vurgu, ikon, bayrak) kullan.
+- Açılış izleyiciyi tutar: S1'de mutlaka yer değiştiren bir hareket olsun (gelen filo, yürüyen ordu, yola çıkan gemi); HOOK, S7'nin en hareketli anından seçilsin. Durağan bir açılış izleyiciyi kaçırır.
 - Bunlar yalnızca kaynaktaki olgulara dayanır: kaynakta olmayan çatışma, batış, patlama uydurma.
 
 ARAÇ KUTUSU (yalnızca bunları kullan; başka bir şey yazarsan haritada görünmez)
@@ -433,7 +436,10 @@ async function kartUygula(o, yerEkle, log) {
     if (s.hava !== undefined) { const H = s.hava.split(/[,;]/).map(x => x.trim().toLocaleLowerCase("tr-TR")).filter(x => x && !/^(yok|-|—|gündüz)$/.test(x)); if (H.length) st.hava = H; else delete st.hava; }
     if (yerEkle && (s.hareket || s.olay)) {
       try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, kat: KAT, bayraklar: VAR.bayraklar, log });
-        if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } } }
+        if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } }
+    /* hiç hareket ya da olay yoksa ilk yere vurgu halkası: sahne hareketsiz kalmasın */
+    if (!["ships", "booms", "shots", "vurgu", "ikon", "simsek", "bayrak", "mines"].some(k => (st[k] || []).length) && (st.pts || []).length) {
+      st.vurgu = [[st.pts[0][0], st.pts[0][1], 3, .08, .95, "", 4]]; log(`  S${+i + 1}: hareket yoktu, ${st.pts[0][2]} üzerine vurgu eklendi`); } }
   const h = V.steps[0].hook || (V.steps[0].hook = { adim: 7, an: .6, ses: "" }); if (o.hook) h.ses = o.hook; if (o.en.hook) h.ses_en = o.en.hook;
   if (o.soru) V.meta.soru = o.soru; if (o.en.soru) V.meta.soru_en = o.en.soru;
   if (o.dogrulanacak && o.dogrulanacak.length) { V.meta.dogrulanacak = [...new Set([...(V.meta.dogrulanacak || []), ...o.dogrulanacak])]; log && log(`Doğrulanacak ${o.dogrulanacak.length} nokta “Hikâye” sekmesine eklendi.`); }
