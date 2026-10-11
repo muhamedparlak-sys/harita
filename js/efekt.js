@@ -86,13 +86,15 @@ const EFEKT = (() => {
   function yerlestir(L, R, s, t, g) { const i = Math.floor(Math.max(0, t) * SR); for (let k = 0; k < s.L.length && i + k < L.length; k++) { L[i + k] += s.L[k] * g; R[i + k] += s.R[k] * g; } }
 
   /* bütün reelin karışımı. olaylar [{t, ad, k}], ses: mono Float32Array (zamana yerleşmiş) */
-  function miks(sure, olaylar, ses, { efektG = 1, ambG = .10 } = {}) {
+  function miks(sure, olaylar, ses, { efektG = 1, ambG = .10, ducKat = .72 } = {}) {
     const n = N(sure), L = new Float32Array(n), R = new Float32Array(n), fL = new Float32Array(n), fR = new Float32Array(n);
     if (efektG) for (const o of olaylar) if (URET[o.ad]) yerlestir(fL, fR, efekt(o.ad, o.k), o.t, SEVIYE[o.ad] || .6);
     const duck = new Float32Array(n).fill(1);
     if (ses) { const a = new Float32Array(n); for (let i = 0; i < n && i < ses.length; i++) a[i] = Math.abs(ses[i]);
-      const e = lp(a, 6, 1), m = tepe(e) + 1e-9; for (let i = 0; i < n; i++) duck[i] = 1 - .35 * Math.min(1, Math.max(0, e[i] / m * 3));
-      for (let i = 0; i < n && i < ses.length; i++) { const v = ses[i] * .95 * Math.SQRT1_2; L[i] += v; R[i] += v; } }
+      /* konuşma varken efektler ve ambiyans belirgin biçimde kısılır; konuşma bitince yavaşça geri gelir */
+      const e = lp(a, 4, 1), m = tepe(e) + 1e-9, sv = tepe(ses) || 1, kz = .92 / sv;
+      for (let i = 0; i < n; i++) duck[i] = 1 - ducKat * Math.min(1, Math.max(0, e[i] / m * 4));
+      for (let i = 0; i < n && i < ses.length; i++) { const v = ses[i] * kz; L[i] += v; R[i] += v; } }
     for (let i = 0; i < n; i++) { L[i] += fL[i] * duck[i] * efektG; R[i] += fR[i] * duck[i] * efektG; }
     if (ambG && efektG) { const A = ambiyans(sure); for (let i = 0; i < n; i++) { L[i] += A.L[i] * ambG * duck[i]; R[i] += A.R[i] * ambG * duck[i]; } }
     const p = Math.max(tepe(L), tepe(R)); if (p > .98) for (const c of [L, R]) for (let i = 0; i < n; i++) c[i] *= .98 / p;

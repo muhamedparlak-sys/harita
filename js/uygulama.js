@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "5 · 11 Ekim";
+const SURUM = "6 · 11 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -435,7 +435,7 @@ async function videoPencere() {
     <label>Canlılık<select id="vTon"><option value="sakin">Sakin</option><option value="canli" selected>Canlı</option><option value="cok">Çok canlı</option></select></label></div>
     <div class="izgara2"><label>Seslendirme dili<select id="vDil"><option value="tr">Türkçe</option><option value="en">İngilizce (sahnelerdeki İngilizce metin)</option></select></label>
     <label>Altyazı dili<select id="vADil"><option value="">Sesle aynı (kelime kelime)</option><option value="tr">Türkçe</option><option value="en">İngilizce</option></select></label>
-    <label>Altyazı<select id="vAlt"><option value="on">Açık</option><option value="off">Kapalı</option></select></label><label>Efektler<select id="vEf"><option value="on">Açık</option><option value="off">Kapalı</option></select></label>
+    <label>Altyazı<select id="vAlt"><option value="on">Açık</option><option value="off">Kapalı</option></select></label><label>Efektler<select id="vEf"><option value="kisik">Kısık</option><option value="on" selected>Normal</option><option value="guclu">Güçlü</option><option value="off">Kapalı</option></select></label>
     <label>Kodlama<select id="vYon"><option value="oto">Otomatik (hızlı)</option><option value="gercek">Gerçek zamanlı kayıt</option></select></label><label>Harita teması<select id="vTema"><option value="light">Açık</option><option value="dark">Koyu</option></select></label><label>Yalnız şu sahneler<input id="vAd" placeholder="hepsi · ör. 8 ya da 5-8" inputmode="text"></label></div>
     <p class="ipucu" id="vNot"></p>
     <button class="ana" id="vBas">Üret</button>
