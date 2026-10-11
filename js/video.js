@@ -154,7 +154,7 @@ const VIDEO = (() => {
   async function uret(AD, hk, a, log, ilerle, durdur) {
     const V = hk.veri, steps = V.steps, META = V.meta || {}, n = steps.length;
     const sesOn = a.ses !== "yok", altOn = a.altyazi !== "off" && sesOn, efOn = a.efekt !== "off";
-    let lo = 1, hi = n; if (a.adimlar) { const m = String(a.adimlar).match(/(\d+)\s*-\s*(\d+)/) || String(a.adimlar).match(/(\d+)/); if (m) { lo = Math.max(1, +m[1]); hi = Math.min(n, +(m[2] || m[1])); } }
+    let lo = 1, hi = n; if (a.adimlar) { const m = String(a.adimlar).match(/(\d+)\D+(\d+)/) || String(a.adimlar).match(/(\d+)/); if (m) { lo = Math.max(1, +m[1]); hi = Math.min(n, +(m[2] || m[1])); } }
     const adil = a.altyazi_dil || a.dil;
     const sesm = o => ((a.dil === "en" ? o.ses_en : o.ses) || ""), altm = o => ((adil === "en" ? o.ses_en : o.ses) || "");
     const SOZ = Object.assign({}, await DEPO.okunusSozluk(), META.okunus || {});
