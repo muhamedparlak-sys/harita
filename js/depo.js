@@ -74,9 +74,10 @@ const DEPO = (() => {
   }
   async function noktalar(metin, kutu) {
     const P = [];
-    for (const t of metin.split(",").map(x => x.trim()).filter(Boolean)) {
-      const m = t.match(/^(-?[\d.]+)\s*[, ]\s*(-?[\d.]+)$/);
-      if (m) { P.push([t, +m[1], +m[2]]); continue; }
+    /* virgülle ayrılır ama parantez içindeki koordinat virgülü bölünmez: "Kabatepe (40.20, 26.27), Morto Koyu" */
+    for (const t of metin.split(/,(?![^()\[\]]*[)\]])/).map(x => x.trim()).filter(Boolean)) {
+      const kc = window.OTOMATIK && OTOMATIK.koordCoz(t);
+      if (kc) { P.push([kc.ad || t, kc.p[0], kc.p[1]]); continue; }
       const r = await yer(t, kutu); if (r) P.push([t, r[0], r[1]]);
     }
     return P;

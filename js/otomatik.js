@@ -34,6 +34,25 @@
     "alman": "de", "almanya": "de", "rus": "ru", "rusya": "ru", "italyan": "it", "italya": "it", "yunan": "gr", "yunanistan": "gr", "amerikan": "us", "abd": "us",
     "avusturya": "at", "bulgar": "bg", "bulgaristan": "bg", "avustralya": "au", "yeni zelanda": "nz", "japon": "jp", "japonya": "jp", "ispanyol": "es", "ispanya": "es" };
   const ok = s => s.split(/\s*(?:→|->|=>|›|>)\s*/).map(x => x.trim()).filter(Boolean);
+  /* koordinat: "Kabatepe (40.20, 26.27)", "~40.2, 26.3", "40°12′K 26°16′D", "40.20N 26.27E" → {ad, p:[boylam, enlem], yaklasik}
+     sıra enlem, boylam (Google Haritalar gibi); K/N/G/S ve D/E/B/W harfleri varsa onlara uyulur */
+  function koordCoz(t) {
+    t = (t || "").trim(); if (!/\d/.test(t)) return null;
+    const yaklasik = /~|≈|yaklaşık|yakl\./i.test(t);
+    const m = t.match(/^(.*?)[\s(\[]*((?:~|≈|yaklaşık|yakl\.)?\s*-?\d[\d.°′'"″ºKNGSDEBWkngsdebw\s,;/-]*?\d\s*[°′'"″º]?\s*[KNGSDEBW]?)\s*[)\]]?\s*$/);
+    if (!m) return null;
+    const ad = m[1].replace(/[\s(\[:–—-]+$/, "").trim(), govde = m[2].replace(/~|≈|yaklaşık|yakl\./gi, "").trim();
+    /* iki parçaya böl: virgül/noktalı virgül/eğik çizgi ya da harf sonrası boşluk */
+    let P = govde.split(/\s*[;,/]\s*|(?<=[KNGSDEBWkngsdebw])\s+/).filter(Boolean);
+    if (P.length !== 2) { const q = govde.split(/\s+/).filter(Boolean); if (q.length === 2) P = q; else return null; }
+    const sayi = x => { const h = (x.match(/[KNGSDEBW]$/i) || [""])[0].toUpperCase(), n = x.replace(/[KNGSDEBW]$/i, "").match(/-?\d+(?:\.\d+)?/g); if (!n) return null;
+      let v = Math.abs(+n[0]) + (n[1] ? +n[1] / 60 : 0) + (n[2] ? +n[2] / 3600 : 0); if (/^-/.test(x.trim()) || h === "S" || h === "G" || h === "W" || h === "B") v = -v; return { v, h }; };
+    const A = sayi(P[0]), B = sayi(P[1]); if (!A || !B) return null;
+    let la = A.v, lo = B.v; if ("DEBW".includes(A.h) && A.h || "KNGS".includes(B.h) && B.h) { la = B.v; lo = A.v; }
+    if (Math.abs(la) > 90 && Math.abs(lo) <= 90) [la, lo] = [lo, la];
+    if (Math.abs(la) > 90 || Math.abs(lo) > 180) return null;
+    return { ad, p: [+lo.toFixed(5), +la.toFixed(5)], yaklasik };
+  }
 
   function hareketCoz(t) {
     return (t || "").split(";").map(x => x.trim()).filter(Boolean).map(x => {
@@ -186,14 +205,29 @@
     let t = Infinity; if (dx > 0) t = Math.min(t, (M.lo1 - pw - N[0]) / dx); if (dx < 0) t = Math.min(t, (M.lo0 + pw - N[0]) / dx); if (dy > 0) t = Math.min(t, (M.la1 - ph - N[1]) / dy); if (dy < 0) t = Math.min(t, (M.la0 + ph - N[1]) / dy);
     if (!isFinite(t) || t < 0) t = 0; return [+(N[0] + dx * t).toFixed(4), +(N[1] + dy * t).toFixed(4)]; }
   async function kur(st, s, c) {
-    const log = c.log || (() => { }), M = c.kat[st.map], H = M ? await c.harita(st.map) : null, yer = {}, eklendi = [];
+    const log = c.log || (() => { }), yer = {}, eklendi = [];
     const AK = c.aktorler || (c.aktorler = new Map());
     const aktorBul = ad => { for (const sh of st.ships || []) if (sh.n && esle(sh.n, ad)) return { p: sh.p[sh.p.length - 1], sh }; for (const [n, a] of AK) if (esle(n, ad)) return { p: a.p, a, n }; return null; };
-    const bul = async (ad, sessiz) => { const k = kucuk(ad); if (k in yer) return yer[k];
+    const bul = async (ad, sessiz) => { const kc = koordCoz(ad); if (kc) { if (kc.ad) yer[kucuk(kc.ad)] = kc.p; return kc.p; } const k = kucuk(ad); if (k in yer) return yer[k];
       const ak = aktorBul(ad); if (ak) return (yer[k] = ak.p);
       const p = (st.pts || []).find(p => kucuk(p[2]) === k); if (p) return (yer[k] = [p[0], p[1]]);
       let r = null; try { r = await c.yerBul(ad); } catch (e) { } if (!r && !sessiz) log(`  bulunamadı: ${ad}`); return (yer[k] = r); };
     const H_ = hareketCoz(s.hareket), O = olayCoz(s.olay);
+    /* 0) harita: hikâyenin haritalarından, sahnenin bütün noktalarını (yer, rota, olay, duran aktörler) en iyi kapsayan en dar olan */
+    if ((c.haritalar || []).length > 1) {
+      const T = (st.pts || []).map(p => [p[0], p[1]]);
+      for (const h of H_) for (const y of h.yol) if (!yonCoz(y)) { const p = await bul(y, true); if (p) T.push(p); }
+      for (const o of O) for (const k of ["yer", "hedef", "gemi"]) if (o[k]) { const p = await bul(o[k], true); if (p) T.push(p); }
+      for (const [n, a] of AK) if (!a.batti) T.push(a.p);
+      const ic = (m, p) => p[0] >= m.lo0 && p[0] <= m.lo1 && p[1] >= m.la0 && p[1] <= m.la1;
+      const U = c.haritalar.map(h => [h, c.kat[h]]).filter(([, m]) => m), T2 = T.filter(p => U.some(([, m]) => ic(m, p)));
+      if (T2.length) { const say = m => T2.filter(p => ic(m, p)).length;
+        const [en] = U.sort((a, b) => say(b[1]) - say(a[1]) || (a[1].lo1 - a[1].lo0) - (b[1].lo1 - b[1].lo0));
+        if (en && en[0] !== st.map && (!c.kat[st.map] || say(c.kat[st.map]) < say(en[1]))) { st.map = en[0]; log(`  harita: ${en[0]} (sahnenin bütün noktalarını kapsıyor)`); } }
+    }
+    /* ön tarama önbelleği temizlenir: aktörlerin bu sahnedeki konumları aşağıda yeniden hesaplanır (yer araması kendi önbelleğini tutar) */
+    for (const k of Object.keys(yer)) delete yer[k];
+    const M = c.kat[st.map], H = M ? await c.harita(st.map) : null;
     st.ships = (st.ships || []).filter(x => !x.fix);
     /* 1) daha önceki sahnelerden kalan aktörler yerinde durur (bu sahnede hareket etmiyorlarsa) */
     for (const [n, a] of AK) { if (a.batti || H_.some(h => esle(h.ad, n))) continue; if (M && !(a.p[0] >= M.lo0 && a.p[0] <= M.lo1 && a.p[1] >= M.la0 && a.p[1] <= M.la1)) continue;
@@ -204,7 +238,7 @@
       const once = h.ad ? aktorBul(h.ad) : null, A = [];
       /* harita dışındaki yer (Cattaro, İstanbul…) ya da yön (batıdan, kuzey kenarı): araç haritanın o yöndeki kenarından girer/çıkar */
       const Y = [];
-      for (const y of h.yol) { const v = yonCoz(y); if (v) { Y.push({ v, ad: y }); continue; } const p = await bul(y, true); if (p) { Y.push({ p }); continue; }
+      for (const y of h.yol) { const v = yonCoz(y); if (v) { Y.push({ v, ad: y }); continue; } const kc = koordCoz(y); if (kc && M && !(kc.p[0] >= M.lo0 && kc.p[0] <= M.lo1 && kc.p[1] >= M.la0 && kc.p[1] <= M.la1)) { Y.push({ d: kc.p, ad: kc.ad || y }); continue; } const p = await bul(y, true); if (p) { Y.push({ p }); continue; }
         const d = c.yerDis ? await c.yerDis(y).catch(() => null) : null; if (d) Y.push({ d, ad: y }); else log(`  bulunamadı: ${y}`); }
       for (let i = 0; i < Y.length; i++) { const o = Y[i]; if (o.p) continue; const N = (Y.slice(i + 1).find(x => x.p) || Y.slice(0, i).reverse().find(x => x.p) || {}).p || (once && once.p);
         if (!N || !M) { Y.splice(i--, 1); continue; }
@@ -295,5 +329,5 @@
       st.cam = { lo: +((lo0 + lo1) / 2).toFixed(4), la: +((la0 + la1) / 2).toFixed(4), w: +Math.min(M.lo1 - M.lo0, Math.max((lo1 - lo0) * 1.5, (la1 - la0) * 2.2, (M.lo1 - M.lo0) * (O.some(o => ["torpido", "isaret", "anons", "batis"].includes(o.tur)) ? .2 : .3), .05)).toFixed(3) }; }
     return eklendi;
   }
-  kok.OTOMATIK = { kur, hareketCoz, olayCoz, denizYolu, IKON, esle };
+  kok.OTOMATIK = { kur, hareketCoz, olayCoz, denizYolu, IKON, esle, koordCoz };
 })(typeof window !== "undefined" ? window : globalThis);

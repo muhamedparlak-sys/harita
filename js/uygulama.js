@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "22 · 12 Ekim";
+const SURUM = "23 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -355,9 +355,11 @@ SAHNELER (olayın türü ne olursa olsun bu iskelet; kaynakta karşılığı yok
 HOOK: S7'nin en çarpıcı olgusu · S1 açılış: ana güç ya da ana olay harekete geçer, mutlaka yer değiştiren bir unsur · S2 karşı hamle ya da hazırlık · S3 risk, engel ya da keşif · S4 dönüm anı, karşılaşma · S5 ilk temas ya da ilk sonuç · S6 kriz, kayıp, çıkmaz · S7 doruk ve sonuç, sayılarla · S8 kalıcı sonuç ve bugün · SORU: yorumlarda tartışma açacak "Ya öyle olmasaydı?" türü soru.
 
 SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında, bu sırayla; boş alan da yazılır: | olay:  | hava: )
-- yer: o sahnede haritada gösterilecek en çok 4 yer, virgülle.
+- yer: o sahnede haritada gösterilecek en çok 4 yer, virgülle; her yerin yanına koordinatını yaz: Kabatepe (40.20, 26.27), Morto Koyu (40.04, 26.19)
 - tarih: ekranda etiket olur, seslendirilmez; RAKAMLA, en çok 4 kelime (18 Mart 1915 · 7/8 Mart 1915 gecesi · 18 Mart 1915, 13.54 · Bugün).
-- hareket: Ad [taraf, tür] Başlangıç → Varış; birden çoksa noktalı virgül; ara nokta olabilir (A → B → C). Yerinde duran için tek yer: Goliath [lacivert, büyük gemi] Morto Koyu
+- hareket: Ad [taraf, tür] Başlangıç (enlem, boylam) → güzergâh noktaları (enlem, boylam) → Varış (enlem, boylam). Birden çoksa noktalı virgül. Yerinde duran için tek nokta: Goliath [lacivert, büyük gemi] Morto Koyu (40.04, 26.19)
+- KOORDİNAT KURALI: Başlangıç, güzergâh ve varış her harekette ZORUNLUDUR ve her noktanın yanında (enlem, boylam) ondalık noktayla yazılır (40.20, 26.27). Kaynakta koordinat varsa onu, yoksa o yerin bilinen gerçek koordinatını yaz; yer kesin bilinmiyorsa yaklaşık koordinat ver ve başına ~ koy: Triumph'un batış yeri (~40.21, 26.24).
+  Başlangıç noktasını UYDURMA: kaynakta nereden çıktığı yazıyorsa onu yaz; yazmıyorsa aracın kaynakta geçen son bilinen konumunu yaz ve bunu DOĞRULANACAK'a ekle. Güzergâhta kaynakta geçen ara durakları (uğradığı liman, geçtiği boğaz/ada) sırasıyla yaz; kaynakta yoksa ara nokta ekleme.
 - olay: aşağıdaki biçimlerle, noktalı virgülle; kartta yazdığın sırayla oynar.
 - hava: gece yapılan iş → gece; sabaha karşı → şafak; akşam → akşam; kaynakta geçiyorsa sis, yağmur, kar, rüzgâr, fırtına. Gündüz ve bilgi yoksa boş.
 - Animasyon yalnızca bu alanlardan kurulur; her sahnede en az bir hareket ya da olay olsun (hareket yoksa vurgu, ikon ya da bayrak).
@@ -366,7 +368,7 @@ YER ADLARI (yer, hareket, olay alanlarının hepsi)
 - Yalnızca OpenStreetMap'te tek başına bulunan nokta adları: şehir, köy, burun, koy, liman, ada, kale, fener (Kilitbahir, Nara Burnu, Morto Koyu, Kumkale, Kabatepe, Gökçeada).
 - "-açığı, -önleri, -yakınları, -civarı, -bölgesi, -kıyıları" ekleme; denizdeki olay için en yakın kıyı noktasını yaz, gemi kendiliğinden denize oturur.
 - Deniz, boğaz, bölge adı yazma (Ege Denizi, Akdeniz, Çanakkale Boğazı, Gelibolu Yarımadası).
-- Haritanın dışından gelen ya da dışarı giden için gerçek yerin adını yaz (U-21 [lacivert, denizaltı] Cattaro → Gökçeada): araç haritanın o yöndeki kenarından girer. Yeri bilinmiyorsa yön yaz: batıdan, kuzeyden…
+- Haritanın dışından gelen ya da dışarı giden için de gerçek yeri koordinatıyla yaz (U-21 [kızıl, denizaltı] Cattaro (42.42, 18.77) → Gökçeada (40.16, 25.84)): araç haritanın o yöndeki kenarından girer.
 
 ARAÇ KUTUSU (başka bir şey yazarsan haritada görünmez)
 Taraf: kızıl (anlatılan taraf) · lacivert (karşı taraf); nötrse yazma; hikâye boyunca değişmez.
@@ -375,7 +377,7 @@ Olaylar: atış A → B · bombardıman A → B (üç atış) · torpido A → B
 İkonlar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar · silo · okul · hastane · banka · anıt · kapı · çan · dağ · orman · ağaç · ada · su · balık · çadır · çapa · havaalanı · radar · dürbün · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol · ölüm · mezar · sağlık · anlaşma · belge · taç · nişan · bayrak · hoparlör · telsiz · uydu
 Hava: gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına
 Bayraklar: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
-Aktörler: hareket satırında adı geçen her araç sonraki sahnelerde son yerinde durur; yalnızca yer değiştirince yeniden yaz. Olaylarda yer yerine aktör adını, her yerde aynı yazımla kullan (torpido U-21 → Triumph · batış Triumph). Gemiden gemiye atışta arada kara varsa atan gemi denizden dolaşıp yaklaşır.
+Aktörler: hareket satırında adı geçen her araç sonraki sahnelerde son yerinde durur; yalnızca yer değiştirince yeniden yaz. Olaylarda yer yerine aktör adını, her yerde aynı yazımla kullan (torpido U-21 → Triumph · batış Triumph); aktör olmayan yerleri koordinatıyla yaz (bombardıman Triumph → Kabatepe (40.20, 26.27)). Gemiden gemiye atışta arada kara varsa atan gemi denizden dolaşıp yaklaşır.
 Saat: tarihe saat yazarsan (01.15) ve önceki sahneden farklıysa ekranda saat döner.
 _EN satırları yalnızca çeviridir; alan ekleme.
 
@@ -424,11 +426,11 @@ async function kartUygula(o, yerEkle, log) {
         const uy = r.haritalar.filter(h => HK.haritalar.includes(h)); if (uy.length) st.map = uy[0]; else if (r.haritalar.length) log(`  uyarı: bu yerler hikâyenin haritalarının dışında; kapsayan harita: ${r.haritalar.join(", ")} (Haritalar'dan ekleyebilirsiniz)`);
         if (P.length) { const los = P.map(p => p[1]), las = P.map(p => p[2]), lo0 = Math.min(...los), lo1 = Math.max(...los), la0 = Math.min(...las), la1 = Math.max(...las);
           const mw = KAT[st.map] ? (KAT[st.map].lo1 - KAT[st.map].lo0) * .12 : .3; st.cam = { lo: +((lo0 + lo1) / 2).toFixed(4), la: +((la0 + la1) / 2).toFixed(4), w: +Math.max((lo1 - lo0) * 1.8, (la1 - la0) * 2.6, .3, mw).toFixed(3) }; }
-        if (P.length < s.yer.split(",").filter(x => x.trim()).length) log("  bazı yerler bulunamadı");
+        if (P.length < s.yer.split(/,(?![^()\[\]]*[)\]])/).filter(x => x.trim()).length) log("  bazı yerler bulunamadı");
       } catch (e) { log("  bulunamadı: " + e.message); } }
     if (s.hava !== undefined) { const H = s.hava.split(/[,;]/).map(x => x.trim().toLocaleLowerCase("tr-TR")).filter(x => x && !/^(yok|-|—|gündüz)$/.test(x)); if (H.length) st.hava = H; else delete st.hava; }
     if (yerEkle) {
-      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, yerDis: async ad => { const r = await DEPO.yer(ad, null); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR });
+      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, yerDis: async ad => { const r = await DEPO.yer(ad, null); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, haritalar: HK.haritalar, kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR });
         if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } }
     /* hiç hareket ya da olay yoksa ilk yere vurgu halkası: sahne hareketsiz kalmasın */
     if (!(st.ships || []).some(x => !x.fix) && !["booms", "shots", "vurgu", "ikon", "simsek", "bayrak", "mines", "torpido", "isaret", "anons", "isildak"].some(k => (st[k] || []).length) && (st.pts || []).length) {
