@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "23 · 12 Ekim";
+const SURUM = "24 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -374,7 +374,7 @@ ARAÇ KUTUSU (başka bir şey yazarsan haritada görünmez)
 Taraf: kızıl (anlatılan taraf) · lacivert (karşı taraf); nötrse yazma; hikâye boyunca değişmez.
 Tür: büyük gemi · küçük gemi · denizaltı · at · süvari · asker · ordu · tank · araba · tren · uçak · helikopter · paraşüt · füze · yelkenli · vapur · kara (nokta). Bayrak için: [kızıl, asker, bayrak Osmanlı]
 Olaylar: atış A → B · bombardıman A → B (üç atış) · torpido A → B · patlama YER · büyük patlama YER · batış GEMİ · vurgu YER · işaret GEMİ (yanıp sönen lamba) · ışıldak GEMİ → HEDEF · anons GEMİ (hoparlör) · mayın YER → YER · bayrak ÜLKE YER · yıldırım YER · ikon TÜR [taraf, etiket] YER
-İkonlar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar · silo · okul · hastane · banka · anıt · kapı · çan · dağ · orman · ağaç · ada · su · balık · çadır · çapa · havaalanı · radar · dürbün · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol · ölüm · mezar · sağlık · anlaşma · belge · taç · nişan · bayrak · hoparlör · telsiz · uydu
+İkonlar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar · silo · okul · hastane · banka · anıt · kapı · çan · dağ · orman · ağaç · ada · su · balık · çadır · çapa · havaalanı · radar · dürbün · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol · ölüm · mezar · sağlık · kızılay · kızılhaç · anlaşma · belge · taç · nişan · bayrak · hoparlör · telsiz · uydu
 Hava: gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına
 Bayraklar: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
 Aktörler: hareket satırında adı geçen her araç sonraki sahnelerde son yerinde durur; yalnızca yer değiştirince yeniden yaz. Olaylarda yer yerine aktör adını, her yerde aynı yazımla kullan (torpido U-21 → Triumph · batış Triumph); aktör olmayan yerleri koordinatıyla yaz (bombardıman Triumph → Kabatepe (40.20, 26.27)). Gemiden gemiye atışta arada kara varsa atan gemi denizden dolaşıp yaklaşır.

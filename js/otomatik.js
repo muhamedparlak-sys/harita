@@ -19,7 +19,7 @@
     "yangın": "yangin", "bayrak": "bayrak", "kalkan": "kalkan", "ölüm": "olum", "kayıp": "olum", "taç": "tac", "taht": "tac", "bomba": "bomba", "cami": "cami",
     "kilise": "kilise", "köprü": "kopru", "fabrika": "fabrika", "fener": "fener", "hedef": "hedef", "dağ": "dag", "nişan": "nisan", "madalya": "nisan",
     "hoparlör": "hoparlor", "megafon": "hoparlor", "telsiz": "telsiz", "uydu": "uydu", "yel değirmeni": "degirmen", "değirmen": "degirmen", "rüzgâr türbini": "turbin", "rüzgar türbini": "turbin", "türbin": "turbin",
-    "saray": "saray", "ev": "ev", "köy": "koy", "şehir": "sehir", "kent": "sehir", "kasaba": "koy", "ambar": "ambar", "çiftlik": "ambar", "silo": "silo", "okul": "okul", "hastane": "hastane",
+    "saray": "saray", "ev": "ev", "köy": "koy", "şehir": "sehir", "kent": "sehir", "kasaba": "koy", "ambar": "ambar", "çiftlik": "ambar", "silo": "silo", "okul": "okul", "hastane": "hastane", "kızılay": "kizilay", "hilal-i ahmer": "kizilay", "hilali ahmer": "kizilay", "ters hilal": "kizilay", "kızılhaç": "kizilhac", "kızıl haç": "kizilhac",
     "banka": "banka", "anıt": "anit", "sütun": "anit", "kapı": "kapi", "çan": "can", "orman": "orman", "ağaç": "agac", "ada": "ada", "su": "su", "kuyu": "su", "pınar": "su", "balık": "balik",
     "havaalanı": "havaalani", "havalimanı": "havaalani", "radar": "radar", "dürbün": "durbun", "gözetleme": "durbun", "gözcü": "durbun", "maden": "maden", "petrol": "petrol",
     "mezar": "mezar", "sağlık": "saglik", "yaralı": "saglik", "anlaşma": "anlasma", "barış": "anlasma", "belge": "belge", "antlaşma": "belge", "emir": "belge",
