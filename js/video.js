@@ -158,15 +158,15 @@ const VIDEO = (() => {
     const adil = a.altyazi_dil || a.dil;
     const sesm = o => ((a.dil === "en" ? o.ses_en : o.ses) || ""), altm = o => ((adil === "en" ? o.ses_en : o.ses) || "");
     const SOZ = Object.assign({}, await DEPO.okunusSozluk(), META.okunus || {});
-    const hiz = { sakin: 1.0, canli: 1.1, cok: 1.2 }[a.ton] || 1.1;
+    const hiz = { sakin: 1.08, canli: 1.2, cok: 1.32 }[a.ton] || 1.2, canli = { sakin: 1, canli: 1.18, cok: 1.32 }[a.ton] || 1.18;
 
     async function seslendir(metin, parca) {
       if (!sesOn || !metin.trim()) return { x: null, W: [] };
       if (a.ses === "tts") {
-        const okunan = a.dil === "tr" ? okunus(metin, SOZ).konusma : metin, key = karma(`${a.konusmaci}|${hiz}|${okunan}`);
+        const okunan = a.dil === "tr" ? okunus(metin, SOZ).konusma : metin, key = karma(`${a.konusmaci}|${hiz}|${canli}|${okunan}`);
         let r = await DEPO.sesOnb(key);
-        if (!r) { log(`  ses üretiliyor: ${parca}`); r = await PIPER.oku(okunan, { ses: a.konusmaci, hiz, sr: SR, ilerle: (y, t) => log(`  ses modeli indiriliyor… ${t ? Math.round(y / t * 100) + "%" : Math.round(y / 1e6) + " MB"}`, true) }); await DEPO.sesOnbYaz(key, r); }
-        return EFEKT.sikistir(r.x, r.W, .32);
+        if (!r) { log(`  ses üretiliyor: ${parca}`); r = await PIPER.oku(okunan, { ses: a.konusmaci, hiz, canli, sr: SR, ilerle: (y, t) => log(`  ses modeli indiriliyor… ${t ? Math.round(y / t * 100) + "%" : Math.round(y / 1e6) + " MB"}`, true) }); await DEPO.sesOnbYaz(key, r); }
+        return EFEKT.sikistir(r.x, r.W, .22);
       }
       const b = await DEPO.kayit(AD, parca); if (!b) { log(`  kayıt yok: ${parca} → sessiz`); return { x: null, W: [] }; }
       const W = (await DEPO.kayit(AD, parca + "#W")) || []; /* bilgisayarda üretilen kopya sesin kelime zamanları */
@@ -268,17 +268,21 @@ const VIDEO = (() => {
   }
 
   /* iPhone ekranı kararmasın: Wake Lock (sayfaya dönünce yeniden alınır) + yedek olarak sessiz, görünmez döngü video */
+  let UYAN = null;
+  /* dokunuşun içinde (senkron) çağrılmalı: iPhone sessiz videoyu ve ekran kilidini ancak dokunuşla başlatır */
+  function uyanikBaslat() { if (!UYAN) UYAN = uyanikTut(); }
+  function uyanikBitir() { if (UYAN) { UYAN(); UYAN = null; } }
   function uyanikTut() {
     let kilit = null, bitti = false; const al = async () => { try { if (!bitti && "wakeLock" in navigator && document.visibilityState === "visible") kilit = await navigator.wakeLock.request("screen"); } catch (e) { } };
     const gor = () => { if (document.visibilityState === "visible") { al(); v.play().catch(() => { }); } };
     const v = document.createElement("video"); v.src = "vendor/uyanik.mp4"; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.setAttribute("muted", "");
-    v.style.cssText = "position:fixed;left:0;top:0;width:1px;height:1px;opacity:.01;pointer-events:none"; document.body.append(v); v.play().catch(() => { });
+    v.style.cssText = "position:fixed;left:0;bottom:0;width:4px;height:4px;opacity:.02;pointer-events:none;z-index:9999"; document.body.append(v); v.play().catch(() => { });
     al(); document.addEventListener("visibilitychange", gor);
     return () => { bitti = true; document.removeEventListener("visibilitychange", gor); try { kilit && kilit.release(); } catch (e) { } v.pause(); v.remove(); };
   }
   async function kodla(M, PARCA, T, mix, log, ilerle, durdur) {
     const cv = document.createElement("canvas"); cv.width = WV; cv.height = HV; const ctx = cv.getContext("2d", { alpha: false });
-    const uyan = uyanikTut();
+    const kendi = !UYAN; uyanikBaslat();
     try {
       const K_ = (window.__GERCEK_ZAMANLI || YONTEM === "gercek") ? null : await kodlayiciSec();
       const mixTepe = tepe(mix.L);
@@ -290,7 +294,7 @@ const VIDEO = (() => {
         log("Bu cihazda hızlı modda ses kodlanamadı; gerçek zamanlı kayda geçiliyor (video süresi kadar sürer, uygulamayı açık tutun)."); ilerle(0);
       } else log(`Gerçek zamanlı kayıt${NEDEN ? " — hızlı mod kullanılamıyor: " + NEDEN : ""} (video süresi kadar sürer, uygulamayı açık tutun).`);
       return await gercekZamanli(ctx, cv, M, PARCA, T, mix, log, ilerle, durdur);
-    } finally { uyan(); }
+    } finally { if (kendi) uyanikBitir(); }
   }
 
   async function webcodecs(ctx, cv, M, PARCA, T, mix, K_, log, ilerle, durdur) {
@@ -391,5 +395,5 @@ const VIDEO = (() => {
       return await new Promise(ok => sh.toBlob(ok, "image/png"));
     } finally { M.kapat(); }
   }
-  return { sesKilidiAc, kapak: r => { KAPAK_RESMI = r || null; }, yontem: v => { YONTEM = v; }, uret, kontrolTablosu, okunus, kelimeler, gruplar, svgCiz, cerceveAc, kare };
+  return { sesKilidiAc, uyanikBaslat, uyanikBitir, kapak: r => { KAPAK_RESMI = r || null; }, yontem: v => { YONTEM = v; }, uret, kontrolTablosu, okunus, kelimeler, gruplar, svgCiz, cerceveAc, kare };
 })();

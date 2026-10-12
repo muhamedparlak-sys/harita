@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "33 · 12 Ekim";
+const SURUM = "34 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -604,7 +604,7 @@ async function videoPencere() {
       catch (e) { bildir("Eklenemedi: " + e.message, 5); } };
     i.click(); };
   $("#vBas").onclick = async () => {
-    VIDEO.sesKilidiAc(); VIDEO.yontem($("#vYon").value);
+    VIDEO.sesKilidiAc(); VIDEO.uyanikBaslat(); VIDEO.yontem($("#vYon").value);
     const a = { yontem: $("#vYon").value, ses: $("#vSes").value, konusmaci: $("#vKon").value, ton: $("#vTon").value, dil: $("#vDil").value, altyazi_dil: $("#vADil").value, altyazi: $("#vAlt").value, efekt: $("#vEf").value, adimlar: $("#vAd").value.trim(), tema: $("#vTema").value };
     DEPO.ayarYaz("video", a); VIDEO_DURDUR = false; $("#vBas").disabled = true; $("#vIs").hidden = false; $("#vRes").innerHTML = ""; $("#vLog").textContent = "";
     const log = (t, ust) => { const L = $("#vLog"); if (!L) return; if (ust && L.textContent.endsWith("\n") && L._son && t.startsWith(L._son)) { L.textContent = L.textContent.replace(/[^\n]*\n$/, t + "\n"); } else L.textContent += t + "\n"; L._son = ust ? t.slice(0, 18) : null; L.scrollTop = 1e9; };
@@ -625,7 +625,7 @@ async function videoPencere() {
       $("#vPay").onclick = e => kopyala(paylasimMetni(), e.target); $("#vSesM").onclick = e => kopyala(r.seslendirme, e.target);
       log("Hazır."); $("#vRes").scrollIntoView({ behavior: "smooth" });
     } catch (e) { log("Hata: " + (e.message || e)); if (/Durduruldu/.test(e.message)) bildir("Durduruldu"); }
-    window.__URETIM = 0; if (window.__GUNCEL_BEKLIYOR) bildir("Uygulamanın yeni sürümü hazır; videoyu kaydettikten sonra uygulamayı kapatıp açın.", 6);
+    VIDEO.uyanikBitir(); window.__URETIM = 0; if (window.__GUNCEL_BEKLIYOR) bildir("Uygulamanın yeni sürümü hazır; videoyu kaydettikten sonra uygulamayı kapatıp açın.", 6);
     const b = $("#vBas"); if (b) b.disabled = false; };
 }
 $("#videoBtn").onclick = videoPencere;

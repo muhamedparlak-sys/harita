@@ -90,14 +90,14 @@ const PIPER = (() => {
     return P;
   }
   /* → {x: Float32Array (sr), W: [[t, süre, kelime], …]} */
-  async function oku(metin, { ses = "fahrettin", hiz = 1, sr = 48000, ilerle } = {}) {
+  async function oku(metin, { ses = "fahrettin", hiz = 1, canli = 1, sr = 48000, ilerle } = {}) {
     const { s, cfg } = await oturumAl(ses, ilerle), sr0 = cfg.audio.sample_rate, inf = cfg.inference;
     const parcalar = parcala(metin), out = [], W = []; let t = 0;
     for (const p of parcalar) {
       const ids = await fonem(p, cfg.espeak.voice); if (!ids.length) continue;
       const feeds = { input: new ort.Tensor("int64", BigInt64Array.from(ids.map(BigInt)), [1, ids.length]),
         input_lengths: new ort.Tensor("int64", BigInt64Array.from([BigInt(ids.length)]), [1]),
-        scales: new ort.Tensor("float32", Float32Array.from([inf.noise_scale, inf.length_scale / hiz, inf.noise_w]), [3]) };
+        scales: new ort.Tensor("float32", Float32Array.from([inf.noise_scale * canli, inf.length_scale / hiz, inf.noise_w * Math.min(1.2, canli)]), [3]) };
       if (cfg.num_speakers > 1) feeds.sid = new ort.Tensor("int64", BigInt64Array.from([0n]), [1]);
       const r = await s.run(feeds); let x = await yeniden(r.output.data, sr0, sr);
       /* parçanın içindeki kelimeler: konuşma başı/sonu sessizliği dışında harf sayısına orantılı */
