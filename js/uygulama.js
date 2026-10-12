@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "25 · 12 Ekim";
+const SURUM = "26 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -311,11 +311,11 @@ async function yeniHikaye() { pencere("Yeni hikâye", `<label>Hikâyenin adı<in
 
 /* ---------- menü ---------- */
 const MENU = [["kart", "Kartı içe aktar", "NotebookLM çıktısını sahnelere yerleştir"], ["kabin", "Seslendirme kabini", "Kendi sesinizle okuyun"], ["denetle", "Denetle", "Sahne sayısı, kelime bütçesi, rotalar"],
-  ["dikey", "Dikey kontrol tablosu", "Her sahnenin reel kadrajı tek görselde"], ["yer", "Yer ara", "Bir yeri bulup sahneye ekleyin"], ["haritalar", "Haritalar", "Hikâyenin haritalarını seçin"],
+  ["dikey", "Dikey kontrol tablosu", "Her sahnenin reel kadrajı tek görselde"], ["kapak", "Kapak görseli", "9:16 taktik kapak, en sert andan"], ["yer", "Yer ara", "Bir yeri bulup sahneye ekleyin"], ["haritalar", "Haritalar", "Hikâyenin haritalarını seçin"],
   ["uret", "Yeni harita üret", "Kütüphanede olmayan bölge için"], ["sayfa", "Sayfayı dışa aktar", "Tek dosyalık kaydırmalı web sayfası"], ["disa", "Hikâyeyi dışa aktar", "Yedek ya da masaüstüne taşımak için .json"],
   ["kilavuz", "Kılavuz", "İş akışı ve NotebookLM istemi"], ["sil", "Hikâyeyi sil", "Bu hikâyeyi telefondan kaldır"]];
 $("#menuBtn").onclick = () => { pencere("Menü", `<div class="liste">${MENU.map(([k, a, b]) => `<button data-m="${k}" ${k === "sil" ? 'class="tehlike"' : ""}><span>${a}</span><small>${b}</small></button>`).join("")}</div><p class="ipucu" style="text-align:center">Sürüm ${SURUM}</p>`);
-  $$("#dlgIc [data-m]").forEach(b => b.onclick = () => ({ kart: kartPencere, kabin, denetle, dikey: dikeyTablo, yer: yerAra, haritalar: haritaSec, uret: haritaUret, sayfa: sayfaDisa, disa: hikayeDisa, kilavuz, sil: hikayeSil })[b.dataset.m]()); };
+  $$("#dlgIc [data-m]").forEach(b => b.onclick = () => ({ kart: kartPencere, kabin, denetle, dikey: dikeyTablo, kapak: kapakPencere, yer: yerAra, haritalar: haritaSec, uret: haritaUret, sayfa: sayfaDisa, disa: hikayeDisa, kilavuz, sil: hikayeSil })[b.dataset.m]()); };
 async function denetle() { pencere("Denetim", `<p class="ipucu">Denetleniyor…</p>`);
   const r = HARITA.denetle(V), d = await HARITA.deniz(V);
   $("#dlgIc").innerHTML = `<ul class="denetim">${r.O.map(o => `<li class="${o.b ? "b" : o.u ? "u" : ""}">${o.u ? "! " : ""}${esc(o.b || o.t)}${o.k ? `<br><small>${esc(o.k)}</small>` : ""}</li>`).join("")}</ul>
@@ -324,6 +324,24 @@ async function dikeyTablo() { pencere("Dikey kontrol tablosu", `<p class="ipucu"
   try { const b = await VIDEO.kontrolTablosu(HK, document.documentElement.dataset.theme), u = URL.createObjectURL(b);
     $("#dlgIc").innerHTML = `<img src="${u}" alt="Sahnelerin dikey kadrajları" style="width:100%;border-radius:8px"><button class="ana" id="dkPay">Görseli kaydet / paylaş</button>`;
     $("#dkPay").onclick = () => paylas(b, `${AD}_dikey.png`); } catch (e) { $("#dlgIc").innerHTML = `<p class="ipucu uyari">Hazırlanamadı: ${esc(e.message)}</p>`; } }
+function kapakPencere() { const m = V.meta, P = (m.paylasim = m.paylasim || {}), pk = (P[m.title] = P[m.title] || { kapak: "", aciklama: "", etiketler: [], yorum: "" });
+  const o = (pk.kapakTasarim = Object.assign({}, KAPAK.VARSAYILAN, pk.kapakTasarim || {}));
+  const gir = (k, lab, ph) => `<label>${lab}<input data-k="${k}" value="${esc(o[k] || "")}" placeholder="${esc(ph || "")}"></label>`;
+  const sec = (k, lab, L) => `<label>${lab}<select data-k="${k}">${L.map(([v, t]) => `<option value="${v}" ${o[k] === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>`;
+  pencere("Kapak görseli", `<p class="ipucu">Başlığı kopyalamayın: en çok 3–4 kelime. 1. satır ölçek/neden, 2. satır sonuç/kayıp.</p>
+    <div class="satir">${gir("s1", "1. satır", "26 MINES")}${sec("s1r", "Renk", [["beyaz", "Beyaz"], ["sari", "Taktik sarı"]])}</div>
+    <div class="satir">${gir("s2", "2. satır", "BROKE CHURCHILL")}${sec("s2r", "Renk", [["kirmizi", "Kırmızı"], ["beyaz", "Beyaz"]])}</div>
+    ${gir("alt", "Alt başlık (ince)", "DARDANELLES (1915) - TACTICAL BRIEFING")}
+    <div class="satir">${gir("mavi", "Mavi taraf", "ALLIED FLEET")}${gir("kirmizi", "Kırmızı taraf", "OTTOMAN MINES")}</div>
+    <div class="satir">${gir("kanal", "Kanal", "@battlelinemaps")}${gir("marka", "Marka yazısı", "BATTLELINE")}</div>
+    ${sec("kare", "Kare", [["oto", "Otomatik (S5 patlama → S4 kilitlenme)"], ...V.steps.map((_, i) => [String(i + 1), `S${i + 1}`])])}
+    <div id="kpUyari"></div><button class="ana" id="kpUret">Kapağı üret</button><div id="kpSonuc"></div>`);
+  const uyar = () => { const U = KAPAK.denetle(o, m.title); $("#kpUyari").innerHTML = U.map(u => `<p class="ipucu uyari">${esc(u)}</p>`).join(""); };
+  $$("#dlgIc [data-k]").forEach(e => e.oninput = e.onchange = () => { o[e.dataset.k] = e.value; sadeceKaydet(); uyar(); }); uyar();
+  $("#kpUret").onclick = async () => { const d = $("#kpSonuc"); d.innerHTML = `<p class="ipucu">Hazırlanıyor…</p>`;
+    try { const r = await KAPAK.uret(HK, o), u = URL.createObjectURL(r.blob);
+      d.innerHTML = `<p class="ipucu">Kare: S${r.kare} · ${r.tur === "kilit" ? "kilitlenme" : r.tur === "batis" ? "batış" : "patlama"}</p><img src="${u}" alt="Kapak" style="width:100%;border-radius:8px"><button class="ana" id="kpPay">Kaydet / paylaş</button>`;
+      $("#kpPay").onclick = () => paylas(r.blob, `${AD}_kapak.png`); } catch (e) { d.innerHTML = `<p class="ipucu uyari">Hazırlanamadı: ${esc(e.message)}</p>`; } }; }
 async function sayfaDisa() { const html = await DEPO.sayfaKur(HK, null), b = new Blob([html], { type: "text/html" });
   pencere("Sayfa dışa aktarıldı", `<p>Tek dosyalık web sayfası hazır (${(b.size / 1048576).toFixed(1)} MB). İnternette yayımlayabilir ya da bilgisayara gönderebilirsiniz.</p><div class="satir"><button class="ana" id="spPay">Dosyayı kaydet / paylaş</button><a id="spAc" href="${URL.createObjectURL(b)}" target="_blank"><button>Sayfayı aç</button></a></div>`);
   $("#spPay").onclick = () => paylas(b, `${AD}.html`); }
