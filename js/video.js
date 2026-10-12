@@ -237,10 +237,13 @@ const VIDEO = (() => {
   }
 
   function parcaBul(PARCA, t) { for (const p of PARCA) if (t < p.t0 + p.sure) return p; return PARCA[PARCA.length - 1]; }
+  /* filigran: yuvarlak logo sağ üst köşede; her 8 sn'de bir dikey eksende bir tur döner */
+  function filigranCiz(ctx, t) { const L = window.__MARKA_LOGO; if (!L) return; const r = 62, x = WV - 50 - r, y = 300 + r, f = t % 8, sx = f < 1.4 ? Math.cos(f / 1.4 * Math.PI * 2) : 1;
+    ctx.save(); ctx.globalAlpha = .82; ctx.translate(x, y); ctx.scale(Math.max(.04, Math.abs(sx)), 1); ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 12; ctx.drawImage(L, -r, -r, 2 * r, 2 * r); ctx.restore(); }
   let KAPAK_RESMI = null; /* seçilen kapak videonun ilk karelerine konur: platform kapağı otomatik onu alır */
   function cizZaman(ctx, M, PARCA, t) { if (KAPAK_RESMI && t < .1) { ctx.globalAlpha = 1; ctx.drawImage(KAPAK_RESMI, 0, 0, WV, HV); return; } const p = parcaBul(PARCA, t), u = Math.min(1, Math.max(0, (t - p.t0) / p.sure));
     /* hook ve soru kendi içinde yaklaşır; sahneler sahne ilerlemesini kullanır */
-    kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip, p.ad === "Hook" ? u : null, p.ad === "Hook"); }
+    kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip, p.ad === "Hook" ? u : null, p.ad === "Hook"); filigranCiz(ctx, t); }
 
   let ACX = null, YONTEM = "oto";
   /* iOS'ta ses motoru yalnızca bir dokunuşla açılır: Üret'e dokunulduğunda çağrılır */

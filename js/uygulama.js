@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "29 · 12 Ekim";
+const SURUM = "30 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -324,8 +324,13 @@ async function dikeyTablo() { pencere("Dikey kontrol tablosu", `<p class="ipucu"
   try { const b = await VIDEO.kontrolTablosu(HK, document.documentElement.dataset.theme), u = URL.createObjectURL(b);
     $("#dlgIc").innerHTML = `<img src="${u}" alt="Sahnelerin dikey kadrajları" style="width:100%;border-radius:8px"><button class="ana" id="dkPay">Görseli kaydet / paylaş</button>`;
     $("#dkPay").onclick = () => paylas(b, `${AD}_dikey.png`); } catch (e) { $("#dlgIc").innerHTML = `<p class="ipucu uyari">Hazırlanamadı: ${esc(e.message)}</p>`; } }
+/* marka: logo (yuvarlak kırpılır), kanal ve marka yazısı telefonda saklanır; depoya girmez */
+async function logoHazirla(blob) { if (!blob) { window.__MARKA_LOGO = null; return; }
+  const im = await createImageBitmap(blob), k = Math.min(im.width, im.height), R = 256, cv = document.createElement("canvas"); cv.width = cv.height = R; const c = cv.getContext("2d");
+  c.beginPath(); c.arc(R / 2, R / 2, R / 2, 0, 7); c.clip(); c.drawImage(im, (im.width - k) / 2 + k * .02, (im.height - k) / 2 + k * .02, k * .96, k * .96, 0, 0, R, R); window.__MARKA_LOGO = cv; }
 function kapakPencere() { const m = V.meta, P = (m.paylasim = m.paylasim || {}), pk = (P[m.title] = P[m.title] || { kapak: "", aciklama: "", etiketler: [], yorum: "" });
   const o = (pk.kapakTasarim = Object.assign({}, KAPAK.VARSAYILAN, pk.kapakTasarim || {}));
+  const MK = VAR.marka || {}; if (!o.kanal && MK.kanal) o.kanal = MK.kanal; if (!o.marka && MK.marka) o.marka = MK.marka;
   /* yazı boşsa Instagram kapak yazısından: "26 mayın, 3 zırhlı" → iki satır */
   if (!o.s1 && !o.s2 && pk.kapak) { const p = pk.kapak.split(/\s*[,;–—:]\s*|\s+-\s+/).filter(Boolean); o.s1 = p[0] || ""; o.s2 = p.slice(1).join(" "); }
   const gir = (k, lab, ph) => `<label>${lab}<input data-k="${k}" value="${esc(o[k] || "")}" placeholder="${esc(ph || "")}"></label>`;
@@ -335,11 +340,15 @@ function kapakPencere() { const m = V.meta, P = (m.paylasim = m.paylasim || {}),
     <div class="satir">${gir("s2", "2. satır", "BROKE CHURCHILL")}${sec("s2r", "Renk", [["kirmizi", "Kırmızı"], ["beyaz", "Beyaz"]])}</div>
     ${gir("alt", "Alt başlık (ince)", "DARDANELLES (1915) - TACTICAL BRIEFING")}
     <div class="satir">${gir("mavi", "Mavi taraf", "ALLIED FLEET")}${gir("kirmizi", "Kırmızı taraf", "OTTOMAN MINES")}</div>
-    <div class="satir">${gir("kanal", "Kanal", "@battlelinemaps")}${gir("marka", "Marka yazısı", "BATTLELINE")}</div>
+    <div class="satir">${gir("kanal", "Kanal", "@kanaladı")}${gir("marka", "Marka yazısı", "MARKA")}</div><div class="satir"><button id="kpLogo">${window.__MARKA_LOGO ? "Logoyu değiştir" : "Logo yükle"}</button>${window.__MARKA_LOGO ? '<button id="kpLogoSil" class="tehlike">Logoyu kaldır</button>' : ""}</div><p class="ipucu">Logo videoda sağ üst köşede filigran olur ve 8 saniyede bir döner; kapakta imzanın yanında durur.</p>
     ${sec("kare", "İlk aday", [["oto", "Otomatik (S5 patlama → S4 kilitlenme)"], ...V.steps.map((_, i) => [String(i + 1), `S${i + 1}`])])}
     <div id="kpUyari"></div><button class="ana" id="kpUret">4 kapak üret</button><div id="kpSonuc"></div>`);
   const uyar = () => { const U = KAPAK.denetle(o, m.title); $("#kpUyari").innerHTML = U.map(u => `<p class="ipucu uyari">${esc(u)}</p>`).join(""); };
-  $$("#dlgIc [data-k]").forEach(e => e.oninput = e.onchange = () => { o[e.dataset.k] = e.value; sadeceKaydet(); uyar(); }); uyar();
+  $$("#dlgIc [data-k]").forEach(e => e.oninput = e.onchange = () => { o[e.dataset.k] = e.value; sadeceKaydet(); uyar();
+    if (e.dataset.k === "kanal" || e.dataset.k === "marka") { VAR.marka = Object.assign({}, VAR.marka || {}, { [e.dataset.k]: e.value }); DEPO.ayarYaz("marka", VAR.marka); } }); uyar();
+  $("#kpLogo").onclick = () => { const i = document.createElement("input"); i.type = "file"; i.accept = "image/*";
+    i.onchange = async () => { const f = i.files[0]; if (!f) return; VAR.marka = Object.assign({}, VAR.marka || {}, { logo: f }); await DEPO.ayarYaz("marka", VAR.marka); await logoHazirla(f); bildir("Logo kaydedildi"); kapakPencere(); }; i.click(); };
+  if ($("#kpLogoSil")) $("#kpLogoSil").onclick = async () => { if (VAR.marka) delete VAR.marka.logo; await DEPO.ayarYaz("marka", VAR.marka || {}); await logoHazirla(null); kapakPencere(); };
   const seciliGoster = async () => { const k = await DEPO.ayar("kapak:" + AD), d = $("#kpSecili"); if (!d) return;
     if (!k || !k.blob) { d.innerHTML = ""; return; }
     d.innerHTML = `<h3>Seçili kapak</h3><img src="${URL.createObjectURL(k.blob)}" alt="Seçili kapak" style="width:46%;border-radius:8px;display:block;margin:0 auto 8px"><p class="ipucu">Video üretilince ilk kareye konur; Instagram kapağı otomatik bunu alır.</p>
@@ -639,6 +648,7 @@ async function ornekYukle() { const hk = await (await fetch("ornek/Bogaz_gecilme
   const L = await DEPO.hikayeler(), son = await DEPO.ayar("son");
   if (!L.length) await ornekYukle(); else await yukle(L.includes(son) ? son : L[0]);
   aracSec("sec");
+  try { VAR.marka = (await DEPO.ayar("marka")) || {}; if (VAR.marka.logo) await logoHazirla(VAR.marka.logo); } catch (e) { }
   try { const o = await DEPO.ayar("sonVideo"); if (o && o.blob && !o.alindi) bildir("Kaydedilmemiş bir video var: Menü → Son üretilen video", 6); } catch (e) { }
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     const vardi = !!navigator.serviceWorker.controller; let yenilendi = false;

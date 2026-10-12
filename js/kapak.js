@@ -3,7 +3,7 @@
 const KAPAK = (() => {
   const W = 1080, H = 1920, K = 2;
   const RENK = { beyaz: "#FFFFFF", sari: "#F4A261", kirmizi: "#E63946", mavi: "#4EA8FF", deniz: "#0B132B", hud: "#7FDBFF" };
-  const VARSAYILAN = { s1: "", s1r: "beyaz", s2: "", s2r: "kirmizi", alt: "", mavi: "ALLIED FLEET", kirmizi: "OTTOMAN MINES", kanal: "@battlelinemaps", marka: "BATTLELINE", kare: "oto" };
+  const VARSAYILAN = { s1: "", s1r: "beyaz", s2: "", s2r: "kirmizi", alt: "", mavi: "ALLIED FLEET", kirmizi: "OTTOMAN MINES", kanal: "", marka: "", kare: "oto" };
   const AILE = "Anton, Impact, 'Arial Narrow', sans-serif";
 
   /* motor içinde çalışan yardımcı: odak noktası, aktörler, koordinat */
@@ -123,12 +123,13 @@ const KAPAK = (() => {
   }
   function marka(c, o) {
     const x = 56, y = 1556; c.save();
-    c.globalAlpha = .9; c.strokeStyle = "#fff"; c.lineWidth = 3.5; c.beginPath(); c.arc(x + 24, y + 24, 20, 0, 7); c.stroke();
+    if (window.__MARKA_LOGO) { c.globalAlpha = 1; c.drawImage(window.__MARKA_LOGO, x - 18, y - 18, 84, 84); }
+    else { c.globalAlpha = .9; c.strokeStyle = "#fff"; c.lineWidth = 3.5; c.beginPath(); c.arc(x + 24, y + 24, 20, 0, 7); c.stroke();
     c.beginPath(); c.moveTo(x + 24, y - 2); c.lineTo(x + 24, y + 50); c.moveTo(x - 2, y + 24); c.lineTo(x + 50, y + 24); c.stroke();
-    c.fillStyle = RENK.kirmizi; c.beginPath(); c.arc(x + 24, y + 24, 6, 0, 7); c.fill();
+    c.fillStyle = RENK.kirmizi; c.beginPath(); c.arc(x + 24, y + 24, 6, 0, 7); c.fill(); }
     c.textBaseline = "alphabetic"; c.fillStyle = "#fff";
-    if (o.marka) { c.font = `34px ${AILE}`; if ("letterSpacing" in c) c.letterSpacing = "3px"; c.fillText(o.marka.toLocaleUpperCase("en-US"), x + 64, y + 22); if ("letterSpacing" in c) c.letterSpacing = "0px"; }
-    c.font = `600 26px Inter, sans-serif`; c.globalAlpha = .82; c.fillText(o.kanal || "", x + 64, y + (o.marka ? 52 : 34));
+    if (o.marka) { c.font = `34px ${AILE}`; if ("letterSpacing" in c) c.letterSpacing = "3px"; c.fillText(o.marka.toLocaleUpperCase("en-US"), x + (window.__MARKA_LOGO ? 82 : 64), y + 22); if ("letterSpacing" in c) c.letterSpacing = "0px"; }
+    c.font = `600 26px Inter, sans-serif`; c.globalAlpha = .82; c.fillText(o.kanal || "", x + (window.__MARKA_LOGO ? 82 : 64), y + (o.marka ? 52 : 34));
     c.restore();
   }
 
