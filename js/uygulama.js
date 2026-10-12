@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "24 · 12 Ekim";
+const SURUM = "25 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -371,9 +371,9 @@ YER ADLARI (yer, hareket, olay alanlarının hepsi)
 - Haritanın dışından gelen ya da dışarı giden için de gerçek yeri koordinatıyla yaz (U-21 [kızıl, denizaltı] Cattaro (42.42, 18.77) → Gökçeada (40.16, 25.84)): araç haritanın o yöndeki kenarından girer.
 
 ARAÇ KUTUSU (başka bir şey yazarsan haritada görünmez)
-Taraf: kızıl (anlatılan taraf) · lacivert (karşı taraf); nötrse yazma; hikâye boyunca değişmez.
+Taraf: kızıl (anlatılan taraf) · lacivert (karşı taraf) · sarı (kıyı mevzisi, batarya ya da üçüncü taraf); nötrse yazma; hikâye boyunca değişmez.
 Tür: büyük gemi · küçük gemi · denizaltı · at · süvari · asker · ordu · tank · araba · tren · uçak · helikopter · paraşüt · füze · yelkenli · vapur · kara (nokta). Bayrak için: [kızıl, asker, bayrak Osmanlı]
-Olaylar: atış A → B · bombardıman A → B (üç atış) · torpido A → B · patlama YER · büyük patlama YER · batış GEMİ · vurgu YER · işaret GEMİ (yanıp sönen lamba) · ışıldak GEMİ → HEDEF · anons GEMİ (hoparlör) · mayın YER → YER · bayrak ÜLKE YER · yıldırım YER · ikon TÜR [taraf, etiket] YER
+Olaylar: atış A → B · bombardıman A → B (üç atış) · torpido A → B · patlama YER · büyük patlama YER · batış GEMİ · vurgu YER · işaret GEMİ (yanıp sönen lamba) · ışıldak GEMİ → HEDEF · anons GEMİ (telsiz/hoparlör) · mayın YER → YER · bayrak ÜLKE YER · yıldırım YER · ikon TÜR [taraf, etiket] YER
 İkonlar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar · silo · okul · hastane · banka · anıt · kapı · çan · dağ · orman · ağaç · ada · su · balık · çadır · çapa · havaalanı · radar · dürbün · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol · ölüm · mezar · sağlık · kızılay · kızılhaç · anlaşma · belge · taç · nişan · bayrak · hoparlör · telsiz · uydu
 Hava: gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına
 Bayraklar: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
@@ -518,7 +518,7 @@ async function videoPencere() {
     <div class="izgara2"><label>Seslendirme dili<select id="vDil"><option value="tr">Türkçe</option><option value="en">İngilizce (sahnelerdeki İngilizce metin)</option></select></label>
     <label>Altyazı dili<select id="vADil"><option value="">Sesle aynı (kelime kelime)</option><option value="tr">Türkçe</option><option value="en">İngilizce</option></select></label>
     <label>Altyazı<select id="vAlt"><option value="on">Açık</option><option value="off">Kapalı</option></select></label><label>Efektler<select id="vEf"><option value="kisik">Kısık</option><option value="on" selected>Normal</option><option value="guclu">Güçlü</option><option value="off">Kapalı</option></select></label>
-    <label>Kodlama<select id="vYon"><option value="oto">Otomatik (hızlı)</option><option value="gercek">Gerçek zamanlı kayıt</option></select></label><label>Harita teması<select id="vTema"><option value="light">Açık</option><option value="dark">Koyu</option></select></label><label>Yalnız şu sahneler<input id="vAd" placeholder="hepsi · ör. 8 ya da 5-8" inputmode="text"></label></div>
+    <label>Kodlama<select id="vYon"><option value="oto">Otomatik (hızlı)</option><option value="gercek">Gerçek zamanlı kayıt</option></select></label><label>Harita teması<select id="vTema"><option value="light">Açık</option><option value="dark">Koyu</option><option value="taktik">Taktik</option></select></label><label>Yalnız şu sahneler<input id="vAd" placeholder="hepsi · ör. 8 ya da 5-8" inputmode="text"></label></div>
     <p class="ipucu" id="vNot"></p>
     <button class="ana" id="vBas">Üret</button>
     <div id="vIs" hidden><div class="ilerleme"><b id="vBar"></b></div><div class="satir" style="justify-content:space-between"><span id="vYuzde" class="ipucu" style="background:none;padding:0"></span><button id="vDur" class="tehlike">Durdur</button></div><pre class="log" id="vLog"></pre></div>

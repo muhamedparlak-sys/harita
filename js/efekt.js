@@ -115,8 +115,15 @@ const EFEKT = (() => {
   function isaret(d = 1.1) { const n = N(d), x = new Float32Array(n);
     for (const [a, b] of [[0, .09], [.16, .25], [.32, .52], [.6, .69], [.76, .96]]) for (let i = N(a); i < N(b) && i < n; i++) { const t = i / SR; x[i] = Math.sin(2 * Math.PI * 880 * t) * Math.min(1, (t - a) / .005, (b - t) / .005); }
     return st(norm(lp(x, 3000), .22), .3); }
-  function anons(d = 1.0) { const n = N(d), x = map(n, (i, t) => { const f0 = 210 + 40 * Math.sin(2 * Math.PI * 3 * t); let v = 0; for (let h = 1; h < 9; h++) v += Math.sin(2 * Math.PI * f0 * h * t) / h; return v * Math.min(1, t / .03, (d - t) / .08) * (.6 + .4 * Math.sin(2 * Math.PI * 5.5 * t)); });
-    return st(norm(yanki(bp(x, 450, 2600), .3), .45)); }
+  /* telsiz anonsu: mandal tıkı (PTT) → 400–3400 Hz bantta cızırtılı konuşma tınısı ve parazit → kapanışta kısa "kşşt" */
+  function anons(d = 1.25) { const n = N(d), g = gurultu(d), x = new Float32Array(n);
+    const tik = (t0, f) => { const i0 = N(t0); for (let j = 0; j < N(.012) && i0 + j < n; j++) { const t = j / SR; x[i0 + j] += (g[(i0 + j) % n] * .7 + Math.sin(2 * Math.PI * f * t)) * Math.exp(-t * 420) * 1.2; } };
+    tik(0, 1800);
+    for (let i = N(.05); i < N(d - .2); i++) { const t = i / SR, f0 = 170 + 35 * Math.sin(2 * Math.PI * 2.3 * t) + 20 * Math.sin(2 * Math.PI * 7.1 * t); let v = 0;
+      for (let h = 1; h < 12; h++) v += Math.sin(2 * Math.PI * f0 * h * t) / h; const hece = .45 + .55 * Math.max(0, Math.sin(2 * Math.PI * 4.2 * t)) ** .6; x[i] += Math.tanh(v * 1.6) * hece * .55 + g[i] * .05; }
+    for (let i = N(d - .2); i < N(d - .05); i++) x[i] += g[i] * .45 * (1 - (i - N(d - .2)) / N(.15));
+    tik(d - .05, 1400);
+    return st(norm(bp(x, 400, 3400), .5), .15); }
   function saat(d = 1.6) { const n = N(d), x = new Float32Array(n);
     for (let k = 0; k < 4; k++) { const i0 = N(k * .38), f0 = k % 2 ? 2300 : 3100, ns = hp(gurultu(.03), 2000); for (let j = 0; j < ns.length && i0 + j < n; j++) { const t = j / SR; x[i0 + j] += (ns[j] * .6 + Math.sin(2 * Math.PI * f0 * t)) * Math.exp(-t * 160); } }
     return st(norm(yanki(x, .15), .4)); }

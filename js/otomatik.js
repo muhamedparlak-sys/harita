@@ -29,7 +29,7 @@
     for (const a of Object.keys(IKON)) { const a2 = a.replace(/â/g, "a"); if (k.startsWith(a2) && (k.length === a2.length || /[\s\[(]/.test(k[a2.length])) && (!en || a2.length > en.length)) en = a2; }
     if (!en) return null; const key = Object.keys(IKON).find(a => a.replace(/â/g, "a") === en); return [IKON[key], x.trim().slice(en.length).trim()]; }
   const DENIZ_IKON = new Set(["yelkenli", "gemi", "denizalti", "vapur"]);
-  const TARAF = { "kızıl": "o", "kirmizi": "o", "kırmızı": "o", "lacivert": "i", "mavi": "i", "nötr": "", "notr": "" };
+  const TARAF = { "kızıl": "o", "kirmizi": "o", "kırmızı": "o", "lacivert": "i", "mavi": "i", "sarı": "y", "sari": "y", "turuncu": "y", "nötr": "", "notr": "" };
   const BAYRAK_AD = { "türk": "tr", "türkiye": "tr", "osmanlı": "osm", "ingiliz": "gb", "ingiltere": "gb", "britanya": "gb", "fransız": "fr", "fransa": "fr",
     "alman": "de", "almanya": "de", "rus": "ru", "rusya": "ru", "italyan": "it", "italya": "it", "yunan": "gr", "yunanistan": "gr", "amerikan": "us", "abd": "us",
     "avusturya": "at", "bulgar": "bg", "bulgaristan": "bg", "avustralya": "au", "yeni zelanda": "nz", "japon": "jp", "japonya": "jp", "ispanyol": "es", "ispanya": "es" };

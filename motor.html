@@ -7,20 +7,26 @@
 :root{
   --bg:#F6F7F5; --ink:#152021; --muted:#5B6664; --faint:#8C9795; --line:#DCE2E0; --soft:#ECF0EE; --raised:#FFFFFF;
   --sea:#17495A; --sea-soft:#DCE8EB; --on-sea:#FFFFFF; --clay:#9C5B38; --clay-soft:#F1E3D6; --gold:#E2A21F; --sky:#EEF3F2;
-  --o:#B4381F; --i:#14263D;
+  --o:#B4381F; --i:#14263D; --y:#C9731E;
   --m-land:#E9ECE6; --m-coast:#6F7B78; --m-s0:#C3DFE9; --m-s1:#3A7C99; --m-halo:#F6F7F5;
   --sans:"Instrument Sans","Segoe UI",system-ui,-apple-system,sans-serif;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ color-scheme:dark;
   --bg:#111617; --ink:#E6EAE8; --muted:#A1ABA9; --faint:#6E7977; --line:#283133; --soft:#182022; --raised:#1A2224;
   --sea:#8CC3D1; --sea-soft:#1B3037; --on-sea:#0C1A1E; --clay:#DB9A72; --clay-soft:#33251D; --gold:#F0B93A; --sky:#141C1E;
-  --o:#FF9B78; --i:#F4F6F8;
+  --o:#FF9B78; --i:#F4F6F8; --y:#F4A261;
   --m-land:#232C2D; --m-coast:#A9B4B1; --m-s0:#37788F; --m-s1:#123847; --m-halo:#111617; } }
 :root[data-theme="dark"]{ color-scheme:dark;
   --bg:#111617; --ink:#E6EAE8; --muted:#A1ABA9; --faint:#6E7977; --line:#283133; --soft:#182022; --raised:#1A2224;
   --sea:#8CC3D1; --sea-soft:#1B3037; --on-sea:#0C1A1E; --clay:#DB9A72; --clay-soft:#33251D; --gold:#F0B93A; --sky:#141C1E;
-  --o:#FF9B78; --i:#F4F6F8;
+  --o:#FF9B78; --i:#F4F6F8; --y:#F4A261;
   --m-land:#232C2D; --m-coast:#A9B4B1; --m-s0:#37788F; --m-s1:#123847; --m-halo:#111617; }
+/* taktik tema: gece mavisi deniz, parlayan cyan kıyı, desatüre kara */
+:root[data-theme="taktik"]{ color-scheme:dark;
+  --bg:#0B132B; --ink:#E8EEF5; --muted:#9AA8BC; --faint:#66748A; --line:#1E2A45; --soft:#121D38; --raised:#14203D;
+  --sea:#5FD3FF; --sea-soft:#13254A; --on-sea:#06101F; --clay:#F4A261; --clay-soft:#33251D; --gold:#FFD23F; --sky:#0B132B;
+  --o:#FF4D5A; --i:#6FB7FF; --y:#F4A261;
+  --m-land:#3B4352; --m-coast:#4FD8FF; --m-s0:#16305A; --m-s1:#0B132B; --m-halo:#07101F; }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;padding-inline:16px;padding-block:14px 64px;-webkit-font-smoothing:antialiased;margin:0}
 main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
@@ -79,7 +85,7 @@ sup a{color:inherit;text-decoration:none}
 .wn{font-size:16px}
 .wn b{font-weight:600}
 .fl{font-style:normal;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-left:6px}
-.fo{color:var(--o)} .fi{color:var(--i)}
+.fo{color:var(--o)} .fi{color:var(--i)} .fy{color:var(--y)}
 .wh{font-size:14px;color:var(--muted)}
 </style>
 <main>
@@ -145,6 +151,12 @@ function paint(m){ if(!m.ok) return; const V=m.V, N=V.length, W=m.w, C=COL, sea=
   for(let e=0;e<128;e++){ const t=e/127; sea[e]=pk(lerp(C.s0[0],C.s1[0],t),lerp(C.s0[1],C.s1[1],t),lerp(C.s0[2],C.s1[2],t)); }
   for(let s=0;s<32;s++){ const f=1+(s-19.8)*.0102; land[s]=pk(Math.min(255,C.land[0]*f),Math.min(255,C.land[1]*f),Math.min(255,C.land[2]*f)); }
   for(let i=0;i<N;i++){ const v=V[i]; if(v<128) o[i]=sea[v]; else { const x=i%W, c=(x>0&&V[i-1]<128)||(x<W-1&&V[i+1]<128)||(i>=W&&V[i-W]<128)||(i<N-W&&V[i+W]<128); o[i]=c?co:land[(v-128)>>2]; } }
+  /* taktik temada kıyı çizgisi parlar: kıyıya 1–3 piksel yakın denize ışık sızar */
+  if(document.documentElement.dataset.theme==="taktik"){ const H=m.h, uz=new Uint8Array(N).fill(9);
+    for(let i=0;i<N;i++) if(o[i]===co) uz[i]=0;
+    for(let r=1;r<=3;r++) for(let i=0;i<N;i++){ if(uz[i]!==9||V[i]>=128) continue; const x=i%W; if((x>0&&uz[i-1]===r-1)||(x<W-1&&uz[i+1]===r-1)||(i>=W&&uz[i-W]===r-1)||(i<N-W&&uz[i+W]===r-1)) uz[i]=r; }
+    for(let i=0;i<N;i++){ const r=uz[i]; if(r<1||r>3) continue; const a=[.55,.3,.14][r-1], v=V[i], b=sea[v];
+      o[i]=pk(lerp(b&255,C.coast[0],a),lerp((b>>8)&255,C.coast[1],a),lerp((b>>16)&255,C.coast[2],a)); } }
   m.x.putImageData(m.img,0,0); }
 /* gece paleti: deniz koyu lacivert, kara açık gri-mavi, kıyı parlak çizgi; kara ve deniz geceleyin de ayrılsın */
 function paintGece(m){ if(!m.ok||m.cN) return m.cN; const V=m.V, N=V.length, W=m.w, c=document.createElement("canvas"); c.width=m.w; c.height=m.h; const x=c.getContext("2d"), im=x.createImageData(m.w,m.h), o=new Uint32Array(im.data.buffer);
@@ -175,7 +187,7 @@ const camOf=c=>VID?c.vr:camRect(c.m,c.cam);
 const el=(t,a,p)=>{ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); (p||ov).append(e); return e; };
 const HALO="stroke:var(--m-halo);stroke-opacity:.8;fill:var(--ink)";
 const txt=(p,str,o)=>{ const t=el("text",Object.assign({"paint-order":"stroke","stroke-width":4.5,"stroke-linejoin":"round","font-size":20,style:HALO},o||{}),p); t.textContent=str; return t; };
-const SIDE={o:"var(--o)",i:"var(--i)"};
+const SIDE={o:"var(--o)",i:"var(--i)",y:"var(--y)"};
 const GLYPH={dot:"M-4.6 0A4.6 4.6 0 1 0 4.6 0A4.6 4.6 0 1 0 -4.6 0Z",big:"M-13 -4.4H6.5L13 0L6.5 4.4H-13Z",small:"M-8.5 -3.1H4L8.5 0L4 3.1H-8.5Z",sub:"M-11 0C-11 -2.9 -8 -3.1 -4 -3.1H5C9 -3.1 12 -1.4 12 0C12 1.4 9 3.1 5 3.1H-4C-8 3.1 -11 2.9 -11 0Z"};
 const CROSS="M-5 -5L5 5M5 -5L-5 5", CROSS_S="M-3.8 -3.8L3.8 3.8M3.8 -3.8L-3.8 3.8";
 const cross=(p,side,d,op)=>{ const g=el("g",{opacity:op==null?1:op},p); el("path",{d,fill:"none","stroke-width":5.2,"stroke-linecap":"round",style:"stroke:var(--m-halo)","stroke-opacity":.85},g); el("path",{d,fill:"none","stroke-width":2.5,"stroke-linecap":"round",style:"stroke:"+SIDE[side]},g); return g; };
@@ -214,6 +226,8 @@ ST.forEach((c,i)=>{ const g=GS[i], m=MAPS[c.map]; c.m=m; c.items=[]; c.EV=[]; c.
     const o={sh,legs,kind}; const lw=sh.lab&&sh.n?TW(sh.n,19)+Math.abs(sh.lab[0]):0;
     for(const L of legs) for(const q of L.q) foc(q[0],q[1],14+(sh.lab&&sh.lab[2]==="end"?lw:sh.lab&&sh.lab[2]==="middle"?lw/2:0),14+(sh.lab&&sh.lab[2]==="start"?lw:sh.lab&&sh.lab[2]==="middle"?lw/2:0),14+(sh.lab?Math.max(0,-sh.lab[1])+6:0),14+(sh.lab?Math.max(0,sh.lab[1]):0),1);
     o.sw=kind==="big"?2.6:2.1; o.trail=el("path",{fill:"none","stroke-width":o.sw,"stroke-linecap":"round","stroke-linejoin":"round","stroke-opacity":.75,style:"stroke:"+col},gT); if(kind==="sub") o.trail.setAttribute("stroke-dasharray","5 5");
+    /* sönen iz: eski rota silik, aracın arkasında parlak kısa bir kuyruk */
+    o.tail=el("path",{fill:"none","stroke-width":o.sw*1.25,"stroke-linecap":"round","stroke-linejoin":"round",style:"stroke:"+col},gT); if(kind==="sub") o.tail.setAttribute("stroke-dasharray","5 5");
     o.g=el("g",{},gS);
     if(sh.ikon){ const am=AMBLEM.has(sh.ikon); o.ik=el("g",{},o.g); el("circle",{r:13,"stroke-width":2,style:`fill:${am?"#fff":col};stroke:${am?"#E30A17":"var(--m-halo)"}`},o.ik); o.ikp=el("path",{d:ICONS[sh.ikon]||ICONS.hedef,transform:"translate(-9 -9) scale(.75)",style:`fill:${am?"#E30A17":"var(--m-halo)"}`},o.ik); }
     o.hull=el("path",{d:sh.ikon?"M0 0":GLYPH[kind],"stroke-width":1.5,"stroke-linejoin":"round",style:"fill:"+col+";stroke:var(--m-halo)"},o.g); if(kind==="sub") el("rect",{x:-1.5,y:-1.6,width:5,height:3.2,rx:1.2,style:"fill:var(--m-halo)","fill-opacity":.85},o.g);
@@ -247,7 +261,7 @@ ST.forEach((c,i)=>{ const g=GS[i], m=MAPS[c.map]; c.m=m; c.items=[]; c.EV=[]; c.
   /* ikon: [lo,la,"tür",taraf?,boyut?,t0?,t1?,"etiket"?] — rozet içinde ikon, t0'da belirir */
   c.P=[]; c.V=[];
   for(const [lo,la,tur,s,k0,t0,t1,lab] of c.ikon||[]){ const k=k0||1, q=add(lo,la,el("g",{},gI)), inn=el("g",{},q), it=c.items[c.items.length-1];
-    const am=AMBLEM.has(tur); el("circle",{r:13*k,"stroke-width":2,style:`fill:${am?"#fff":s==="o"?"var(--o)":s==="i"?"var(--i)":"var(--ink)"};stroke:${am?"#E30A17":"var(--m-halo)"}`},inn);
+    const am=AMBLEM.has(tur); el("circle",{r:13*k,"stroke-width":2,style:`fill:${am?"#fff":s==="o"?"var(--o)":s==="i"?"var(--i)":s==="y"?"var(--y)":"var(--ink)"};stroke:${am?"#E30A17":"var(--m-halo)"}`},inn);
     el("path",{d:ICONS[tur]||ICONS.hedef,transform:`translate(${-9*k} ${-9*k}) scale(${.75*k})`,style:`fill:${am?"#E30A17":"var(--m-halo)"}`},inn);
     if(lab) txt(inn,lab,{y:13*k+19,"text-anchor":"middle","font-size":17,"font-weight":600});
     c.P.push({inn,t0:t0||0,t1:t1==null?1:t1,it,k,r:14,lw:lab?TW(lab,17):0}); foc(it.X,it.Y,16*k+(lab?TW(lab,17)/2:0),16*k+(lab?TW(lab,17)/2:0),16*k,16*k+(lab?24:0),1); if(t0>0) c.EV.push({t:t0,tur:"pop",k}); }
@@ -259,7 +273,7 @@ ST.forEach((c,i)=>{ const g=GS[i], m=MAPS[c.map]; c.m=m; c.items=[]; c.EV=[]; c.
     el("image",{href:FLAGS[kod]||FLAGS.tr,x:1.5,y:-33.5*k,width:27*k,height:20*k,preserveAspectRatio:"none"},inn);
     c.P.push({inn,t0:t0||0,t1:t1==null?1:t1,it,k,flag:1}); foc(it.X,it.Y,6,32*k,38*k,6,1); if(t0>0) c.EV.push({t:t0,tur:"bayrak",k}); }
   /* vurgu (kalp atışı): [lo,la,yarıçap_km,t0,t1,taraf?,atış?] ya da {poly:[[lo,la],…],t0,t1,s?,n?} */
-  for(const a of c.vurgu||[]){ const o=Array.isArray(a)?{lo:a[0],la:a[1],km:a[2],t0:a[3],t1:a[4],s:a[5],n:a[6]}:Object.assign({},a), col=o.s==="o"?"var(--o)":o.s==="i"?"var(--i)":"var(--gold)";
+  for(const a of c.vurgu||[]){ const o=Array.isArray(a)?{lo:a[0],la:a[1],km:a[2],t0:a[3],t1:a[4],s:a[5],n:a[6]}:Object.assign({},a), col=o.s==="o"?"var(--o)":o.s==="i"?"var(--i)":o.s==="y"?"var(--y)":"var(--gold)";
     const n=o.n||3, gV=el("g",{},gW);
     if(o.poly){ const Q=o.poly.map(([lo,la])=>PX(lo,la)); o.Q=Q; o.fill=el("path",{"stroke-linejoin":"round",style:`fill:${col};stroke:${col}`},gV); o.ring=el("path",{"stroke-linejoin":"round",fill:"none",style:`stroke:${col}`},gV); for(const q of Q) foc(q[0],q[1],8,8,8,8,1); }
     else { o.C=PX(o.lo,o.la); o.R=o.km/(111.32*Math.cos(o.la*Math.PI/180))*m.XS; o.fill=el("circle",{style:`fill:${col};stroke:${col}`},gV); o.ring=el("circle",{fill:"none",style:`stroke:${col}`},gV); foc(o.C[0]-o.R*1.5,o.C[1]-o.R*1.5,6,6,6,6,1); foc(o.C[0]+o.R*1.5,o.C[1]+o.R*1.5,6,6,6,6,1); }
@@ -327,9 +341,10 @@ function havaCiz(c,q,f,solo,r){ if(!c.HV) return; const tek=!q||solo, u=tek?1:se
   renk("safak","rgb(255,222,186)"); renk("aksam","rgb(250,184,150)");
   for(const [k,a,col] of [["gece",.3,"2,6,16"],["aksam",.22,"120,40,20"]]){ const g=w(k); if(g<=0) continue;
     const v=ctx.createRadialGradient(W_/2,H_/2,Math.min(W_,H_)*.3,W_/2,H_/2,Math.hypot(W_,H_)*.62); v.addColorStop(0,`rgba(${col},0)`); v.addColorStop(1,`rgba(${col},${a*g})`); ctx.globalAlpha=1; ctx.fillStyle=v; ctx.fillRect(0,0,W_,H_); }
-  let g=w("sis"); if(g>0){ ctx.globalAlpha=1; ctx.fillStyle=`rgba(232,236,238,${.26*g})`; ctx.fillRect(0,0,W_,H_);
+  let g=w("sis"); const gN=w("gece"), sisR=[232,236,238].map((v,k)=>Math.round(lerp(v,[96,116,140][k],gN))).join(","), sisB=[240,243,245].map((v,k)=>Math.round(lerp(v,[120,140,165][k],gN))).join(",");
+  if(g>0){ ctx.globalAlpha=1; ctx.fillStyle=`rgba(${sisR},${.26*g*(1-.35*gN)})`; ctx.fillRect(0,0,W_,H_);
     for(let i=0;i<8;i++){ const x=((rnd(i)+f*.06*(i%2?1:-1))%1+1)%1*W_*1.2-W_*.1, y=rnd(i+20)*H_, R=(.28+rnd(i+40)*.22)*Math.max(W_,H_);
-      const b=ctx.createRadialGradient(x,y,0,x,y,R); b.addColorStop(0,`rgba(240,243,245,${.42*g})`); b.addColorStop(1,"rgba(240,243,245,0)"); ctx.fillStyle=b; ctx.fillRect(0,0,W_,H_); } }
+      const b=ctx.createRadialGradient(x,y,0,x,y,R); b.addColorStop(0,`rgba(${sisB},${.42*g*(1-.3*gN)})`); b.addColorStop(1,`rgba(${sisB},0)`); ctx.fillStyle=b; ctx.fillRect(0,0,W_,H_); } }
   g=w("yagmur"); if(g>0){ ctx.globalAlpha=g; ctx.strokeStyle=c.HV.has("gece")?"rgba(185,205,230,.7)":"rgba(70,92,115,.6)"; ctx.lineWidth=2.4*S; ctx.lineCap="round"; ctx.beginPath();
     for(let i=0;i<380;i++){ const sp=.8+rnd(i+7)*.5, y=(rnd(i)*H_+f*H_*10*sp)%H_, x=(rnd(i+3)*W_*1.1-W_*.05)+y*.1; ctx.moveTo(x,y); ctx.lineTo(x+5*S,y+38*S*sp); } ctx.stroke(); }
   g=w("kar"); if(g>0){ ctx.globalAlpha=g; ctx.fillStyle="rgba(255,255,255,.95)"; ctx.shadowColor="rgba(40,60,80,.55)"; ctx.shadowBlur=3*S; ctx.beginPath();
@@ -359,8 +374,12 @@ function place(c,f){ const r=c.rect, kx=VW/r[2], ky=VH/r[3], sx=X=>(X-r[0])*kx, 
     if(sh.cap!=null) o.hull.style.fill=f>=sh.cap?SIDE.o:SIDE[sh.s];
     if(o.x){ o.x.setAttribute("transform",`translate(${x.toFixed(1)} ${y.toFixed(1)})`); o.x.setAttribute("opacity",sunk.toFixed(2)); }
     if(o.lab){ o.lab.setAttribute("x",(x+sh.lab[0]).toFixed(1)); o.lab.setAttribute("y",(y+sh.lab[1]).toFixed(1)); o.lab.setAttribute("opacity",vis.toFixed(2)); if(sh.cap!=null) o.lab.style.fill=f>=sh.cap?SIDE.o:SIDE[sh.s]; }
-    let d=""; for(let k=0;k<=a.li;k++){ const L=o.legs[k]; if(L.len<=0) continue; const last=k===a.li, kk=last?a.k:L.q.length; for(let j=0;j<kk;j++) d+=(d&&j?"L":"M")+sx(L.q[j][0]).toFixed(1)+" "+sy(L.q[j][1]).toFixed(1); if(last) d+="L"+x.toFixed(1)+" "+y.toFixed(1); }
-    o.trail.setAttribute("d",d||"M0 0"); o.trail.setAttribute("opacity",(vis*(1-sunk*.5)).toFixed(2)); }
+    let d="", Pt=[]; for(let k=0;k<=a.li;k++){ const L=o.legs[k]; if(L.len<=0) continue; const last=k===a.li, kk=last?a.k:L.q.length; for(let j=0;j<kk;j++){ const X=sx(L.q[j][0]), Y=sy(L.q[j][1]); d+=(d&&j?"L":"M")+X.toFixed(1)+" "+Y.toFixed(1); Pt.push([X,Y]); } if(last){ d+="L"+x.toFixed(1)+" "+y.toFixed(1); Pt.push([x,y]); } }
+    o.trail.setAttribute("d",d||"M0 0"); o.trail.setAttribute("opacity",(vis*(1-sunk*.5)).toFixed(2));
+    /* kuyruk: son ~110 piksel */
+    let td=""; if(Pt.length>1){ let kal=110, T=[Pt[Pt.length-1]]; for(let j=Pt.length-1;j>0&&kal>0;j--){ const A=Pt[j], B=Pt[j-1], l=Math.hypot(A[0]-B[0],A[1]-B[1]); if(l>=kal){ const u=kal/l; T.push([A[0]+(B[0]-A[0])*u,A[1]+(B[1]-A[1])*u]); kal=0; } else { T.push(B); kal-=l; } }
+      td=T.reverse().map((p,j)=>(j?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(""); }
+    o.tail.setAttribute("d",td||"M0 0"); o.tail.setAttribute("opacity",(vis*(1-sunk*.5)).toFixed(2)); }
   if(c.N){ const fr=c.nus.fr, all=!c.nus.ship, m=c.N.length; c.N.forEach((q,k)=>{ q.style.display=(all||nusFrac>=fr[0]+(fr[1]-fr[0])*(k+.5)/m)?"":"none"; }); }
   for(const h of c.H){ const on=f>=h.t0&&f<=h.t1+.02; h.node.style.display=on?"":"none"; if(!on) continue;
     const A=[sx(h.a[0]),sy(h.a[1])], B=[sx(h.b[0]),sy(h.b[1])], d=Math.hypot(B[0]-A[0],B[1]-A[1]), C=[(A[0]+B[0])/2,(A[1]+B[1])/2-Math.max(18,d*.35)];
@@ -396,7 +415,18 @@ function draw(p){ P=p; const N=ST.length, i=clamp(Math.floor(p),0,N-1), f=clamp(
   const t=q&&!same?ease(seg(f,0,.2)):1; ctx.setTransform(1,0,0,1,0,0);
   /* Ken Burns: kamera her sahnede yavaşça yaklaşır (çift sahneler) ya da uzaklaşır (tek sahneler); ardışık sahneler kesintisiz bağlanır */
   const KZ=window.__kbz!=null?window.__kbz:.08, yon=k=>window.__kbYon!=null?window.__kbYon:(k%2?-1:1);
-  const kb=(R,u,k)=>{ const e=ease(clamp(u,0,1)), z=yon(k)>0?1-KZ*e:1-KZ+KZ*e; return [R[0]+R[2]*(1-z)/2,R[1]+R[3]*(1-z)/2,R[2]*z,R[3]*z]; };
+  const kb0=(R,u,k)=>{ const e=ease(clamp(u,0,1)), z=yon(k)>0?1-KZ*e:1-KZ+KZ*e; return [R[0]+R[2]*(1-z)/2,R[1]+R[3]*(1-z)/2,R[2]*z,R[3]*z]; };
+  /* sinematik kamera (dikey video): S1 geniş plandan hedefe dalış · hareketli sahnelerde aracı izleyen kayma · son sahnede noktaya kilitlenip yaklaşma · diğerleri Ken Burns */
+  const sigdir=(R,m)=>{ let [x,y,w,h]=R; if(m&&m.ok){ const z=Math.min(1,m.w/w,m.h/h); if(z<1){ x+=w*(1-z)/2; y+=h*(1-z)/2; w*=z; h*=z; } x=clamp(x,0,m.w-w); y=clamp(y,0,m.h-h); } return [x,y,w,h]; };
+  const kb=(R,u,k)=>{ const sc=ST[k]; if(!VID||window.__kbz!=null||!sc) return kb0(R,u,k);
+    const e=ease(clamp(u,0,1)), cx=R[0]+R[2]/2, cy=R[1]+R[3]/2;
+    if(k===0){ const z=1.55-.55*ease(clamp(u/.75,0,1)); return sigdir([cx-R[2]*z/2,cy-R[3]*z/2,R[2]*z,R[3]*z],sc.m); }
+    const gid=(sc.S||[]).filter(o=>!o.sh.fix&&o.sh.sink==null&&o.legs.some(L=>L.len>0&&L.t1>L.t0));
+    if(gid.length){ let X=0,Y=0; for(const o of gid){ const a=shipAt(o,clamp(u,0,1)); X+=a.X; Y+=a.Y; } X/=gid.length; Y/=gid.length;
+      const w=.18*ease(seg(u,0,.25))+.17*e, z=1-.1*e, nx=lerp(cx,X,w), ny=lerp(cy,Y,w);
+      return sigdir([nx-R[2]*z/2,ny-R[3]*z/2,R[2]*z,R[3]*z],sc.m); }
+    if(k===ST.length-1){ const z=1-.16*e; return [cx-R[2]*z/2,cy-R[3]*z/2,R[2]*z,R[3]*z]; }
+    return kb0(R,u,k); };
   const U=window.__u!=null?window.__u:f;
   let r=camOf(c); if(same&&!sameCam(q,c)){ const a=kb(camOf(q),1,i-1), u=ease(seg(f,0,.3)); r=a.map((v,k)=>lerp(v,r[k],u)); }
   r=(same&&!sameCam(q,c))?(f<.3?r:kb(r,(U-.3)/.7,i)):kb(r,U,i);
@@ -404,7 +434,7 @@ function draw(p){ P=p; const N=ST.length, i=clamp(Math.floor(p),0,N-1), f=clamp(
   if(t<1){ q.rect=kb(camOf(q),1,i-1); blit(q.m,q.rect,1); if(gw>0&&q.m.ok){ ctx.globalAlpha=gw; ctx.drawImage(paintGece(q.m),q.rect[0],q.rect[1],q.rect[2],q.rect[3],0,0,CW,CH); ctx.globalAlpha=1; } }
   c.rect=r; blit(c.m,r,t); if(gw>0&&c.m.ok){ ctx.globalAlpha=gw*t; ctx.drawImage(paintGece(c.m),r[0],r[1],r[2],r[3],0,0,CW,CH); ctx.globalAlpha=1; }
   havaCiz(c,q,f,solo,r);
-  for(const o of c.S){ o.trail.setAttribute("stroke-width",(o.sw*(1+.8*gw)).toFixed(2)); o.trail.setAttribute("stroke-opacity",(.75+.2*gw).toFixed(2)); }
+  for(const o of c.S){ o.trail.setAttribute("stroke-width",(o.sw*(1+.8*gw)).toFixed(2)); o.trail.setAttribute("stroke-opacity",(.38+.22*gw).toFixed(2)); o.tail.setAttribute("stroke-width",(o.sw*1.25*(1+.8*gw)).toFixed(2)); o.tail.setAttribute("stroke-opacity",(.92).toFixed(2)); }
   const fin=solo?seg(f,0,.1):(i===0?1:seg(f,.03,.2));
   GS.forEach((g,k)=>{ const o=k===i?fin:(k===i-1?1-seg(f,0,.14):0); g.setAttribute("opacity",o.toFixed(2)); g.style.display=o<=0?"none":""; });
   place(c,f); if(q&&GS[i-1].style.display!=="none"){ if(same) q.rect=r; place(q,.999); }
@@ -436,7 +466,7 @@ $("#mListe").innerHTML=META.listeBaslik||""; $("#mListeA").innerHTML=META.listeA
 $("#wrecks").innerHTML=WR.map(w=>`<li><span class="wd">${w[0]}</span><span class="wn"><b>${w[1]}</b>${w[2]?` <i class="fl ${(w[6]||(w[2]==="Osmanlı"?"o":"i"))==="o"?"fo":"fi"}">${w[2]}</i>`:""}</span><span class="wh">${[w[3],w[4],w[5]].filter(Boolean).join(" · ")}</span></li>`).join(""); hide("#sWr",WR.length);
 $("#mDog").innerHTML=(META.dogrulanacak||[]).map(x=>`<li>${x}</li>`).join(""); hide("#sDog",(META.dogrulanacak||[]).length);
 $("#mYon").innerHTML=(META.yontem||[]).map(x=>`<li>${x}</li>`).join(""); hide("#sYon",(META.yontem||[]).length);
-{ const col=s=>s==="o"?"var(--o)":s==="i"?"var(--i)":"var(--ink)", G={
+{ const col=s=>s==="o"?"var(--o)":s==="i"?"var(--i)":s==="y"?"var(--y)":"var(--ink)", G={
     big:c=>`<path d="${GLYPH.big}" style="fill:${c}"/>`, small:c=>`<path d="${GLYPH.small}" style="fill:${c}"/>`,
     sub:c=>`<path d="${GLYPH.sub}" style="fill:${c}"/><path d="M-14 6H14" fill="none" stroke-width="1.6" stroke-dasharray="4 4" style="stroke:${c}"/>`,
     dot:c=>`<circle r="4.6" style="fill:${c}"/>`, x:c=>`<path d="${CROSS}" fill="none" stroke-width="2.5" stroke-linecap="round" style="stroke:${c}"/>`,
