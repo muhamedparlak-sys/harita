@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "39 · 12 Ekim";
+const SURUM = "40 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -328,6 +328,12 @@ async function dikeyTablo() { pencere("Dikey kontrol tablosu", `<p class="ipucu"
 async function logoHazirla(blob) { if (!blob) { window.__MARKA_LOGO = null; return; }
   const im = await createImageBitmap(blob), k = Math.min(im.width, im.height), R = 256, cv = document.createElement("canvas"); cv.width = cv.height = R; const c = cv.getContext("2d");
   c.beginPath(); c.arc(R / 2, R / 2, R / 2, 0, 7); c.clip(); c.drawImage(im, (im.width - k) / 2 + k * .02, (im.height - k) / 2 + k * .02, k * .96, k * .96, 0, 0, R, R); window.__MARKA_LOGO = cv; }
+/* hikâyenin kapak ayarlarıyla tek kapak üretir ve seçili kapak olarak kaydeder */
+async function kapakOtomatik() { const m = V.meta, P = (m.paylasim = m.paylasim || {}), pk = (P[m.title] = P[m.title] || { kapak: "", aciklama: "", etiketler: [], yorum: "" });
+  const o = Object.assign({}, KAPAK.VARSAYILAN, pk.kapakTasarim || {}), MK = VAR.marka || {}; if (!o.kanal && MK.kanal) o.kanal = MK.kanal; if (!o.marka && MK.marka) o.marka = MK.marka;
+  if (!o.s1 && !o.s2 && pk.kapak) { const p = pk.kapak.split(/\s*[,;–—:|]\s*|\s+-\s+/).filter(Boolean); o.s1 = p[0] || ""; o.s2 = p.slice(1).join(" "); }
+  if (!o.s1 && !o.s2) return null;
+  const r = await KAPAK.uret(HK, o), k = { blob: r.blob, kare: r.kare, zaman: Date.now() }; await DEPO.ayarYaz("kapak:" + AD, k); return k; }
 function kapakPencere() { const m = V.meta, P = (m.paylasim = m.paylasim || {}), pk = (P[m.title] = P[m.title] || { kapak: "", aciklama: "", etiketler: [], yorum: "" });
   const o = (pk.kapakTasarim = Object.assign({}, KAPAK.VARSAYILAN, pk.kapakTasarim || {}));
   const MK = VAR.marka || {}; if (!o.kanal && MK.kanal) o.kanal = MK.kanal; if (!o.marka && MK.marka) o.marka = MK.marka;
@@ -342,7 +348,7 @@ function kapakPencere() { const m = V.meta, P = (m.paylasim = m.paylasim || {}),
     <div class="satir">${gir("mavi", "Mavi taraf", "ALLIED FLEET")}${gir("kirmizi", "Kırmızı taraf", "OTTOMAN MINES")}</div>
     <div class="satir">${gir("kanal", "Kanal", "@kanaladı")}${gir("marka", "Marka yazısı", "MARKA")}</div><div class="satir"><button id="kpLogo">${window.__MARKA_LOGO ? "Logoyu değiştir" : "Logo yükle"}</button>${window.__MARKA_LOGO ? '<button id="kpLogoSil" class="tehlike">Logoyu kaldır</button>' : ""}</div><p class="ipucu">Logo videoda sağ üst köşede filigran olur ve 8 saniyede bir döner; kapakta imzanın yanında durur.</p>
     ${sec("kare", "İlk aday", [["oto", "Otomatik (S5 patlama → S4 kilitlenme)"], ...V.steps.map((_, i) => [String(i + 1), `S${i + 1}`])])}
-    <div id="kpUyari"></div><button class="ana" id="kpUret">4 kapak üret</button><div id="kpSonuc"></div>`);
+    <div id="kpUyari"></div><button class="ana" id="kpUret">Kapağı üret</button><div id="kpSonuc"></div>`);
   const uyar = () => { const U = KAPAK.denetle(o, m.title); $("#kpUyari").innerHTML = U.map(u => `<p class="ipucu uyari">${esc(u)}</p>`).join(""); };
   $$("#dlgIc [data-k]").forEach(e => e.oninput = e.onchange = () => { o[e.dataset.k] = e.value; sadeceKaydet(); uyar();
     if (e.dataset.k === "kanal" || e.dataset.k === "marka") { VAR.marka = Object.assign({}, VAR.marka || {}, { [e.dataset.k]: e.value }); DEPO.ayarYaz("marka", VAR.marka); } }); uyar();
@@ -351,17 +357,13 @@ function kapakPencere() { const m = V.meta, P = (m.paylasim = m.paylasim || {}),
   if ($("#kpLogoSil")) $("#kpLogoSil").onclick = async () => { if (VAR.marka) delete VAR.marka.logo; await DEPO.ayarYaz("marka", VAR.marka || {}); await logoHazirla(null); kapakPencere(); };
   const seciliGoster = async () => { const k = await DEPO.ayar("kapak:" + AD), d = $("#kpSecili"); if (!d) return;
     if (!k || !k.blob) { d.innerHTML = ""; return; }
-    d.innerHTML = `<h3>Seçili kapak</h3><img src="${URL.createObjectURL(k.blob)}" alt="Seçili kapak" style="width:46%;border-radius:8px;display:block;margin:0 auto 8px"><p class="ipucu">Video üretilince ilk kareye konur; Instagram kapağı otomatik bunu alır.</p>
+    d.innerHTML = `<h3>Seçili kapak</h3><img src="${URL.createObjectURL(k.blob)}" alt="Seçili kapak" style="width:46%;border-radius:8px;display:block;margin:0 auto 8px"><p class="ipucu">Video üretilince ilk saniyeye konur. Kapak yoksa video üretilirken kendiliğinden hazırlanır.</p>
       <div class="satir"><button id="kpPay">Kapağı kaydet / paylaş</button><button id="kpKal" class="tehlike">Kapağı kaldır</button></div>`;
     $("#kpPay").onclick = () => paylas(k.blob, `${AD}_kapak.png`); $("#kpKal").onclick = async () => { await DEPO.ayarYaz("kapak:" + AD, null); seciliGoster(); }; };
   seciliGoster();
-  $("#kpUret").onclick = async () => { const d = $("#kpSonuc"); d.innerHTML = `<p class="ipucu">4 aday hazırlanıyor…</p>`; $("#kpUret").disabled = true;
-    try { const R = await KAPAK.adaylar(HK, o, 4);
-      d.innerHTML = `<p class="ipucu">Birine dokunun: seçilen kapak kaydedilir ve videoya eklenir.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${R.map((r, i) => `<button data-aday="${i}" style="padding:0;border-radius:8px;overflow:hidden"><img src="${URL.createObjectURL(r.blob)}" alt="Aday ${i + 1}" style="width:100%;display:block"><small style="display:block;padding:4px">S${r.kare} · ${r.tur === "kilit" ? "kilitlenme" : r.tur === "batis" ? "batış" : "patlama"}</small></button>`).join("")}</div>`;
-      $$("#kpSonuc [data-aday]").forEach(b => b.onclick = async () => { const r = R[+b.dataset.aday];
-        await DEPO.ayarYaz("kapak:" + AD, { blob: r.blob, kare: r.kare, zaman: Date.now() }); o.s1r = r.ayar.s1r; o.s2r = r.ayar.s2r; sadeceKaydet();
-        bildir("Kapak seçildi"); await seciliGoster(); $("#dlgIc").scrollTop = 0; });
-    } catch (e) { d.innerHTML = `<p class="ipucu uyari">Hazırlanamadı: ${esc(e.message)}</p>`; }
+  $("#kpUret").onclick = async () => { const d = $("#kpSonuc"); d.innerHTML = `<p class="ipucu">Kapak hazırlanıyor…</p>`; $("#kpUret").disabled = true;
+    try { await DEPO.ayarYaz("kapak:" + AD, null); const k = await kapakOtomatik(); d.innerHTML = k ? "" : `<p class="ipucu uyari">Önce 1. ve 2. satırı yazın.</p>`; await seciliGoster(); $("#dlgIc").scrollTop = 0; }
+    catch (e) { d.innerHTML = `<p class="ipucu uyari">Hazırlanamadı: ${esc(e.message)}</p>`; }
     const b = $("#kpUret"); if (b) b.disabled = false; }; }
 async function sayfaDisa() { const html = await DEPO.sayfaKur(HK, null), b = new Blob([html], { type: "text/html" });
   pencere("Sayfa dışa aktarıldı", `<p>Tek dosyalık web sayfası hazır (${(b.size / 1048576).toFixed(1)} MB). İnternette yayımlayabilir ya da bilgisayara gönderebilirsiniz.</p><div class="satir"><button class="ana" id="spPay">Dosyayı kaydet / paylaş</button><a id="spAc" href="${URL.createObjectURL(b)}" target="_blank"><button>Sayfayı aç</button></a></div>`);
@@ -627,7 +629,9 @@ async function videoPencere() {
     $("#vDur").onclick = () => { VIDEO_DURDUR = true; };
     durdurOyna();
     window.__URETIM = 1;
-    try { const k = await DEPO.ayar("kapak:" + AD); VIDEO.kapak(k && k.blob ? await createImageBitmap(k.blob) : null); if (k && k.blob) log("Seçili kapak ilk kareye konuyor."); } catch (e) { VIDEO.kapak(null); }
+    try { let k = await DEPO.ayar("kapak:" + AD);
+      if (!k || !k.blob) { log("Kapak hazırlanıyor…"); k = await kapakOtomatik(); }
+      VIDEO.kapak(k && k.blob ? await createImageBitmap(k.blob) : null); if (k && k.blob) log("Kapak videonun ilk saniyesine konuyor."); else log("Kapak yazısı yok; kapaksız üretiliyor (Menü → Kapak görseli)."); } catch (e) { VIDEO.kapak(null); log("Kapak hazırlanamadı: " + e.message); }
     try { const r = await VIDEO.uret(AD, HK, a, log, ilerle, () => VIDEO_DURDUR);
       /* biter bitmez telefona kaydedilir: ekran kapansa, uygulama kapansa da kaybolmaz */
       try { await DEPO.ayarYaz("sonVideo", { blob: r.blob, ad: `bolum_${DEPO.guvenli(V.meta.title || AD).toLocaleLowerCase("tr-TR")}.${r.uzanti}`, baslik: V.meta.title || AD, sure: r.sure, srt: r.srt, seslendirme: r.seslendirme, zaman: Date.now(), alindi: false }); log("Video telefona kaydedildi (Menü → Son üretilen video)."); } catch (e) { log("Telefona kaydedilemedi: " + e.message); }

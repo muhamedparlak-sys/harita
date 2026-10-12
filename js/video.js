@@ -207,6 +207,9 @@ const VIDEO = (() => {
       const evs = (i, f0, f1, sure, t0) => (EV[i] || []).filter(e => f0 <= e.t && e.t <= f1).map(e => ({ t: t0 + (e.t - f0) / Math.max(1e-6, f1 - f0) * sure, ad: e.tur, k: e.k }));
       const PARCA = [], OLAY = [], SESLER = []; let T = 0;
       const ekle = (p) => { p.t0 = T; PARCA.push(p); T += p.sure; };
+      ILK = null;
+      /* kapak: videonun ilk saniyesi; platform kapağı ve izleyicinin ilk gördüğü kare */
+      if (KAPAK_RESMI) { ekle({ ad: "Kapak", p0: lo - 1, p1: lo - 1, sure: 1.0, solo: true, G: [], metin: "", i: lo - 1, kapak: true }); OLAY.push({ t: .92, ad: "whoosh" }); }
       for (let i = lo - 1; i < hi; i++) {
         if (durdur()) throw new Error("Durduruldu");
         const st = steps[i], solo = i === 0 || steps[i - 1].perde !== st.perde;
@@ -238,6 +241,8 @@ const VIDEO = (() => {
           log(`soru  ${sure.toFixed(1)} sn`);
         }
       }
+      /* döngü: son kare videonun ilk karesine erir; Instagram başa sardığında kesinti olmaz */
+      { const s = PARCA[PARCA.length - 1]; if (s) ekle({ ad: "Döngü", p0: s.p1, p1: s.p1, sure: .7, solo: s.solo, G: [], metin: "", i: s.i, dongu: true }); }
       PARCA.forEach(p => { p.G = p.G.map(g => ({ ...g, bas: g.bas, son: g.son })); const od = M.W.__odak ? M.W.__odak(Math.floor(p.p0)) : [0, 0]; p.kip = p.soru ? "soru" : (od[1] > .66 ? "ust" : "alt"); });
       log(`Toplam ${T.toFixed(1)} sn. Ses karıştırılıyor…`);
       const ses = new Float32Array(Math.ceil((T + .2) * SR)); for (const [t, x] of SESLER) { const i0 = Math.floor(t * SR); for (let k = 0; k < x.length && i0 + k < ses.length; k++) ses[i0 + k] += x[k]; }
@@ -249,7 +254,7 @@ const VIDEO = (() => {
       /* altyazı (.srt) ve seslendirme metni */
       const srt = [], S = [`=== ${META.title || AD} ===`]; const tc = t => { const ms = Math.round(t * 1000); return `${String(Math.floor(ms / 3600000)).padStart(2, "0")}:${String(Math.floor(ms / 60000) % 60).padStart(2, "0")}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")},${String(ms % 1000).padStart(3, "0")}`; };
       const dk = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, "0")}`;
-      for (const p of PARCA) { S.push(`[${dk(p.t0)} – ${dk(p.t0 + p.sure)}] ${p.ad.toLocaleUpperCase("tr-TR")}: ${p.metin}`);
+      for (const p of PARCA) { if (p.kapak || p.dongu) continue; S.push(`[${dk(p.t0)} – ${dk(p.t0 + p.sure)}] ${p.ad.toLocaleUpperCase("tr-TR")}: ${p.metin}`);
         for (const g of p.G) srt.push(`${srt.length + 1}\n${tc(p.t0 + g.bas)} --> ${tc(p.t0 + g.son)}\n${g.k.map(x => x[1]).join(" ")}\n`); }
       S.push(`toplam ${T.toFixed(1)} sn`);
       return { blob, sure: T, srt: srt.join("\n"), seslendirme: S.join("\n"), uzanti: blob.type.includes("webm") ? "webm" : "mp4" };
@@ -261,9 +266,13 @@ const VIDEO = (() => {
   function filigranCiz(ctx, t) { const L = window.__MARKA_LOGO; if (!L) return; const r = 62, x = WV - 50 - r, y = 300 + r, f = t % 8, sx = f < 1.4 ? Math.cos(f / 1.4 * Math.PI * 2) : 1;
     ctx.save(); ctx.globalAlpha = .82; ctx.translate(x, y); ctx.scale(Math.max(.04, Math.abs(sx)), 1); ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 12; ctx.drawImage(L, -r, -r, 2 * r, 2 * r); ctx.restore(); }
   let KAPAK_RESMI = null; /* seçilen kapak videonun ilk karelerine konur: platform kapağı otomatik onu alır */
-  function cizZaman(ctx, M, PARCA, t) { if (KAPAK_RESMI && t < .1) { ctx.globalAlpha = 1; ctx.drawImage(KAPAK_RESMI, 0, 0, WV, HV); return; } const p = parcaBul(PARCA, t), u = Math.min(1, Math.max(0, (t - p.t0) / p.sure));
+  let ILK = null;
+  function cizZaman(ctx, M, PARCA, t) { const p = parcaBul(PARCA, t), u = Math.min(1, Math.max(0, (t - p.t0) / p.sure));
+    if (p.kapak) { ctx.globalAlpha = 1; ctx.drawImage(KAPAK_RESMI, 0, 0, WV, HV); if (!ILK) { ILK = document.createElement("canvas"); ILK.width = WV; ILK.height = HV; ILK.getContext("2d").drawImage(ctx.canvas, 0, 0); } return; }
+    if (p.dongu) { kare(ctx, M, p.p0, p.solo, null, 0); filigranCiz(ctx, t); if (ILK) { ctx.globalAlpha = u * u * (3 - 2 * u); ctx.drawImage(ILK, 0, 0, WV, HV); ctx.globalAlpha = 1; } return; }
     /* hook ve soru kendi içinde yaklaşır; sahneler sahne ilerlemesini kullanır */
-    kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip, p.ad === "Hook" ? u : null, p.ad === "Hook"); filigranCiz(ctx, t); }
+    kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip, p.ad === "Hook" ? u : null, p.ad === "Hook"); filigranCiz(ctx, t);
+    if (!ILK) { ILK = document.createElement("canvas"); ILK.width = WV; ILK.height = HV; ILK.getContext("2d").drawImage(ctx.canvas, 0, 0); } }
 
   let ACX = null, YONTEM = "oto";
   /* iOS'ta ses motoru yalnızca bir dokunuşla açılır: Üret'e dokunulduğunda çağrılır */
