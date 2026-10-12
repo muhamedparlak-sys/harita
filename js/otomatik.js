@@ -65,8 +65,11 @@
         const b = p.match(/^bayrak\s+(.+)$/); if (b) { bayrak = BAYRAK_AD[b[1].trim()] || b[1].trim(); continue; }
         if (p in TARAF) taraf = TARAF[p]; else if (TUR[p]) tur = TUR[p]; else if (IKON[p]) { ikon = IKON[p]; tur = DENIZ_IKON.has(ikon) ? "small" : "dot"; }
         else { const k = Object.keys(TUR).find(k => p.includes(k)); if (k) tur = TUR[k]; } }
-      return { ad, taraf, tur, ikon, bayrak, yol };
-    }).filter(h => h.yol.length >= 1);
+      /* filo: "Fransız hattı: Suffren, Bouvet, Gaulois [..] A → B" → aynı rotada yan yana (hat hâlinde) giden gemiler */
+      const fm = ad.match(/^(.+?)\s*:\s*(.+)$/);
+      if (fm) { const adlar = fm[2].split(/\s*,\s*/).filter(Boolean); return adlar.map((a, i) => ({ ad: a, taraf, tur, ikon, bayrak, yol, grup: { ad: fm[1].trim(), i, n: adlar.length } })); }
+      return [{ ad, taraf, tur, ikon, bayrak, yol }];
+    }).flat().filter(h => h.yol.length >= 1);
   }
   const dizi = (a, b, n) => { const R = []; n = Math.max(2, n || 12); for (let i = 0; i < n; i++) R.push([+(a[0] + (b[0] - a[0]) * i / (n - 1)).toFixed(4), +(a[1] + (b[1] - a[1]) * i / (n - 1)).toFixed(4)]); return R; };
   function olayCoz(t) {
@@ -244,10 +247,18 @@
     for (const o of O) if (o.tur === "cekil") { let bulundu = false; for (const n of [...AK.keys()]) if (esle(n, o.gemi)) { AK.delete(n); bulundu = true; } if (bulundu) eklendi.push(`çekildi ${o.gemi}`); else log(`  çekilir: “${o.gemi}” daha önce haritada yoktu`); }
     /* 1) daha önceki sahnelerden kalan aktörler yerinde durur (bu sahnede hareket etmiyorlarsa) */
     for (const [n, a] of AK) { if (a.batti || H_.some(h => esle(h.ad, n))) continue; if (M && !(a.p[0] >= M.lo0 && a.p[0] <= M.lo1 && a.p[1] >= M.la0 && a.p[1] <= M.la1)) continue;
-      const sh = { n, s: a.s, k: a.k, p: [a.p], t: [0, 1], fix: true, lab: [0, a.ikon ? -22 : -14, "middle"] }; if (a.ikon) sh.ikon = a.ikon; if (a.bayrak) sh.bayrak = a.bayrak; if (a.k === "dot") sh.kara = true; st.ships.push(sh); }
+      const sh = { n, s: a.s, k: a.k, p: [a.p], t: [0, 1], fix: true }; if (!a.etiketsiz) sh.lab = [0, a.ikon ? -22 : -14, "middle"]; if (a.ln) sh.ln = a.ln; if (a.ikon) sh.ikon = a.ikon; if (a.bayrak) sh.bayrak = a.bayrak; if (a.k === "dot") sh.kara = true; st.ships.push(sh); }
     /* 2) hareketler */
     const yeni = [];
+    const GRUP = {};
+    const yanKaydir = (P, k) => { if (!M || P.length < 2) return P; const d = (M.lo1 - M.lo0) * .011 * k;
+      return P.map((p, i) => { const a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)], c0 = Math.cos(p[1] * Math.PI / 180);
+        const dx = (b[0] - a[0]) * c0, dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; let q = [+(p[0] + (-dy / L) * d / c0).toFixed(4), +(p[1] + (dx / L) * d).toFixed(4)];
+        if (H) q = denizeIt(M, H, q); return q; }); };
     for (const h of H_) {
+      if (h.grup && h.grup.i > 0 && GRUP[h.grup.ad]) { const g = GRUP[h.grup.ad], P = yanKaydir(g.P, h.grup.i - (h.grup.n - 1) / 2);
+        const sh = { n: h.ad, s: h.taraf, k: h.tur, p: P, t: [0, 1], _g: h.grup.ad };
+        st.ships = st.ships.filter(x => !(x.n && esle(x.n, h.ad))); st.ships.push(sh); yeni.push(sh); eklendi.push(`rota ${h.ad} (${h.grup.ad} düzeninde)`); continue; }
       const once = h.ad ? aktorBul(h.ad) : null, A = [];
       /* harita dışındaki yer (Cattaro, İstanbul…) ya da yön (batıdan, kuzey kenarı): araç haritanın o yöndeki kenarından girer/çıkar */
       const Y = [];
@@ -268,7 +279,8 @@
       /* başka bir aktörün üstüne binmesin: hedefte durmadan önce yanaşma mesafesinde durur */
       if (M && h.tur !== "dot") { const D = (M.lo1 - M.lo0) * .035, digerleri = st.ships.filter(x => x.p && !(x.n && h.ad && esle(x.n, h.ad))).map(x => x.p[x.p.length - 1]);
         P = uzakTut(P, digerleri, D, M, denizde ? H : null); }
-      const sh = { n: h.ad, s: h.taraf, k: h.tur, p: P, t: [0, 1] }; if (h.ad) sh.lab = [0, -14, "middle"]; if (h.tur === "dot") sh.kara = true;
+      if (h.grup) { GRUP[h.grup.ad] = { P }; P = yanKaydir(P, -(h.grup.n - 1) / 2); }
+      const sh = { n: h.ad, s: h.taraf, k: h.tur, p: P, t: [0, 1] }; if (h.ad) sh.lab = [0, -14, "middle"]; if (h.tur === "dot") sh.kara = true; if (h.grup) { sh._g = h.grup.ad; sh.ln = h.grup.ad; }
       if (once && once.a) { if (!h.taraf && once.a.s) sh.s = once.a.s; if (h.tur === "big" && once.a.k && !/\[/.test(s.hareket || "")) sh.k = once.a.k; if (!h.ikon && once.a.ikon) sh.ikon = once.a.ikon; if (!h.bayrak && once.a.bayrak) sh.bayrak = once.a.bayrak; }
       if (h.ikon) { sh.ikon = h.ikon; if (h.ad) sh.lab = [0, -22, "middle"]; } if (h.bayrak && (c.bayraklar || []).includes(h.bayrak)) sh.bayrak = h.bayrak;
       st.ships = st.ships.filter(x => !(x.n && h.ad && esle(x.n, h.ad))); st.ships.push(sh); yeni.push(sh); eklendi.push(`rota ${h.ad || ""}${notu}`);
@@ -348,8 +360,10 @@
       t += sure;
     }
     ayrilan.forEach((sh, j) => { const t0 = +Math.min(.85, t + .02 + j * .04).toFixed(2); sh.t = [t0, +Math.min(.99, t0 + .32).toFixed(2)]; });
+    /* filo üyeleri liderle aynı anda yola çıkar ve varır */
+    { const L = {}; for (const sh of st.ships) if (sh._g && !L[sh._g]) L[sh._g] = sh; for (const sh of st.ships) if (sh._g && L[sh._g] !== sh) sh.t = [...L[sh._g].t]; }
     /* 5) sahneler arası durum */
-    for (const sh of st.ships) { if (!sh.n) continue; const e = AK.get(sh.n) || {}; AK.set(sh.n, { p: sh.p[sh.p.length - 1], s: sh.s, k: sh.k, ikon: sh.ikon, bayrak: sh.bayrak, batti: e.batti || sh.sink != null }); if (sh.sink != null) sh.wd = st.day; }
+    for (const sh of st.ships) { if (!sh.n) continue; const e = AK.get(sh.n) || {}; AK.set(sh.n, { p: sh.p[sh.p.length - 1], s: sh.s, k: sh.k, ikon: sh.ikon, bayrak: sh.bayrak, ln: sh.ln, etiketsiz: !sh.lab, batti: e.batti || sh.sink != null }); if (sh.sink != null) sh.wd = st.day; }
     /* 6) kamera: hareketleri ve olayları kapsasın */
     const T = [...(st.pts || []).map(p => [p[0], p[1]])]; for (const sh of st.ships) if (!sh.fix) for (const p of sh.p || []) T.push(p);
     for (const b of st.booms || []) T.push([b[0], b[1]]); for (const k of ["torpido", "shots"]) for (const v of st[k] || []) T.push([v[0], v[1]], [v[2], v[3]]);

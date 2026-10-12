@@ -223,7 +223,7 @@ ST.forEach((c,i)=>{ const g=GS[i], m=MAPS[c.map]; c.m=m; c.items=[]; c.EV=[]; c.
   /* gemiler */
   for(const sh of c.ships||[]){ const kind=sh.k||"big", col=SIDE[sh.s];
     const legs=(sh.L||[[sh.p,(sh.t||[0,0])[0],(sh.t||[0,0])[1]]]).map(([P,t0,t1])=>{ const q=P.map(p=>PX(p[0],p[1])), cum=[0]; for(let k=1;k<q.length;k++) cum.push(cum[k-1]+Math.hypot(q[k][0]-q[k-1][0],q[k][1]-q[k-1][1])); return {q,cum,len:cum[cum.length-1],t0,t1}; });
-    const o={sh,legs,kind}; const lw=sh.lab&&sh.n?TW(sh.n,19)+Math.abs(sh.lab[0]):0;
+    const o={sh,legs,kind}; const lw=sh.lab&&sh.n?TW(sh.ln||sh.n,19)+Math.abs(sh.lab[0]):0;
     for(const L of legs) for(const q of L.q) foc(q[0],q[1],14+(sh.lab&&sh.lab[2]==="end"?lw:sh.lab&&sh.lab[2]==="middle"?lw/2:0),14+(sh.lab&&sh.lab[2]==="start"?lw:sh.lab&&sh.lab[2]==="middle"?lw/2:0),14+(sh.lab?Math.max(0,-sh.lab[1])+6:0),14+(sh.lab?Math.max(0,sh.lab[1]):0),1);
     o.sw=kind==="big"?2.6:2.1; o.trail=el("path",{fill:"none","stroke-width":o.sw,"stroke-linecap":"round","stroke-linejoin":"round","stroke-opacity":.75,style:"stroke:"+col},gT); if(kind==="sub") o.trail.setAttribute("stroke-dasharray","5 5");
     /* sönen iz: eski rota silik, aracın arkasında parlak kısa bir kuyruk */
@@ -232,7 +232,7 @@ ST.forEach((c,i)=>{ const g=GS[i], m=MAPS[c.map]; c.m=m; c.items=[]; c.EV=[]; c.
     if(sh.ikon){ const am=AMBLEM.has(sh.ikon); o.ik=el("g",{},o.g); el("circle",{r:13,"stroke-width":2,style:`fill:${am?"#fff":col};stroke:${am?"#E30A17":"var(--m-halo)"}`},o.ik); o.ikp=el("path",{d:ICONS[sh.ikon]||ICONS.hedef,transform:"translate(-9 -9) scale(.75)",style:`fill:${am?"#E30A17":"var(--m-halo)"}`},o.ik); }
     o.hull=el("path",{d:sh.ikon?"M0 0":GLYPH[kind],"stroke-width":1.5,"stroke-linejoin":"round",style:"fill:"+col+";stroke:var(--m-halo)"},o.g); if(!sh.ikon&&DECK[kind]){ const d=el("g",{},o.g); d.innerHTML=DECK[kind]; }
     if(sh.sink!=null) o.x=cross(gW,sh.s,CROSS,0);
-    if(sh.lab&&sh.n){ o.lab=txt(gL,sh.n,{x:0,y:0,"text-anchor":sh.lab[2],"font-size":19,"font-weight":600,style:"stroke:var(--m-halo);stroke-opacity:.82;fill:"+col}); }
+    if(sh.lab&&sh.n){ o.lab=txt(gL,sh.ln||sh.n,{x:0,y:0,"text-anchor":sh.lab[2],"font-size":19,"font-weight":600,style:"stroke:var(--m-halo);stroke-opacity:.82;fill:"+col}); }
     c.S.push(o); }
   /* atışlar, patlamalar */
   for(const [a,b,d,e] of c.shots||[]){ const p1=PX(a,b), p2=PX(d,e); foc(p1[0],p1[1],8,8,8,8,1); foc(p2[0],p2[1],8,8,8,8,1); }
@@ -305,7 +305,7 @@ function labels(c,sx,sy){ const B=[], M=4, ov2=(a,b)=>a[0]<b[2]&&b[0]<a[2]&&a[1]
   for(const q of c.P||[]){ if(!(+q.inn.getAttribute("opacity")>0)) continue; const px=sx(q.it.X), py=sy(q.it.Y), k=q.k;
     if(q.flag) B.push([px-3,py-36*k,px+31*k,py+3]); else { const R=q.r*k; B.push([px-R,py-R,px+R,py+R]); if(q.lw) B.push([px-q.lw/2,py+R+2,px+q.lw/2,py+R+24]); } }
 
-  for(const o of c.S) if(o.lab&&+o.lab.getAttribute("opacity")>0){ const sh=o.sh, w=TW(sh.n,19), dx=sh.lab[0], gx=+o.lab.getAttribute("x")-dx;
+  for(const o of c.S) if(o.lab&&+o.lab.getAttribute("opacity")>0){ const sh=o.sh, w=TW(sh.ln||sh.n,19), dx=sh.lab[0], gx=+o.lab.getAttribute("x")-dx;
     let an=sh.lab[2], x=gx+dx, y=+o.lab.getAttribute("y");
     const x0f=(an,x)=>an==="end"?x-w:an==="middle"?x-w/2:x;
     if(x0f(an,x)<M||x0f(an,x)+w>VW-M){ const fa=an==="start"?"end":an==="end"?"start":"middle", fx=gx-dx; if(x0f(fa,fx)>=M&&x0f(fa,fx)+w<=VW-M){ an=fa; x=fx; } else { an="start"; x=clamp(x0f(an,x),M,VW-M-w); } }

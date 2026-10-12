@@ -149,6 +149,26 @@ const VIDEO = (() => {
     const s = oc.createBufferSource(); s.buffer = bb; s.connect(oc.destination); s.start(); return (await oc.startRendering()).getChannelData(0).slice();
   }
 
+  /* İngilizce video: ekrandaki yer, araç, bölüm adları ve tarihler İngilizceye çevrilir (meta.ceviri sözlüğü + ay adları) */
+  const AYLAR = { ocak: "January", şubat: "February", mart: "March", nisan: "April", mayıs: "May", haziran: "June", temmuz: "July", ağustos: "August", eylül: "September", ekim: "October", kasım: "November", aralık: "December",
+    gecesi: "night", gece: "night", akşam: "evening", sabah: "morning", öğle: "noon", şafak: "dawn", bugün: "Today", günümüz: "Today" };
+  function ingilizce(hk) {
+    const v = JSON.parse(JSON.stringify(hk.veri)), C = Object.assign({}, (v.meta || {}).ceviri || {}), K = Object.keys(C).sort((a, b) => b.length - a.length);
+    const tr = s => { if (!s || typeof s !== "string") return s; if (C[s]) return C[s]; let r = s; for (const k of K) r = r.split(k).join(C[k]); return r; };
+    const tarih = s => s ? tr(s).replace(/[\p{L}]+/gu, w => AYLAR[w.toLocaleLowerCase("tr-TR")] || w).replace(/(\d{1,2})\.(\d{2})\b/g, "$1:$2") : s;
+    const baslik = (v.meta || {}).title_en;
+    for (const st of v.steps || []) {
+      if (st.perde) st.perde = (baslik || tr(st.perde)).toUpperCase(); st.date = tarih(st.date);
+      for (const p of st.pts || []) p[2] = tr(p[2]); for (const p of st.seas || []) p[2] = tr(p[2]);
+      for (const sh of st.ships || []) { if (sh.n) sh.n = tr(sh.n); if (sh.ln) sh.ln = tr(sh.ln); }
+      if (st.nus && st.nus.ship) st.nus.ship = tr(st.nus.ship);
+      for (const q of st.ikon || []) if (typeof q[7] === "string") q[7] = tr(q[7]);
+      for (const q of st.vurgu || []) if (Array.isArray(q) && typeof q[6] === "string") q[6] = tr(q[6]);
+    }
+    if (v.wl) { const W = {}; for (const [k, x] of Object.entries(v.wl)) W[tr(k)] = x; v.wl = W; }
+    return Object.assign({}, hk, { veri: v });
+  }
+
   /* ---------------- reel ---------------- */
   /* a: {ses:"tts"|"kendi"|"yok", konusmaci, ton, dil, altyazi_dil, altyazi, efekt, adimlar, tema}; log(metin), ilerle(oran) */
   async function uret(AD, hk, a, log, ilerle, durdur) {
@@ -181,7 +201,7 @@ const VIDEO = (() => {
 
     log("Harita motoru açılıyor…");
     const top = a.etiket === "off" ? 0 : 70;
-    const M = await cerceveAc(hk, { w: 540, h: 960, top, alt: altOn ? .27 : 0 }, a.tema);
+    const M = await cerceveAc(a.dil === "en" ? ingilizce(hk) : hk, { w: 540, h: 960, top, alt: altOn ? .27 : 0 }, a.tema);
     try {
       const EV = M.W.__olaylar ? M.W.__olaylar() : steps.map(() => []);
       const evs = (i, f0, f1, sure, t0) => (EV[i] || []).filter(e => f0 <= e.t && e.t <= f1).map(e => ({ t: t0 + (e.t - f0) / Math.max(1e-6, f1 - f0) * sure, ad: e.tur, k: e.k }));

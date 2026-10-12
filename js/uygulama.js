@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "34 · 12 Ekim";
+const SURUM = "35 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -398,7 +398,7 @@ HOOK: S7'nin en çarpıcı olgusu · S1 açılış: ana güç ya da ana olay har
 SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında, bu sırayla; boş alan da yazılır: | olay:  | hava: )
 - yer: o sahnede haritada gösterilecek en çok 4 yer, virgülle; her yerin yanına koordinatını yaz: Kabatepe (40.20, 26.27), Morto Koyu (40.04, 26.19)
 - tarih: ekranda etiket olur, seslendirilmez; RAKAMLA, en çok 4 kelime (18 Mart 1915 · 7/8 Mart 1915 gecesi · 18 Mart 1915, 13.54 · Bugün).
-- hareket: Ad [taraf, tür] Başlangıç (enlem, boylam) → güzergâh noktaları (enlem, boylam) → Varış (enlem, boylam). Birden çoksa noktalı virgül. Yerinde duran için tek nokta: Goliath [lacivert, büyük gemi] Morto Koyu (40.04, 26.19)
+- hareket: Ad [taraf, tür] Başlangıç (enlem, boylam) → güzergâh noktaları (enlem, boylam) → Varış (enlem, boylam). Birden çoksa noktalı virgül. Birlikte, hat hâlinde giden gemiler TEK satırda filo olarak yazılır, ayrı ayrı değil: Fransız hattı: Suffren, Bouvet, Gaulois, Charlemagne [lacivert, büyük gemi, bayrak Fransız] Başlangıç (…) → Varış (…). Gemiler aynı rotada yan yana, aynı anda ilerler; sonraki sahnelerde her biri kendi adıyla anılır (batış Bouvet). Yerinde duran için tek nokta: Goliath [lacivert, büyük gemi] Morto Koyu (40.04, 26.19)
 - KOORDİNAT KURALI: Başlangıç, güzergâh ve varış her harekette ZORUNLUDUR ve her noktanın yanında (enlem, boylam) ondalık noktayla yazılır (40.20, 26.27). Kaynakta koordinat varsa onu, yoksa o yerin bilinen gerçek koordinatını yaz; yer kesin bilinmiyorsa yaklaşık koordinat ver ve başına ~ koy: Triumph'un batış yeri (~40.21, 26.24).
   Başlangıç noktasını UYDURMA: kaynakta nereden çıktığı yazıyorsa onu yaz; yazmıyorsa aracın kaynakta geçen son bilinen konumunu yaz ve bunu DOĞRULANACAK'a ekle. Güzergâhta kaynakta geçen ara durakları (uğradığı liman, geçtiği boğaz/ada) sırasıyla yaz; kaynakta yoksa ara nokta ekleme.
 - olay: aşağıdaki biçimlerle, noktalı virgülle; kartta yazdığın sırayla oynar.
@@ -418,6 +418,7 @@ YER ADLARI (yer, hareket, olay alanlarının hepsi)
 ARAÇ KUTUSU (başka bir şey yazarsan haritada görünmez)
 Taraf: kızıl (anlatılan taraf) · lacivert (karşı taraf) · sarı (kıyı mevzisi, batarya ya da üçüncü taraf); nötrse yazma; hikâye boyunca değişmez.
 Tür: büyük gemi · küçük gemi · denizaltı · at · süvari · asker · ordu · tank · araba · tren · uçak · helikopter · paraşüt · füze · yelkenli · vapur · kara (nokta). Bayrak için: [kızıl, asker, bayrak Osmanlı]
+Kıyı tabyası ya da bataryası ateş ediyorsa atıştan önce onu aynı sahnede ikon olarak koy (ikon kale [sarı, Mecidiye Tabyası] YER); atış yerine yakın bir gemi varsa ateşi o gemi açıyormuş gibi görünür, gerekirse o gemiyi “çekilir” ile kaldır.
 Olaylar: atış A → B · bombardıman A → B (üç atış) · torpido A → B · patlama YER · büyük patlama YER · batış GEMİ · vurgu YER · işaret GEMİ (yanıp sönen lamba) · ışıldak GEMİ → HEDEF · anons GEMİ (telsiz/hoparlör) · bayrak ÜLKE YER · yıldırım YER · ikon TÜR [taraf, etiket] YER
 Mayınlar (kalıcıdır; bir kez yazılan hat sonraki bütün sahnelerde durur, tekrar yazma):
   · mayın hattı A (enlem, boylam) → B (enlem, boylam) (12) — tek hat; uçlar iki ayrı nokta, parantezde mayın sayısı
@@ -431,6 +432,8 @@ Saat: tarihe saat yazarsan (01.15) ve önceki sahneden farklıysa ekranda saat d
 _EN satırları yalnızca çeviridir; alan ekleme.
 
 BAŞLIK: (en çok 6 kelime)
+BAŞLIK_EN: başlığın İngilizcesi (İngilizce videoda ekrandaki bölüm adı olur)
+ÇEVİRİ: İngilizce videoda ekranda yazacak her Türkçe kelimenin karşılığı, noktalı virgülle: hareket satırlarındaki araç ve filo adları, yer adlarındaki ortak sözcükler, tarihteki sözcükler (Erenköy Koyu = Erenköy Bay; Mecidiye Tabyası = Mecidiye Battery; tarama tekneleri = minesweepers; zırhlı = battleship; İngiliz hattı = British line). Özel adlar (Kepez, Nusret, Bouvet) aynen kalır, yazma. Ay adları kendiliğinden çevrilir.
 KAPAK: 1. satır | 2. satır | alt başlık — kapak görseli; BÜYÜK HARF, toplam en çok 4 kelime, başlığın aynısı olamaz; 1. satır ölçek/neden (26 MAYIN), 2. satır sonuç/kayıp (3 ZIRHLI BATTI); alt başlık yer ve yıl (ÇANAKKALE 1915)
 KAPAK_EN: aynısı İngilizce (26 MINES | BROKE CHURCHILL | DARDANELLES (1915) - TACTICAL BRIEFING)
 LEJANT_EN: lacivert taraf | kızıl taraf, kapak lejantı için (ALLIED FLEET | OTTOMAN MINES)
@@ -464,6 +467,8 @@ SORU_EN:`;
 function kartCoz(t) { const o = { sahne: {}, en: {} };
   for (const ham of t.split(/\r?\n/)) { const sat = ham.replace(/^[\s*\-•#]+/, "").replace(/\*\*/g, "");
     const d0 = sat.match(/^DO[ĞG]RULANACAK\s*[:：]\s*(.*)$/i); if (d0) { o.dogrulanacak = d0[1].split(";").map(x => x.trim()).filter(x => x && !/^(yok|-|—)$/i.test(x)); continue; }
+    const c0 = sat.match(/^(ÇEVİRİ|CEVIRI)\s*[:：]\s*(.*)$/i); if (c0) { o.ceviri = c0[2]; continue; }
+    const b0 = sat.match(/^(BAŞLIK|BASLIK)_EN\s*[:：]\s*(.*)$/i); if (b0) { o.baslikEn = b0[2].trim(); continue; }
     const p0 = sat.match(/^(KAPAK|LEJANT|AÇIKLAMA|ACIKLAMA|ETİKETLER|ETIKETLER|YORUM)(_EN)?\s*[:：]\s*(.*)$/i);
     if (p0) { const k = p0[1].toLocaleUpperCase("tr-TR").replace("Ç", "C").replace("İ", "I"); (o.paylas = o.paylas || {})[k + (p0[2] ? "_EN" : "")] = p0[3].trim(); continue; }
     const m = sat.match(/^(BAŞLIK|BASLIK|YABANCI|HOOK|SORU|S\s*([1-9]\d?))(_EN)?\s*(?:\([^)]*\))?\s*[:：]\s*(.*)$/i); if (!m) continue;
@@ -481,6 +486,8 @@ async function kartUygula(o, yerEkle, log) {
     if (!bos(Y.ACIKLAMA)) pk.aciklama = Y.ACIKLAMA; if (!bos(Y.ACIKLAMA_EN)) pk.aciklama_en = Y.ACIKLAMA_EN;
     if (!bos(Y.ETIKETLER)) pk.etiketler = Y.ETIKETLER.split(/\s+/).filter(Boolean); if (!bos(Y.ETIKETLER_EN)) pk.etiketler_en = Y.ETIKETLER_EN.split(/\s+/).filter(Boolean);
     if (!bos(Y.YORUM)) pk.yorum = Y.YORUM; }
+  if (o.ceviri) { const C = (V.meta.ceviri = V.meta.ceviri || {}); for (const p of o.ceviri.split(";")) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) C[k] = v; } }
+  if (o.baslikEn) V.meta.title_en = o.baslikEn;
   if (o.yabanci) { V.meta.okunus = V.meta.okunus || {}; for (const p of o.yabanci.split(/[;,]/)) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) V.meta.okunus[k] = v; } }
   { const sq = [["HOOK", o.hook], ...Object.entries(o.sahne).map(([i, s]) => [`S${+i + 1}`, s.ses])].filter(([, x]) => /\?/.test(x || "")).map(([k]) => k); if (sq.length) log(`uyarı: ${sq.join(", ")} soru cümlesi içeriyor (şablona göre soru yalnızca SORU satırında olmalı)`); }
   const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map(), MAYIN = [];
