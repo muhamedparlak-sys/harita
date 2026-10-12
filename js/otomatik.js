@@ -73,7 +73,8 @@
     const O = [];
     for (let x of (t || "").split(";").map(x => x.trim()).filter(Boolean)) {
       const k = kucuk(x); let m;
-      if ((m = x.match(/^büyük\s+patlama\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[1].trim(), k: 2.2 });
+      if ((m = x.match(/^(çekilir|ayrılır|haritadan çıkar|kaybolur)\s+(.+)$/i))) { for (const g of m[2].split(/\s*,\s*/).filter(Boolean)) O.push({ tur: "cekil", gemi: g.trim() }); }
+      else if ((m = x.match(/^büyük\s+patlama\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[1].trim(), k: 2.2 });
       else if ((m = x.match(/^(patlama|infilak)\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[2].trim(), k: 1 });
       else if ((m = x.match(/^(yıldırım|şimşek)\s+(.+)$/i))) O.push({ tur: "simsek", yer: m[2].trim() });
       else if ((m = x.match(/^(torpido|torpil)\s+(.+)$/i))) { const y = ok(m[2]); O.push({ tur: "torpido", yer: y[0], hedef: y[1] || null }); }
@@ -175,7 +176,7 @@
     for (let it = 0; it < 3; it++) { const R = [Q[0]]; for (let k = 0; k + 1 < Q.length; k++) { const a = Q[k], b = Q[k + 1]; R.push([a[0] * .75 + b[0] * .25, a[1] * .75 + b[1] * .25], [a[0] * .25 + b[0] * .75, a[1] * .25 + b[1] * .75]); } R.push(Q[Q.length - 1]);
       if (denizde && M && H && R.some(p => !denizNokta(M, H, p))) break; Q = R; }
     return Q.map(p => [+p[0].toFixed(4), +p[1].toFixed(4)]); }
-  const SURE = { doser: .02, hatlar: .02, torpido: .16, atis: .12, patlama: .06, batis: .16, isaret: .22, anons: .26, isildak: .08, vurgu: .1, simsek: .06, ikon: .04, bayrak: .04, mayin: .04 };
+  const SURE = { cekil: 0, doser: .02, hatlar: .02, torpido: .16, atis: .12, patlama: .06, batis: .16, isaret: .22, anons: .26, isildak: .08, vurgu: .1, simsek: .06, ikon: .04, bayrak: .04, mayin: .04 };
   const yakin = (a, b, M) => Math.hypot(a[0] - b[0], a[1] - b[1]) < Math.max(.006, (M ? (M.lo1 - M.lo0) : 1) * .04);
 
   /* st: sahne; s: {hareket, olay}; c: {yerBul(ad)->[lo,la]|null, harita(ad)->{V,W,H}, kat, bayraklar, log, aktorler: Map (sahneler arası durum)} */
@@ -239,6 +240,8 @@
     for (const k of Object.keys(yer)) delete yer[k];
     const M = c.kat[st.map], H = M ? await c.harita(st.map) : null;
     st.ships = (st.ships || []).filter(x => !x.fix);
+    /* "çekilir X": X bu sahneden itibaren haritada durmaz */
+    for (const o of O) if (o.tur === "cekil") { let bulundu = false; for (const n of [...AK.keys()]) if (esle(n, o.gemi)) { AK.delete(n); bulundu = true; } if (bulundu) eklendi.push(`çekildi ${o.gemi}`); else log(`  çekilir: “${o.gemi}” daha önce haritada yoktu`); }
     /* 1) daha önceki sahnelerden kalan aktörler yerinde durur (bu sahnede hareket etmiyorlarsa) */
     for (const [n, a] of AK) { if (a.batti || H_.some(h => esle(h.ad, n))) continue; if (M && !(a.p[0] >= M.lo0 && a.p[0] <= M.lo1 && a.p[1] >= M.la0 && a.p[1] <= M.la1)) continue;
       const sh = { n, s: a.s, k: a.k, p: [a.p], t: [0, 1], fix: true, lab: [0, a.ikon ? -22 : -14, "middle"] }; if (a.ikon) sh.ikon = a.ikon; if (a.bayrak) sh.bayrak = a.bayrak; if (a.k === "dot") sh.kara = true; st.ships.push(sh); }
@@ -271,7 +274,7 @@
       st.ships = st.ships.filter(x => !(x.n && h.ad && esle(x.n, h.ad))); st.ships.push(sh); yeni.push(sh); eklendi.push(`rota ${h.ad || ""}${notu}`);
     }
     /* 3) zamanlama: gelenler önce gelir, sonra olaylar sırayla olur, olay yerinden ayrılanlar en son çekilir */
-    const olayYer = []; for (const o of O) if (!["bayrak", "ikon", "mayin", "hatlar", "doser"].includes(o.tur)) { const p = o.tur === "batis" ? (aktorBul(o.gemi) || {}).p : await bul(o.yer); if (p) olayYer.push(p); }
+    const olayYer = []; for (const o of O) if (!["bayrak", "ikon", "mayin", "hatlar", "doser", "cekil"].includes(o.tur)) { const p = o.tur === "batis" ? (aktorBul(o.gemi) || {}).p : await bul(o.yer); if (p) olayYer.push(p); }
     const gelen = [], ayrilan = [];
     for (const sh of yeni) { if (sh.p.length < 2) { sh.t = [0, 1]; continue; } (olayYer.some(p => yakin(p, sh.p[0], M)) && !olayYer.some(p => yakin(p, sh.p[sh.p.length - 1], M)) ? ayrilan : gelen).push(sh); }
     gelen.forEach((sh, j) => { sh.t = [+(.03 + j * .06).toFixed(2), +Math.min(.62, .48 + j * .05).toFixed(2)]; });
@@ -340,6 +343,7 @@
             const f0 = en(a), f1 = en(b); fr = [+Math.min(f0, f1).toFixed(3), +Math.max(f0, f1, Math.min(f0, f1) + .05).toFixed(3)]; if (f1 < f0) R.reverse(); }
           st.nus = g ? { pts: R, ship: g.n, fr } : { pts: R, fr }; MY.push(R); eklendi.push(`${gemi} ${o.n} mayın döşüyor`); }
         else log(`  mayın döşer: başlangıç ya da bitiş bulunamadı (${bas} → ${o.hedef})`); }
+      else if (o.tur === "cekil") { }
       else log(`  anlaşılmayan olay: ${o.ham}`);
       t += sure;
     }

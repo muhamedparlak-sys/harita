@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "30 · 12 Ekim";
+const SURUM = "31 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -422,7 +422,7 @@ Mayınlar (kalıcıdır; bir kez yazılan hat sonraki bütün sahnelerde durur, 
 İkonlar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar · silo · okul · hastane · banka · anıt · kapı · çan · dağ · orman · ağaç · ada · su · balık · çadır · çapa · havaalanı · radar · dürbün · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol · ölüm · mezar · sağlık · kızılay · kızılhaç · anlaşma · belge · taç · nişan · bayrak · hoparlör · telsiz · uydu
 Hava: gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına
 Bayraklar: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
-Aktörler: hareket satırında adı geçen her araç sonraki sahnelerde son yerinde durur; yalnızca yer değiştirince yeniden yaz. Olaylarda yer yerine aktör adını, her yerde aynı yazımla kullan (torpido U-21 → Triumph · batış Triumph); aktör olmayan yerleri koordinatıyla yaz (bombardıman Triumph → Kabatepe (40.20, 26.27)). Gemiden gemiye atışta arada kara varsa atan gemi denizden dolaşıp yaklaşır.
+Aktörler: hareket satırında adı geçen her araç sonraki sahnelerde son yerinde durur; yalnızca yer değiştirince yeniden yaz. İşi biten aracı olay alanında “çekilir AD” ile haritadan kaldır (çekilir tarama tekneleri, zırhlı); yoksa sonraki sahneleri kalabalıklaştırır. Olaylarda yer yerine aktör adını, her yerde aynı yazımla kullan (torpido U-21 → Triumph · batış Triumph); aktör olmayan yerleri koordinatıyla yaz (bombardıman Triumph → Kabatepe (40.20, 26.27)). Gemiden gemiye atışta arada kara varsa atan gemi denizden dolaşıp yaklaşır.
 Saat: tarihe saat yazarsan (01.15) ve önceki sahneden farklıysa ekranda saat döner.
 _EN satırları yalnızca çeviridir; alan ekleme.
 
