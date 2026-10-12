@@ -4,7 +4,7 @@
 "use strict";
 const VIDEO = (() => {
   const SR = 48000, WV = 1080, HV = 1920, K = 2; /* CSS 540×960 → 1080×1920 */
-  const LEAD = .3, TAIL = .4, HLEAD = .1, HTAIL = .35;
+  const LEAD = .15, TAIL = .3, HLEAD = .1, HTAIL = .35;
 
   /* ---------------- SVG katmanını tuvale çizen küçük çizici ---------------- */
   const imgOnb = {};
@@ -201,7 +201,7 @@ const VIDEO = (() => {
           log(`hook  ${sure.toFixed(1)} sn`);
         }
         const { x, W } = await seslendir(sesm(st), `sahne_${String(i + 1).padStart(2, "0")}`);
-        const sure = x ? Math.max(7, LEAD + x.length / SR + TAIL) : (+st.sn || (st.ses ? Math.round((st.ses.split(/\s+/).length / 2.3 + 1) * 10) / 10 : 6));
+        const sure = x ? Math.max(4.5, LEAD + x.length / SR + TAIL) : (+st.sn || (st.ses ? Math.round((st.ses.split(/\s+/).length / 2.3 + 1) * 10) / 10 : 6));
         const G = altyazi(st, x, W, LEAD, sure - .15), t0 = T;
         if (!(solo && !st.hook)) OLAY.push({ t: t0, ad: "gecis" }); OLAY.push(...evs(i, 0, .999, sure, t0)); if (x) SESLER.push([t0 + LEAD, x]);
         ekle({ ad: `S${i + 1}`, p0: i, p1: i + .999, sure, solo: solo && !st.hook, G, metin: sesm(st), i });
@@ -237,7 +237,8 @@ const VIDEO = (() => {
   }
 
   function parcaBul(PARCA, t) { for (const p of PARCA) if (t < p.t0 + p.sure) return p; return PARCA[PARCA.length - 1]; }
-  function cizZaman(ctx, M, PARCA, t) { const p = parcaBul(PARCA, t), u = Math.min(1, Math.max(0, (t - p.t0) / p.sure));
+  let KAPAK_RESMI = null; /* seçilen kapak videonun ilk karelerine konur: platform kapağı otomatik onu alır */
+  function cizZaman(ctx, M, PARCA, t) { if (KAPAK_RESMI && t < .1) { ctx.globalAlpha = 1; ctx.drawImage(KAPAK_RESMI, 0, 0, WV, HV); return; } const p = parcaBul(PARCA, t), u = Math.min(1, Math.max(0, (t - p.t0) / p.sure));
     /* hook ve soru kendi içinde yaklaşır; sahneler sahne ilerlemesini kullanır */
     kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip, p.ad === "Hook" ? u : null, p.ad === "Hook"); }
 
@@ -385,5 +386,5 @@ const VIDEO = (() => {
       return await new Promise(ok => sh.toBlob(ok, "image/png"));
     } finally { M.kapat(); }
   }
-  return { sesKilidiAc, yontem: v => { YONTEM = v; }, uret, kontrolTablosu, okunus, kelimeler, gruplar, svgCiz, cerceveAc, kare };
+  return { sesKilidiAc, kapak: r => { KAPAK_RESMI = r || null; }, yontem: v => { YONTEM = v; }, uret, kontrolTablosu, okunus, kelimeler, gruplar, svgCiz, cerceveAc, kare };
 })();

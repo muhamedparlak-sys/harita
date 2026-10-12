@@ -132,13 +132,12 @@ const KAPAK = (() => {
     c.restore();
   }
 
-  async function uret(hk, ayar) {
-    const o = Object.assign({}, VARSAYILAN, ayar || {});
+  async function hazirla(hk) {
     try { await document.fonts.load(`120px Anton`); await document.fonts.load(`600 26px Inter`); } catch (e) { }
-    const M = await VIDEO.cerceveAc(hk, { w: 540, h: 960, top: 70 }, "taktik");
-    try {
-      M.W.eval(YARDIMCI);
-      const ol = M.W.__olaylar(), sec = kareSec(ol, hk.veri.steps, o.kare), t = sec.e.tur === "batis" ? Math.max(0, sec.e.t - .03) : Math.min(.999, sec.e.t + .05);
+    const M = await VIDEO.cerceveAc(hk, { w: 540, h: 960, top: 70 }, "taktik"); M.W.eval(YARDIMCI); return M;
+  }
+  async function ciz(M, o, sec) {
+    const t = sec.e.tur === "batis" ? Math.max(0, sec.e.t - .03) : Math.min(.999, sec.e.t + .05);
       const ham = document.createElement("canvas"); ham.width = W; ham.height = H; const hc = ham.getContext("2d");
       hc.fillStyle = RENK.deniz; hc.fillRect(0, 0, W, H);
       VIDEO.kare(hc, M, sec.k + t, true, null, 0); M.W.__kapakSade();
@@ -148,7 +147,8 @@ const KAPAK = (() => {
       /* yakınlaştır: odak ekranın alt-ortasına gelsin (metne yer kalır), kenarlar boş kalmasın */
       const z = 1.2, hedef = [W / 2, H * .6];
       let dx = hedef[0] - odak[0] * z, dy = hedef[1] - odak[1] * z;
-      dx = Math.min(0, Math.max(W - W * z, dx)); dy = Math.min(0, Math.max(H - H * z, dy));
+      /* odak kenardaysa harita kayar; açılan boşluk deniz rengi + vinyetle kapanır (odak her zaman ortada) */
+      dx = Math.min(W * .35, Math.max(W - W * z - W * .35, dx)); dy = Math.min(H * .2, Math.max(H - H * z - H * .2, dy));
       const P = ([x, y]) => [x * z + dx, y * z + dy];
       const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const c = cv.getContext("2d");
       c.fillStyle = RENK.deniz; c.fillRect(0, 0, W, H); c.drawImage(ham, dx, dy, W * z, H * z);
@@ -164,7 +164,28 @@ const KAPAK = (() => {
       telemetri(c, b, sinif, o.alt ? o.alt.split(/[-–—(]/)[0].trim() : "");
       metin(c, o); lejant(c, o); marka(c, o);
       const blob = await new Promise(ok_ => cv.toBlob(ok_, "image/png"));
-      return { blob, kare: sec.k + 1, tur: sec.e.tur };
+      return { blob, kare: sec.k + 1, tur: sec.e.tur, ayar: o };
+  }
+  async function uret(hk, ayar) {
+    const o = Object.assign({}, VARSAYILAN, ayar || {}), M = await hazirla(hk);
+    try { return await ciz(M, o, kareSec(M.W.__olaylar(), hk.veri.steps, o.kare)); } finally { M.kapat(); }
+  }
+  /* birkaç aday: farklı anlar (S5/S4 önce, sonra en sert anlar) ve iki renk düzeni */
+  async function adaylar(hk, ayar, n = 4) {
+    const o = Object.assign({}, VARSAYILAN, ayar || {}), M = await hazirla(hk), steps = hk.veri.steps;
+    try {
+      const ol = M.W.__olaylar(), agir = { buyukpatlama: 3, batis: 2.6, patlama: 2 }, L = [], gor = new Set();
+      const ekle = (k, e) => { const key = k + ":" + e.tur + ":" + Math.round(e.t * 10); if (!gor.has(key) && L.length < n) { gor.add(key); L.push({ k, e }); } };
+      if (o.kare && o.kare !== "oto") ekle(...Object.values(kareSec(ol, steps, o.kare)));
+      else { const ilk = kareSec(ol, steps, "oto"); ekle(ilk.k, ilk.e); }
+      const T = []; ol.forEach((E, k) => { if (steps[k] && steps[k].hook) return; for (const e of E) if (agir[e.tur]) T.push({ k, e, p: agir[e.tur] - .15 * Math.abs(k - 4) }); });
+      T.sort((a, b) => b.p - a.p); const adimda = new Set(L.map(x => x.k));
+      for (const x of T) if (!adimda.has(x.k)) { adimda.add(x.k); ekle(x.k, x.e); }
+      for (const x of T) ekle(x.k, x.e);
+      for (const k of [3, 4, 2, 5]) if (k < steps.length) ekle(k, { tur: "kilit", t: .8 });
+      const R = [];
+      for (const [i, sec] of L.entries()) { const v = Object.assign({}, o); if (i % 2) { v.s1r = o.s1r === "sari" ? "beyaz" : "sari"; v.s2r = o.s2r === "kirmizi" ? "beyaz" : "kirmizi"; } v.kare = String(sec.k + 1); R.push(await ciz(M, v, sec)); }
+      return R;
     } finally { M.kapat(); }
   }
   /* 0,5 sn kuralı denetimi */
@@ -175,5 +196,5 @@ const KAPAK = (() => {
     if (baslik && n([o.s1, o.s2].join(" ")) === n(baslik)) U.push("Kapak yazısı başlığın aynısı: başlığı kopyalamayın, ölçek + sonuç yazın.");
     return U;
   }
-  return { uret, denetle, VARSAYILAN };
+  return { uret, adaylar, denetle, VARSAYILAN };
 })();

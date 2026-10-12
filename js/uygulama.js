@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "28 · 12 Ekim";
+const SURUM = "29 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -326,22 +326,34 @@ async function dikeyTablo() { pencere("Dikey kontrol tablosu", `<p class="ipucu"
     $("#dkPay").onclick = () => paylas(b, `${AD}_dikey.png`); } catch (e) { $("#dlgIc").innerHTML = `<p class="ipucu uyari">Hazırlanamadı: ${esc(e.message)}</p>`; } }
 function kapakPencere() { const m = V.meta, P = (m.paylasim = m.paylasim || {}), pk = (P[m.title] = P[m.title] || { kapak: "", aciklama: "", etiketler: [], yorum: "" });
   const o = (pk.kapakTasarim = Object.assign({}, KAPAK.VARSAYILAN, pk.kapakTasarim || {}));
+  /* yazı boşsa Instagram kapak yazısından: "26 mayın, 3 zırhlı" → iki satır */
+  if (!o.s1 && !o.s2 && pk.kapak) { const p = pk.kapak.split(/\s*[,;–—:]\s*|\s+-\s+/).filter(Boolean); o.s1 = p[0] || ""; o.s2 = p.slice(1).join(" "); }
   const gir = (k, lab, ph) => `<label>${lab}<input data-k="${k}" value="${esc(o[k] || "")}" placeholder="${esc(ph || "")}"></label>`;
   const sec = (k, lab, L) => `<label>${lab}<select data-k="${k}">${L.map(([v, t]) => `<option value="${v}" ${o[k] === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>`;
-  pencere("Kapak görseli", `<p class="ipucu">Başlığı kopyalamayın: en çok 3–4 kelime. 1. satır ölçek/neden, 2. satır sonuç/kayıp.</p>
+  pencere("Kapak görseli", `<div id="kpSecili"></div><p class="ipucu">Kapak, videonun en sert anından (patlama, batış ya da kilitlenme) ve aşağıdaki yazılardan oluşur. Başlığı kopyalamayın: en çok 3–4 kelime; 1. satır ölçek/neden, 2. satır sonuç/kayıp.</p>
     <div class="satir">${gir("s1", "1. satır", "26 MINES")}${sec("s1r", "Renk", [["beyaz", "Beyaz"], ["sari", "Taktik sarı"]])}</div>
     <div class="satir">${gir("s2", "2. satır", "BROKE CHURCHILL")}${sec("s2r", "Renk", [["kirmizi", "Kırmızı"], ["beyaz", "Beyaz"]])}</div>
     ${gir("alt", "Alt başlık (ince)", "DARDANELLES (1915) - TACTICAL BRIEFING")}
     <div class="satir">${gir("mavi", "Mavi taraf", "ALLIED FLEET")}${gir("kirmizi", "Kırmızı taraf", "OTTOMAN MINES")}</div>
     <div class="satir">${gir("kanal", "Kanal", "@battlelinemaps")}${gir("marka", "Marka yazısı", "BATTLELINE")}</div>
-    ${sec("kare", "Kare", [["oto", "Otomatik (S5 patlama → S4 kilitlenme)"], ...V.steps.map((_, i) => [String(i + 1), `S${i + 1}`])])}
-    <div id="kpUyari"></div><button class="ana" id="kpUret">Kapağı üret</button><div id="kpSonuc"></div>`);
+    ${sec("kare", "İlk aday", [["oto", "Otomatik (S5 patlama → S4 kilitlenme)"], ...V.steps.map((_, i) => [String(i + 1), `S${i + 1}`])])}
+    <div id="kpUyari"></div><button class="ana" id="kpUret">4 kapak üret</button><div id="kpSonuc"></div>`);
   const uyar = () => { const U = KAPAK.denetle(o, m.title); $("#kpUyari").innerHTML = U.map(u => `<p class="ipucu uyari">${esc(u)}</p>`).join(""); };
   $$("#dlgIc [data-k]").forEach(e => e.oninput = e.onchange = () => { o[e.dataset.k] = e.value; sadeceKaydet(); uyar(); }); uyar();
-  $("#kpUret").onclick = async () => { const d = $("#kpSonuc"); d.innerHTML = `<p class="ipucu">Hazırlanıyor…</p>`;
-    try { const r = await KAPAK.uret(HK, o), u = URL.createObjectURL(r.blob);
-      d.innerHTML = `<p class="ipucu">Kare: S${r.kare} · ${r.tur === "kilit" ? "kilitlenme" : r.tur === "batis" ? "batış" : "patlama"}</p><img src="${u}" alt="Kapak" style="width:100%;border-radius:8px"><button class="ana" id="kpPay">Kaydet / paylaş</button>`;
-      $("#kpPay").onclick = () => paylas(r.blob, `${AD}_kapak.png`); } catch (e) { d.innerHTML = `<p class="ipucu uyari">Hazırlanamadı: ${esc(e.message)}</p>`; } }; }
+  const seciliGoster = async () => { const k = await DEPO.ayar("kapak:" + AD), d = $("#kpSecili"); if (!d) return;
+    if (!k || !k.blob) { d.innerHTML = ""; return; }
+    d.innerHTML = `<h3>Seçili kapak</h3><img src="${URL.createObjectURL(k.blob)}" alt="Seçili kapak" style="width:46%;border-radius:8px;display:block;margin:0 auto 8px"><p class="ipucu">Video üretilince ilk kareye konur; Instagram kapağı otomatik bunu alır.</p>
+      <div class="satir"><button id="kpPay">Kapağı kaydet / paylaş</button><button id="kpKal" class="tehlike">Kapağı kaldır</button></div>`;
+    $("#kpPay").onclick = () => paylas(k.blob, `${AD}_kapak.png`); $("#kpKal").onclick = async () => { await DEPO.ayarYaz("kapak:" + AD, null); seciliGoster(); }; };
+  seciliGoster();
+  $("#kpUret").onclick = async () => { const d = $("#kpSonuc"); d.innerHTML = `<p class="ipucu">4 aday hazırlanıyor…</p>`; $("#kpUret").disabled = true;
+    try { const R = await KAPAK.adaylar(HK, o, 4);
+      d.innerHTML = `<p class="ipucu">Birine dokunun: seçilen kapak kaydedilir ve videoya eklenir.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${R.map((r, i) => `<button data-aday="${i}" style="padding:0;border-radius:8px;overflow:hidden"><img src="${URL.createObjectURL(r.blob)}" alt="Aday ${i + 1}" style="width:100%;display:block"><small style="display:block;padding:4px">S${r.kare} · ${r.tur === "kilit" ? "kilitlenme" : r.tur === "batis" ? "batış" : "patlama"}</small></button>`).join("")}</div>`;
+      $$("#kpSonuc [data-aday]").forEach(b => b.onclick = async () => { const r = R[+b.dataset.aday];
+        await DEPO.ayarYaz("kapak:" + AD, { blob: r.blob, kare: r.kare, zaman: Date.now() }); o.s1r = r.ayar.s1r; o.s2r = r.ayar.s2r; sadeceKaydet();
+        bildir("Kapak seçildi"); await seciliGoster(); $("#dlgIc").scrollTop = 0; });
+    } catch (e) { d.innerHTML = `<p class="ipucu uyari">Hazırlanamadı: ${esc(e.message)}</p>`; }
+    const b = $("#kpUret"); if (b) b.disabled = false; }; }
 async function sayfaDisa() { const html = await DEPO.sayfaKur(HK, null), b = new Blob([html], { type: "text/html" });
   pencere("Sayfa dışa aktarıldı", `<p>Tek dosyalık web sayfası hazır (${(b.size / 1048576).toFixed(1)} MB). İnternette yayımlayabilir ya da bilgisayara gönderebilirsiniz.</p><div class="satir"><button class="ana" id="spPay">Dosyayı kaydet / paylaş</button><a id="spAc" href="${URL.createObjectURL(b)}" target="_blank"><button>Sayfayı aç</button></a></div>`);
   $("#spPay").onclick = () => paylas(b, `${AD}.html`); }
@@ -381,6 +393,8 @@ SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında, bu sırayla; boş alan
 - olay: aşağıdaki biçimlerle, noktalı virgülle; kartta yazdığın sırayla oynar.
 - hava: gece yapılan iş → gece; sabaha karşı → şafak; akşam → akşam; kaynakta geçiyorsa sis, yağmur, kar, rüzgâr, fırtına. Gündüz ve bilgi yoksa boş.
 - Animasyon yalnızca bu alanlardan kurulur; her sahnede en az bir hareket ya da olay olsun (hareket yoksa vurgu, ikon ya da bayrak).
+- HARİTA ANLATIYI TAŞIR: seslendirmede geçen her mekânsal unsur (mayın hattı, set, tabya, batarya, cephe, konvoy, döşenen mayın, dönüş yeri) o sahnenin hareket ya da olay alanında da yazılır. Haritada görünmeyen şeyi anlatma.
+- S1 DÜZENİ KURAR: hikâyenin başındaki durağan düzeni (mevcut mayın hatları, tabyalar, kıyı bataryaları, gemilerin bekleme yerleri) kaynakta varsa S1'in olay alanına yaz; sonraki sahnelerde yeniden yazma, kendiliğinden durur.
 
 YER ADLARI (yer, hareket, olay alanlarının hepsi)
 - Yalnızca OpenStreetMap'te tek başına bulunan nokta adları: şehir, köy, burun, koy, liman, ada, kale, fener (Kilitbahir, Nara Burnu, Morto Koyu, Kumkale, Kabatepe, Gökçeada).
@@ -391,7 +405,11 @@ YER ADLARI (yer, hareket, olay alanlarının hepsi)
 ARAÇ KUTUSU (başka bir şey yazarsan haritada görünmez)
 Taraf: kızıl (anlatılan taraf) · lacivert (karşı taraf) · sarı (kıyı mevzisi, batarya ya da üçüncü taraf); nötrse yazma; hikâye boyunca değişmez.
 Tür: büyük gemi · küçük gemi · denizaltı · at · süvari · asker · ordu · tank · araba · tren · uçak · helikopter · paraşüt · füze · yelkenli · vapur · kara (nokta). Bayrak için: [kızıl, asker, bayrak Osmanlı]
-Olaylar: atış A → B · bombardıman A → B (üç atış) · torpido A → B · patlama YER · büyük patlama YER · batış GEMİ · vurgu YER · işaret GEMİ (yanıp sönen lamba) · ışıldak GEMİ → HEDEF · anons GEMİ (telsiz/hoparlör) · mayın YER → YER · bayrak ÜLKE YER · yıldırım YER · ikon TÜR [taraf, etiket] YER
+Olaylar: atış A → B · bombardıman A → B (üç atış) · torpido A → B · patlama YER · büyük patlama YER · batış GEMİ · vurgu YER · işaret GEMİ (yanıp sönen lamba) · ışıldak GEMİ → HEDEF · anons GEMİ (telsiz/hoparlör) · bayrak ÜLKE YER · yıldırım YER · ikon TÜR [taraf, etiket] YER
+Mayınlar (kalıcıdır; bir kez yazılan hat sonraki bütün sahnelerde durur, tekrar yazma):
+  · mayın hattı A (enlem, boylam) → B (enlem, boylam) (12) — tek hat; uçlar iki ayrı nokta, parantezde mayın sayısı
+  · mayın hatları N: A → B / C → D — birbirine paralel N hat; yalnızca İLK hattın iki ucunu ve SON hattın iki ucunu yaz, aradakiler eşit aralıkla çizilir. Boğazı enine kesen hatlar için uçlar karşılıklı iki kıyıdadır: mayın hatları 10: Kıyı-1 (enlem, boylam) → Karşı kıyı-1 (enlem, boylam) / Kıyı-2 (enlem, boylam) → Karşı kıyı-2 (enlem, boylam). Koordinatları kaynaktan ya da yerin gerçek konumundan al; kesin değilse ~ koy ve DOĞRULANACAK'a yaz
+  · mayın döşer GEMİ A (enlem, boylam) → B (enlem, boylam) (26) — gemi A'dan B'ye giderken mayınlar arkasına tek tek düşer. Aynı sahnenin hareket alanında o geminin rotası A ve B'den GEÇMELİ: Nusret [kızıl, küçük gemi] Nara Burnu (40.19, 26.40) → A (…) → B (…) → Nara Burnu (40.19, 26.40)
 İkonlar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar · silo · okul · hastane · banka · anıt · kapı · çan · dağ · orman · ağaç · ada · su · balık · çadır · çapa · havaalanı · radar · dürbün · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol · ölüm · mezar · sağlık · kızılay · kızılhaç · anlaşma · belge · taç · nişan · bayrak · hoparlör · telsiz · uydu
 Hava: gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına
 Bayraklar: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
@@ -435,7 +453,7 @@ async function kartUygula(o, yerEkle, log) {
   if (o.baslik) { const eski = V.meta.title, P = V.meta.paylasim || {}; V.meta.title = V.meta.h1 = o.baslik; if (P[eski] && eski !== o.baslik) { P[o.baslik] = P[eski]; delete P[eski]; } }
   if (o.yabanci) { V.meta.okunus = V.meta.okunus || {}; for (const p of o.yabanci.split(/[;,]/)) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) V.meta.okunus[k] = v; } }
   { const sq = [["HOOK", o.hook], ...Object.entries(o.sahne).map(([i, s]) => [`S${+i + 1}`, s.ses])].filter(([, x]) => /\?/.test(x || "")).map(([k]) => k); if (sq.length) log(`uyarı: ${sq.join(", ")} soru cümlesi içeriyor (şablona göre soru yalnızca SORU satırında olmalı)`); }
-  const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map();
+  const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map(), MAYIN = [];
   const n = Math.max(8, ...Object.keys(o.sahne).map(k => +k + 1)); while (V.steps.length < n) { const k = JSON.parse(JSON.stringify(V.steps.at(-1))); delete k.hook; Object.assign(k, { ses: "", text: "", date: "", ships: [], booms: [], shots: [] }); V.steps.push(k); }
   for (const [i, s] of Object.entries(o.sahne)) { const st = V.steps[+i]; st.ses = s.ses; if (!st.text) st.text = s.ses; if (s.tarih) st.date = s.tarih; if (o.en[i]) st.ses_en = o.en[i];
     if (yerEkle && s.yer) { log(`S${+i + 1}: ${s.yer}`);
@@ -448,7 +466,7 @@ async function kartUygula(o, yerEkle, log) {
       } catch (e) { log("  bulunamadı: " + e.message); } }
     if (s.hava !== undefined) { const H = s.hava.split(/[,;]/).map(x => x.trim().toLocaleLowerCase("tr-TR")).filter(x => x && !/^(yok|-|—|gündüz)$/.test(x)); if (H.length) st.hava = H; else delete st.hava; }
     if (yerEkle) {
-      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, yerDis: async ad => { const r = await DEPO.yer(ad, null); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, haritalar: HK.haritalar, kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR });
+      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, yerDis: async ad => { const r = await DEPO.yer(ad, null); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, haritalar: HK.haritalar, kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR, mayinlar: MAYIN });
         if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } }
     /* hiç hareket ya da olay yoksa ilk yere vurgu halkası: sahne hareketsiz kalmasın */
     if (!(st.ships || []).some(x => !x.fix) && !["booms", "shots", "vurgu", "ikon", "simsek", "bayrak", "mines", "torpido", "isaret", "anons", "isildak"].some(k => (st[k] || []).length) && (st.pts || []).length) {
@@ -564,6 +582,7 @@ async function videoPencere() {
     $("#vDur").onclick = () => { VIDEO_DURDUR = true; };
     durdurOyna();
     window.__URETIM = 1;
+    try { const k = await DEPO.ayar("kapak:" + AD); VIDEO.kapak(k && k.blob ? await createImageBitmap(k.blob) : null); if (k && k.blob) log("Seçili kapak ilk kareye konuyor."); } catch (e) { VIDEO.kapak(null); }
     try { const r = await VIDEO.uret(AD, HK, a, log, ilerle, () => VIDEO_DURDUR);
       /* biter bitmez telefona kaydedilir: ekran kapansa, uygulama kapansa da kaybolmaz */
       try { await DEPO.ayarYaz("sonVideo", { blob: r.blob, ad: `bolum_${DEPO.guvenli(V.meta.title || AD).toLocaleLowerCase("tr-TR")}.${r.uzanti}`, baslik: V.meta.title || AD, sure: r.sure, srt: r.srt, seslendirme: r.seslendirme, zaman: Date.now(), alindi: false }); log("Video telefona kaydedildi (Menü → Son üretilen video)."); } catch (e) { log("Telefona kaydedilemedi: " + e.message); }
