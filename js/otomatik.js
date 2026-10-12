@@ -277,7 +277,7 @@
       else if (denizde) { const D = denizYolu(M, H, A); if (D && D.length >= 2) { P = yumusat(D, M, H, true); notu = " (denizden)"; } else { P = A.map(p => denizeIt(M, H, p)); notu = " (düz)"; } }
       else P = yumusat(A, M, H, false);
       /* başka bir aktörün üstüne binmesin: hedefte durmadan önce yanaşma mesafesinde durur */
-      if (M && h.tur !== "dot") { const D = (M.lo1 - M.lo0) * .035, digerleri = st.ships.filter(x => x.p && !(x.n && h.ad && esle(x.n, h.ad))).map(x => x.p[x.p.length - 1]);
+      if (M && h.tur !== "dot") { const D = (M.lo1 - M.lo0) * .018, digerleri = st.ships.filter(x => x.p && !(x.n && h.ad && esle(x.n, h.ad))).map(x => x.p[x.p.length - 1]);
         P = uzakTut(P, digerleri, D, M, denizde ? H : null); }
       if (h.grup) { GRUP[h.grup.ad] = { P }; P = yanKaydir(P, -(h.grup.n - 1) / 2); }
       const sh = { n: h.ad, s: h.taraf, k: h.tur, p: P, t: [0, 1] }; if (h.ad) sh.lab = [0, -14, "middle"]; if (h.tur === "dot") sh.kara = true; if (h.grup) { sh._g = h.grup.ad; sh.ln = h.grup.ad; }
