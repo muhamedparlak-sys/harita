@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "37 · 12 Ekim";
+const SURUM = "38 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -400,7 +400,8 @@ SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında, bu sırayla; boş alan
 - tarih: ekranda etiket olur, seslendirilmez; RAKAMLA, en çok 4 kelime (18 Mart 1915 · 7/8 Mart 1915 gecesi · 18 Mart 1915, 13.54 · Bugün).
 - hareket: Ad [taraf, tür] Başlangıç (enlem, boylam) → güzergâh noktaları (enlem, boylam) → Varış (enlem, boylam). Birden çoksa noktalı virgül. Birlikte, hat hâlinde giden gemiler TEK satırda filo olarak yazılır, ayrı ayrı değil: Fransız hattı: Suffren, Bouvet, Gaulois, Charlemagne [lacivert, büyük gemi, bayrak Fransız] Başlangıç (…) → Varış (…). Gemiler aynı rotada yan yana, aynı anda ilerler; sonraki sahnelerde her biri kendi adıyla anılır (batış Bouvet). Yerinde duran için tek nokta: Goliath [lacivert, büyük gemi] Morto Koyu (40.04, 26.19)
 - KOORDİNAT KURALI: Başlangıç, güzergâh ve varış her harekette ZORUNLUDUR ve her noktanın yanında (enlem, boylam) ondalık noktayla yazılır (40.20, 26.27). Kaynakta koordinat varsa onu, yoksa o yerin bilinen gerçek koordinatını yaz; yer kesin bilinmiyorsa yaklaşık koordinat ver ve başına ~ koy: Triumph'un batış yeri (~40.21, 26.24).
-  Başlangıç noktasını UYDURMA: kaynakta nereden çıktığı yazıyorsa onu yaz; yazmıyorsa aracın kaynakta geçen son bilinen konumunu yaz ve bunu DOĞRULANACAK'a ekle. Güzergâhta kaynakta geçen ara durakları (uğradığı liman, geçtiği boğaz/ada) sırasıyla yaz; kaynakta yoksa ara nokta ekleme.
+  Başlangıç noktasını UYDURMA: kaynakta nereden çıktığı yazıyorsa onu yaz; yazmıyorsa aracın kaynakta geçen son bilinen konumunu yaz ve bunu DOĞRULANACAK'a ekle. Güzergâhta kaynakta geçen ara durakları (uğradığı liman, geçtiği boğaz/ada) sırasıyla yaz; kaynakta olmayan liman ya da durak ekleme.
+  DENİZ GEÇİŞ NOKTASI: rota bir adalar arasından, dar bir boğazdan ya da bir yarımadanın çevresinden geçiyorsa, gemi karadan geçmesin diye arada açık denizde nokta ver ve adına “açığı / batısı / güneyi” koy (Sakız batısı (38.50, 25.70); Limni güneyi (39.50, 25.90)). Bunlar tarihî durak değil, yol tarifidir; uzak rotalarda her 150–200 km'de bir yeterlidir.
 - olay: aşağıdaki biçimlerle, noktalı virgülle; kartta yazdığın sırayla oynar.
 - hava: gece yapılan iş → gece; sabaha karşı → şafak; akşam → akşam; kaynakta geçiyorsa sis, yağmur, kar, rüzgâr, fırtına. Gündüz ve bilgi yoksa boş.
 - Animasyon yalnızca bu alanlardan kurulur; her sahnede en az bir hareket ya da olay olsun (hareket yoksa vurgu, ikon ya da bayrak).
@@ -427,7 +428,7 @@ Mayınlar (kalıcıdır; bir kez yazılan hat sonraki bütün sahnelerde durur, 
 İkonlar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar · silo · okul · hastane · banka · anıt · kapı · çan · dağ · orman · ağaç · ada · su · balık · çadır · çapa · havaalanı · radar · dürbün · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol · ölüm · mezar · sağlık · kızılay · kızılhaç · anlaşma · belge · taç · nişan · bayrak · hoparlör · telsiz · uydu
 Hava: gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına
 Bayraklar: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
-Aktörler: hareket satırında adı geçen her araç sonraki sahnelerde son yerinde durur; yalnızca yer değiştirince yeniden yaz. İşi biten aracı olay alanında “çekilir AD” ile haritadan kaldır (çekilir tarama tekneleri, zırhlı); yoksa sonraki sahneleri kalabalıklaştırır. Olaylarda yer yerine aktör adını, her yerde aynı yazımla kullan (torpido U-21 → Triumph · batış Triumph); aktör olmayan yerleri koordinatıyla yaz (bombardıman Triumph → Kabatepe (40.20, 26.27)). Gemiden gemiye atışta arada kara varsa atan gemi denizden dolaşıp yaklaşır.
+Aktörler: hareket satırında adı geçen her araç sonraki sahnelerde son yerinde durur; yalnızca yer değiştirince yeniden yaz. İşi biten aracı olay alanında “çekilir AD” ile haritadan kaldır (çekilir tarama tekneleri, zırhlı); yoksa sonraki sahneleri kalabalıklaştırır. Olaylarda yer yerine aktör adını, her yerde aynı yazımla kullan (torpido U-21 → Triumph · batış Triumph). Bir aracın adı hikâye içinde değişse de (Goeben → Yavuz) haritada ilk adı kalır; yeni ad yalnızca seslendirmede geçer. Aynı nokta adı (Atış yeri, Koy girişi) kartın her yerinde aynı koordinatı gösterir; farklı yer için farklı ad ver. Her torpido ve her atış ayrı olaydır: üç torpido için üç kez “torpido A → B” yaz. Filo satırına yalnızca aynı türden gemileri koy (zırhlılar bir filo, muhripler ayrı filo). aktör olmayan yerleri koordinatıyla yaz (bombardıman Triumph → Kabatepe (40.20, 26.27)). Gemiden gemiye atışta arada kara varsa atan gemi denizden dolaşıp yaklaşır.
 Saat: tarihe saat yazarsan (01.15) ve önceki sahneden farklıysa ekranda saat döner.
 _EN satırları yalnızca çeviridir; alan ekleme.
 
