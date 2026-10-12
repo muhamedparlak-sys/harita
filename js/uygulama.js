@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "31 · 12 Ekim";
+const SURUM = "32 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -382,7 +382,9 @@ const ISTEM = `Kaynaklardaki olayı Instagram/Shorts için 60 saniyelik, Save th
 
 DOĞRULUK
 - Yalnızca kaynaktaki olgular: hava, duygu, diyalog, sayı, süre, çatışma uydurma. Sayıları kaynaktaki gibi ver; kesin değilse "yaklaşık" de. Kaynaklar çelişiyorsa temkinli olanı al ve DOĞRULANACAK'a yaz.
-- Olayların sırasını ve aralarındaki zamanı koru.
+- Olayların sırasını ve aralarındaki zamanı koru. S1–S8 tarih sırasıyla ilerler; geriye dönüş yok (yalnızca HOOK ileriden bir an gösterir).
+- Hareket ve olay alanına da yalnızca kaynakta geçeni yaz: kaynakta olmayan ışıldak, telsiz anonsu, patlama, rota durağı ekleme. Bir gemiyi kaynakta varmadığı bir yerden geçirme.
+- Sonuç ve etki cümleleri ("savaşı uzattı", "istifa etti", "değiştirdi") ancak kaynakta aynen varsa; yoksa yazma ya da DOĞRULANACAK'a ekle.
 
 ÜSLUP
 - Soğukkanlı, kesik, olgu dili; şimdiki zaman, kısa ve yüklem odaklı cümleler. Duygusal sıfat (kahramanca, haince, muazzam, destansı vb.) yok; gerilimi eylem, sayı, mesafe ve zaman baskısı kurar.
@@ -409,6 +411,8 @@ YER ADLARI (yer, hareket, olay alanlarının hepsi)
 - Yalnızca OpenStreetMap'te tek başına bulunan nokta adları: şehir, köy, burun, koy, liman, ada, kale, fener (Kilitbahir, Nara Burnu, Morto Koyu, Kumkale, Kabatepe, Gökçeada).
 - "-açığı, -önleri, -yakınları, -civarı, -bölgesi, -kıyıları" ekleme; denizdeki olay için en yakın kıyı noktasını yaz, gemi kendiliğinden denize oturur.
 - Deniz, boğaz, bölge adı yazma (Ege Denizi, Akdeniz, Çanakkale Boğazı, Gelibolu Yarımadası).
+- Denizde olan şeyin (batış, patlama, mayın, dönüş yeri) koordinatı DENİZDEKİ noktadır: koyun ortası, kıyıdan biraz açık; aynı adlı köyün ya da kasabanın kara üstündeki koordinatı değil.
+- Haritanın çok dışında kalan yer (Londra, Paris) için olay yazma; o bilgi yalnızca seslendirmede geçer.
 - Haritanın dışından gelen ya da dışarı giden için de gerçek yeri koordinatıyla yaz (U-21 [kızıl, denizaltı] Cattaro (42.42, 18.77) → Gökçeada (40.16, 25.84)): araç haritanın o yöndeki kenarından girer.
 
 ARAÇ KUTUSU (başka bir şey yazarsan haritada görünmez)
@@ -427,6 +431,14 @@ Saat: tarihe saat yazarsan (01.15) ve önceki sahneden farklıysa ekranda saat d
 _EN satırları yalnızca çeviridir; alan ekleme.
 
 BAŞLIK: (en çok 6 kelime)
+KAPAK: 1. satır | 2. satır | alt başlık — kapak görseli; BÜYÜK HARF, toplam en çok 4 kelime, başlığın aynısı olamaz; 1. satır ölçek/neden (26 MAYIN), 2. satır sonuç/kayıp (3 ZIRHLI BATTI); alt başlık yer ve yıl (ÇANAKKALE 1915)
+KAPAK_EN: aynısı İngilizce (26 MINES | BROKE CHURCHILL | DARDANELLES (1915) - TACTICAL BRIEFING)
+LEJANT_EN: lacivert taraf | kızıl taraf, kapak lejantı için (ALLIED FLEET | OTTOMAN MINES)
+AÇIKLAMA: Instagram açıklaması, en çok 120 kelime; ilk cümle ikinci bir kanca, sonda yorum sorusu
+AÇIKLAMA_EN:
+ETİKETLER: 3–5 etiket, boşlukla (#Çanakkale #18Mart)
+ETİKETLER_EN:
+YORUM: sabit yorum: kaynaklar (yazar, yıl, eser) ve "harita sayfası profildeki bağlantıda"
 YABANCI: yabancı özel adlar ve Türkçe okunuşu (Triumph = Trayamf; Bouvet = Buve)
 DOĞRULANACAK: kontrol edilecek noktalar, noktalı virgülle (yoksa boş)
 HOOK:
@@ -452,6 +464,8 @@ SORU_EN:`;
 function kartCoz(t) { const o = { sahne: {}, en: {} };
   for (const ham of t.split(/\r?\n/)) { const sat = ham.replace(/^[\s*\-•#]+/, "").replace(/\*\*/g, "");
     const d0 = sat.match(/^DO[ĞG]RULANACAK\s*[:：]\s*(.*)$/i); if (d0) { o.dogrulanacak = d0[1].split(";").map(x => x.trim()).filter(x => x && !/^(yok|-|—)$/i.test(x)); continue; }
+    const p0 = sat.match(/^(KAPAK|LEJANT|AÇIKLAMA|ACIKLAMA|ETİKETLER|ETIKETLER|YORUM)(_EN)?\s*[:：]\s*(.*)$/i);
+    if (p0) { const k = p0[1].toLocaleUpperCase("tr-TR").replace("Ç", "C").replace("İ", "I"); (o.paylas = o.paylas || {})[k + (p0[2] ? "_EN" : "")] = p0[3].trim(); continue; }
     const m = sat.match(/^(BAŞLIK|BASLIK|YABANCI|HOOK|SORU|S\s*([1-9]\d?))(_EN)?\s*(?:\([^)]*\))?\s*[:：]\s*(.*)$/i); if (!m) continue;
     const anah = m[1].toUpperCase().replace(/\s/g, ""), en = !!m[3], [metin, ...ek] = m[4].split("|").map(x => x.trim());
     if (anah.startsWith("BA")) o.baslik = metin; else if (anah === "YABANCI") o.yabanci = m[4];
@@ -460,6 +474,13 @@ function kartCoz(t) { const o = { sahne: {}, en: {} };
   return o; }
 async function kartUygula(o, yerEkle, log) {
   if (o.baslik) { const eski = V.meta.title, P = V.meta.paylasim || {}; V.meta.title = V.meta.h1 = o.baslik; if (P[eski] && eski !== o.baslik) { P[o.baslik] = P[eski]; delete P[eski]; } }
+  if (o.paylas) { const P = (V.meta.paylasim = V.meta.paylasim || {}), pk = (P[V.meta.title] = P[V.meta.title] || { kapak: "", aciklama: "", etiketler: [], yorum: "" }), Y = o.paylas, bos = x => !x || /^(yok|-|—)$/i.test(x);
+    const kp = (Y.KAPAK_EN || Y.KAPAK || "").split("|").map(x => x.trim()); if (kp[0]) { const t = (pk.kapakTasarim = Object.assign({}, window.KAPAK ? KAPAK.VARSAYILAN : {}, pk.kapakTasarim || {})); t.s1 = kp[0]; t.s2 = kp[1] || ""; if (kp[2]) t.alt = kp[2]; }
+    if (Y.KAPAK) pk.kapak = Y.KAPAK.split("|").slice(0, 2).join(" ").trim();
+    const lj = (Y.LEJANT_EN || "").split("|").map(x => x.trim()); if (lj[0] && pk.kapakTasarim) { pk.kapakTasarim.mavi = lj[0]; if (lj[1]) pk.kapakTasarim.kirmizi = lj[1]; }
+    if (!bos(Y.ACIKLAMA)) pk.aciklama = Y.ACIKLAMA; if (!bos(Y.ACIKLAMA_EN)) pk.aciklama_en = Y.ACIKLAMA_EN;
+    if (!bos(Y.ETIKETLER)) pk.etiketler = Y.ETIKETLER.split(/\s+/).filter(Boolean); if (!bos(Y.ETIKETLER_EN)) pk.etiketler_en = Y.ETIKETLER_EN.split(/\s+/).filter(Boolean);
+    if (!bos(Y.YORUM)) pk.yorum = Y.YORUM; }
   if (o.yabanci) { V.meta.okunus = V.meta.okunus || {}; for (const p of o.yabanci.split(/[;,]/)) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) V.meta.okunus[k] = v; } }
   { const sq = [["HOOK", o.hook], ...Object.entries(o.sahne).map(([i, s]) => [`S${+i + 1}`, s.ses])].filter(([, x]) => /\?/.test(x || "")).map(([k]) => k); if (sq.length) log(`uyarı: ${sq.join(", ")} soru cümlesi içeriyor (şablona göre soru yalnızca SORU satırında olmalı)`); }
   const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map(), MAYIN = [];
