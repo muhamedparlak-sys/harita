@@ -261,9 +261,18 @@ const VIDEO = (() => {
     return { v, s };
   }
 
+  /* iPhone ekranı kararmasın: Wake Lock (sayfaya dönünce yeniden alınır) + yedek olarak sessiz, görünmez döngü video */
+  function uyanikTut() {
+    let kilit = null, bitti = false; const al = async () => { try { if (!bitti && "wakeLock" in navigator && document.visibilityState === "visible") kilit = await navigator.wakeLock.request("screen"); } catch (e) { } };
+    const gor = () => { if (document.visibilityState === "visible") { al(); v.play().catch(() => { }); } };
+    const v = document.createElement("video"); v.src = "vendor/uyanik.mp4"; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.setAttribute("muted", "");
+    v.style.cssText = "position:fixed;left:0;top:0;width:1px;height:1px;opacity:.01;pointer-events:none"; document.body.append(v); v.play().catch(() => { });
+    al(); document.addEventListener("visibilitychange", gor);
+    return () => { bitti = true; document.removeEventListener("visibilitychange", gor); try { kilit && kilit.release(); } catch (e) { } v.pause(); v.remove(); };
+  }
   async function kodla(M, PARCA, T, mix, log, ilerle, durdur) {
     const cv = document.createElement("canvas"); cv.width = WV; cv.height = HV; const ctx = cv.getContext("2d", { alpha: false });
-    let kilit = null; try { kilit = await navigator.wakeLock.request("screen"); } catch (e) { }
+    const uyan = uyanikTut();
     try {
       const K_ = (window.__GERCEK_ZAMANLI || YONTEM === "gercek") ? null : await kodlayiciSec();
       const mixTepe = tepe(mix.L);
@@ -275,7 +284,7 @@ const VIDEO = (() => {
         log("Bu cihazda hızlı modda ses kodlanamadı; gerçek zamanlı kayda geçiliyor (video süresi kadar sürer, uygulamayı açık tutun)."); ilerle(0);
       } else log("Gerçek zamanlı kayıt (video süresi kadar sürer, uygulamayı açık tutun).");
       return await gercekZamanli(ctx, cv, M, PARCA, T, mix, log, ilerle, durdur);
-    } finally { try { kilit && kilit.release(); } catch (e) { } }
+    } finally { uyan(); }
   }
 
   async function webcodecs(ctx, cv, M, PARCA, T, mix, K_, log, ilerle, durdur) {

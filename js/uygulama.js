@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "27 · 12 Ekim";
+const SURUM = "28 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -311,11 +311,11 @@ async function yeniHikaye() { pencere("Yeni hikâye", `<label>Hikâyenin adı<in
 
 /* ---------- menü ---------- */
 const MENU = [["kart", "Kartı içe aktar", "NotebookLM çıktısını sahnelere yerleştir"], ["kabin", "Seslendirme kabini", "Kendi sesinizle okuyun"], ["denetle", "Denetle", "Sahne sayısı, kelime bütçesi, rotalar"],
-  ["dikey", "Dikey kontrol tablosu", "Her sahnenin reel kadrajı tek görselde"], ["kapak", "Kapak görseli", "9:16 taktik kapak, en sert andan"], ["yer", "Yer ara", "Bir yeri bulup sahneye ekleyin"], ["haritalar", "Haritalar", "Hikâyenin haritalarını seçin"],
+  ["dikey", "Dikey kontrol tablosu", "Her sahnenin reel kadrajı tek görselde"], ["kapak", "Kapak görseli", "9:16 taktik kapak, en sert andan"], ["sonvideo", "Son üretilen video", "Telefona kaydedilen son reel"], ["yer", "Yer ara", "Bir yeri bulup sahneye ekleyin"], ["haritalar", "Haritalar", "Hikâyenin haritalarını seçin"],
   ["uret", "Yeni harita üret", "Kütüphanede olmayan bölge için"], ["sayfa", "Sayfayı dışa aktar", "Tek dosyalık kaydırmalı web sayfası"], ["disa", "Hikâyeyi dışa aktar", "Yedek ya da masaüstüne taşımak için .json"],
   ["kilavuz", "Kılavuz", "İş akışı ve NotebookLM istemi"], ["sil", "Hikâyeyi sil", "Bu hikâyeyi telefondan kaldır"]];
 $("#menuBtn").onclick = () => { pencere("Menü", `<div class="liste">${MENU.map(([k, a, b]) => `<button data-m="${k}" ${k === "sil" ? 'class="tehlike"' : ""}><span>${a}</span><small>${b}</small></button>`).join("")}</div><p class="ipucu" style="text-align:center">Sürüm ${SURUM}</p>`);
-  $$("#dlgIc [data-m]").forEach(b => b.onclick = () => ({ kart: kartPencere, kabin, denetle, dikey: dikeyTablo, kapak: kapakPencere, yer: yerAra, haritalar: haritaSec, uret: haritaUret, sayfa: sayfaDisa, disa: hikayeDisa, kilavuz, sil: hikayeSil })[b.dataset.m]()); };
+  $$("#dlgIc [data-m]").forEach(b => b.onclick = () => ({ kart: kartPencere, kabin, denetle, dikey: dikeyTablo, kapak: kapakPencere, sonvideo: sonVideo, yer: yerAra, haritalar: haritaSec, uret: haritaUret, sayfa: sayfaDisa, disa: hikayeDisa, kilavuz, sil: hikayeSil })[b.dataset.m]()); };
 async function denetle() { pencere("Denetim", `<p class="ipucu">Denetleniyor…</p>`);
   const r = HARITA.denetle(V), d = await HARITA.deniz(V);
   $("#dlgIc").innerHTML = `<ul class="denetim">${r.O.map(o => `<li class="${o.b ? "b" : o.u ? "u" : ""}">${o.u ? "! " : ""}${esc(o.b || o.t)}${o.k ? `<br><small>${esc(o.k)}</small>` : ""}</li>`).join("")}</ul>
@@ -563,18 +563,31 @@ async function videoPencere() {
     const ilerle = u => { const b = $("#vBar"); if (b) { b.style.width = (u * 100).toFixed(1) + "%"; $("#vYuzde").textContent = `Video: %${Math.round(u * 100)}`; } };
     $("#vDur").onclick = () => { VIDEO_DURDUR = true; };
     durdurOyna();
+    window.__URETIM = 1;
     try { const r = await VIDEO.uret(AD, HK, a, log, ilerle, () => VIDEO_DURDUR);
+      /* biter bitmez telefona kaydedilir: ekran kapansa, uygulama kapansa da kaybolmaz */
+      try { await DEPO.ayarYaz("sonVideo", { blob: r.blob, ad: `bolum_${DEPO.guvenli(V.meta.title || AD).toLocaleLowerCase("tr-TR")}.${r.uzanti}`, baslik: V.meta.title || AD, sure: r.sure, srt: r.srt, seslendirme: r.seslendirme, zaman: Date.now(), alindi: false }); log("Video telefona kaydedildi (Menü → Son üretilen video)."); } catch (e) { log("Telefona kaydedilemedi: " + e.message); }
+      try { const ac = new (window.AudioContext || window.webkitAudioContext)(), o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 880; g.gain.setValueAtTime(.2, ac.currentTime); g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + .6); o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + .6); } catch (e) { }
       const ad = `bolum_${DEPO.guvenli(V.meta.title || AD).toLocaleLowerCase("tr-TR")}.${r.uzanti}`, u = URL.createObjectURL(r.blob);
       $("#vRes").innerHTML = `<video controls playsinline src="${u}"></video><p class="ipucu">${r.sure.toFixed(1)} sn · ${(r.blob.size / 1048576).toFixed(1)} MB</p>
         <button class="ana" id="vKay">Videoyu kaydet / paylaş</button><div class="satir"><button id="vSrt">Altyazı (.srt)</button><button id="vPay">Paylaşım metnini kopyala</button><button id="vSesM">Seslendirme metnini kopyala</button></div>
         <p class="ipucu">“Videoyu kaydet / paylaş” → “Videoyu Kaydet” ile Fotoğraflar'a kaydedin ya da doğrudan Instagram'ı seçin.</p>`;
-      $("#vKay").onclick = () => paylas(r.blob, ad, V.meta.title); $("#vSrt").onclick = () => paylas(new Blob([r.srt], { type: "text/plain" }), ad.replace(/\.\w+$/, ".srt"));
+      $("#vKay").onclick = async () => { await paylas(r.blob, ad, V.meta.title); sonVideoAlindi(); }; $("#vSrt").onclick = () => paylas(new Blob([r.srt], { type: "text/plain" }), ad.replace(/\.\w+$/, ".srt"));
       $("#vPay").onclick = e => kopyala(paylasimMetni(), e.target); $("#vSesM").onclick = e => kopyala(r.seslendirme, e.target);
       log("Hazır."); $("#vRes").scrollIntoView({ behavior: "smooth" });
     } catch (e) { log("Hata: " + (e.message || e)); if (/Durduruldu/.test(e.message)) bildir("Durduruldu"); }
+    window.__URETIM = 0; if (window.__GUNCEL_BEKLIYOR) bildir("Uygulamanın yeni sürümü hazır; videoyu kaydettikten sonra uygulamayı kapatıp açın.", 6);
     const b = $("#vBas"); if (b) b.disabled = false; };
 }
 $("#videoBtn").onclick = videoPencere;
+async function sonVideoAlindi() { try { const o = await DEPO.ayar("sonVideo"); if (o) { o.alindi = true; await DEPO.ayarYaz("sonVideo", o); } } catch (e) { } }
+async function sonVideo() { const o = await DEPO.ayar("sonVideo");
+  if (!o || !o.blob) return pencere("Son üretilen video", `<p class="ipucu">Telefonda kayıtlı video yok.</p>`);
+  const u = URL.createObjectURL(o.blob), ne = new Date(o.zaman).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" });
+  pencere("Son üretilen video", `<video controls playsinline src="${u}"></video><p class="ipucu">${esc(o.baslik)} · ${ne} · ${o.sure.toFixed(1)} sn · ${(o.blob.size / 1048576).toFixed(1)} MB</p>
+    <button class="ana" id="svKay">Videoyu kaydet / paylaş</button><div class="satir"><button id="svSrt">Altyazı (.srt)</button><button id="svSes">Seslendirme metnini kopyala</button></div>`);
+  $("#svKay").onclick = async () => { await paylas(o.blob, o.ad, o.baslik); sonVideoAlindi(); };
+  $("#svSrt").onclick = () => paylas(new Blob([o.srt || ""], { type: "text/plain" }), o.ad.replace(/\.\w+$/, ".srt")); $("#svSes").onclick = e => kopyala(o.seslendirme || "", e.target); }
 
 /* ---------- kılavuz ---------- */
 function kilavuz() { pencere("Kılavuz", `<h3>Bir reel, adım adım</h3><ol style="margin:0;padding-left:1.2em;display:grid;gap:6px">
@@ -607,9 +620,10 @@ async function ornekYukle() { const hk = await (await fetch("ornek/Bogaz_gecilme
   const L = await DEPO.hikayeler(), son = await DEPO.ayar("son");
   if (!L.length) await ornekYukle(); else await yukle(L.includes(son) ? son : L[0]);
   aracSec("sec");
+  try { const o = await DEPO.ayar("sonVideo"); if (o && o.blob && !o.alindi) bildir("Kaydedilmemiş bir video var: Menü → Son üretilen video", 6); } catch (e) { }
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     const vardi = !!navigator.serviceWorker.controller; let yenilendi = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => { if (vardi && !yenilendi) { yenilendi = true; bildir("Uygulama güncellendi; yeniden yükleniyor…"); setTimeout(() => location.reload(), 800); } });
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (vardi && !yenilendi) { if (window.__URETIM) { window.__GUNCEL_BEKLIYOR = 1; return; } yenilendi = true; bildir("Uygulama güncellendi; yeniden yükleniyor…"); setTimeout(() => location.reload(), 800); } });
     navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => { r.update(); document.addEventListener("visibilitychange", () => { if (!document.hidden) r.update(); }); }).catch(() => { });
   }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
