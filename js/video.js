@@ -253,15 +253,17 @@ const VIDEO = (() => {
   async function sesTepe(blob) { try { const ab = await blob.arrayBuffer(), ac = new OfflineAudioContext(1, 1, SR);
       const b = await new Promise((ok, no) => { const p = ac.decodeAudioData(ab, ok, no); if (p && p.then) p.then(ok, no); });
       let m = 0; for (let c = 0; c < b.numberOfChannels; c++) m = Math.max(m, tepe(b.getChannelData(c))); return m; } catch (e) { return null; } }
+  let NEDEN = "";
   async function kodlayiciSec() {
-    if (!("VideoEncoder" in window) || !("AudioEncoder" in window) || !window.Mp4Muxer) return null;
+    NEDEN = !("VideoEncoder" in window) ? "bu iPhone'da video kodlayıcı (VideoEncoder) yok" : !("AudioEncoder" in window) ? "bu iPhone'da ses kodlayıcı (AudioEncoder) yok" : !window.Mp4Muxer ? "mp4 paketleyici yüklenemedi" : "";
+    if (NEDEN) return null;
     let v = null;
     for (const c of ["avc1.640028", "avc1.4d0028", "avc1.640032", "avc1.42003e"]) { try { const r = await VideoEncoder.isConfigSupported({ codec: c, width: WV, height: HV, bitrate: 8e6, framerate: 30 }); if (r.supported) { v = { kod: c, mux: "avc" }; break; } } catch (e) { } }
     if (!v) for (const c of ["vp09.00.40.08", "vp09.00.41.08"]) { try { const r = await VideoEncoder.isConfigSupported({ codec: c, width: WV, height: HV, bitrate: 8e6, framerate: 30 }); if (r.supported) { v = { kod: c, mux: "vp9" }; break; } } catch (e) { } }
-    if (!v) return null;
+    if (!v) { NEDEN = "H.264/VP9 video kodlama desteklenmiyor"; return null; }
     let s = null;
     for (const [c, mux] of [["mp4a.40.2", "aac"], ["opus", "opus"]]) { try { const r = await AudioEncoder.isConfigSupported({ codec: c, sampleRate: SR, numberOfChannels: 2, bitrate: 192000 }); if (r.supported) { s = { kod: c, mux }; break; } } catch (e) { } }
-    if (!s) return null;
+    if (!s) { NEDEN = "AAC/Opus ses kodlama desteklenmiyor"; return null; }
     return { v, s };
   }
 
@@ -286,7 +288,7 @@ const VIDEO = (() => {
         catch (e) { if (/Durduruldu/.test(e.message)) throw e; if (e.message !== "SESSIZ") log("Hızlı kodlama başarısız: " + e.message); }
         if (b) return b;
         log("Bu cihazda hızlı modda ses kodlanamadı; gerçek zamanlı kayda geçiliyor (video süresi kadar sürer, uygulamayı açık tutun)."); ilerle(0);
-      } else log("Gerçek zamanlı kayıt (video süresi kadar sürer, uygulamayı açık tutun).");
+      } else log(`Gerçek zamanlı kayıt${NEDEN ? " — hızlı mod kullanılamıyor: " + NEDEN : ""} (video süresi kadar sürer, uygulamayı açık tutun).`);
       return await gercekZamanli(ctx, cv, M, PARCA, T, mix, log, ilerle, durdur);
     } finally { uyan(); }
   }
