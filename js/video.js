@@ -270,10 +270,9 @@ const VIDEO = (() => {
       if (K_) {
         let b = null;
         try { b = await webcodecs(ctx, cv, M, PARCA, T, mix, K_, log, ilerle, durdur); }
-        catch (e) { if (/Durduruldu/.test(e.message)) throw e; log("Hızlı kodlama başarısız: " + e.message); }
-        if (b) { if (mixTepe < .005) return b; const t = await sesTepe(b); log(`Ses denetimi: ${t == null ? "doğrulanamadı" : t > .002 ? "ses var" : "SES YOK"}`);
-          if (t != null && t > .002) return b; }
-        log("Videonun sesi boş çıktı; gerçek zamanlı kayıtla yeniden üretiliyor (video süresi kadar sürer, uygulamayı açık tutun)."); ilerle(0);
+        catch (e) { if (/Durduruldu/.test(e.message)) throw e; if (e.message !== "SESSIZ") log("Hızlı kodlama başarısız: " + e.message); }
+        if (b) return b;
+        log("Bu cihazda hızlı modda ses kodlanamadı; gerçek zamanlı kayda geçiliyor (video süresi kadar sürer, uygulamayı açık tutun)."); ilerle(0);
       } else log("Gerçek zamanlı kayıt (video süresi kadar sürer, uygulamayı açık tutun).");
       return await gercekZamanli(ctx, cv, M, PARCA, T, mix, log, ilerle, durdur);
     } finally { try { kilit && kilit.release(); } catch (e) { } }
@@ -287,19 +286,16 @@ const VIDEO = (() => {
     let hata = null;
     const ve = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: e => hata = e });
     ve.configure({ codec: K_.v.kod, width: WV, height: HV, bitrate: 8e6, framerate: FPS, ...(K_.v.mux === "avc" ? { avc: { format: "avc" } } : {}) });
-    let sesParca = 0, ilkSes = true;
-    const ASC = new Uint8Array([0x11, 0x90]); /* AAC-LC, 48 kHz, 2 kanal */
-    const ae = new AudioEncoder({ output: (c, m) => {
-      if (K_.s.mux === "aac") {
-        let d = new Uint8Array(c.byteLength); c.copyTo(d);
-        if (d.length > 7 && d[0] === 0xFF && (d[1] & 0xF0) === 0xF0) { const bas = (d[1] & 1) ? 7 : 9; d = d.subarray(bas); c = new EncodedAudioChunk({ type: c.type, timestamp: c.timestamp, duration: c.duration, data: d }); }
-        if (ilkSes) { const dc = (m && m.decoderConfig) || {}; if (!dc.description || !dc.description.byteLength) m = { decoderConfig: { codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 2, description: ASC } }; }
-      }
-      ilkSes = false; sesParca++; muxer.addAudioChunk(c, m); }, error: e => hata = e });
-    ae.configure({ codec: K_.s.kod, sampleRate: SR, numberOfChannels: 2, bitrate: 192000 });
-    const N = Math.min(mix.L.length, Math.ceil(F / FPS * SR)), B = 4800;
-    for (let i = 0; i < N; i += B) { const m = Math.min(B, N - i), d = new Float32Array(m * 2); d.set(mix.L.subarray(i, i + m), 0); d.set(mix.R.subarray(i, i + m), m);
-      const ad = new AudioData({ format: "f32-planar", sampleRate: SR, numberOfFrames: m, numberOfChannels: 2, timestamp: Math.round(i / SR * 1e6), data: d }); ae.encode(ad); ad.close(); }
+    /* ses önce ayrı kodlanır ve kendi çözücüsüyle dinlenir; sessizse öteki biçimle denenir, yine sessizse video hiç kodlanmadan gerçek zamanlıya geçilir */
+    const N = Math.min(mix.L.length, Math.ceil(F / FPS * SR));
+    let ses = null; const sessizMiks = tepe(mix.L) < .005;
+    for (const bicim of ["f32-planar", "f32"]) {
+      const s_ = await sesKodla(K_, mix, N, bicim); const t = await sesDinle(s_, K_);
+      log(`Ses denetimi (${bicim}): ${t == null ? "doğrulanamadı" : t > .002 ? "ses var" : "SES YOK"}`);
+      if (t == null || t > .002 || sessizMiks) { ses = s_; break; }
+    }
+    if (!ses) throw new Error("SESSIZ");
+    for (const [c, m] of ses.P) muxer.addAudioChunk(c, m);
     const t0 = performance.now();
     for (let k = 0; k < F; k++) {
       if (hata) throw hata; if (durdur()) throw new Error("Durduruldu");
@@ -309,9 +305,43 @@ const VIDEO = (() => {
       while (ve.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 4));
       if (k % 15 === 0) { ilerle(k / F); await new Promise(r => setTimeout(r, 0)); }
     }
-    await ve.flush(); await ae.flush(); if (hata) throw hata; if (!sesParca) throw new Error("Ses kodlanamadı"); muxer.finalize(); ve.close(); ae.close();
+    await ve.flush(); if (hata) throw hata; muxer.finalize(); ve.close();
     ilerle(1); log(`Kodlama ${((performance.now() - t0) / 1000).toFixed(0)} sn sürdü.`);
     return new Blob([muxer.target.buffer], { type: "video/mp4" });
+  }
+
+  async function sesKodla(K_, mix, N, bicim) {
+    const P = []; let hata = null, ilk = true, aciklama = null;
+    const ASC = new Uint8Array([0x11, 0x90]); /* AAC-LC, 48 kHz, 2 kanal */
+    const ae = new AudioEncoder({ output: (c, m) => {
+      let d = new Uint8Array(c.byteLength); c.copyTo(d);
+      if (K_.s.mux === "aac") {
+        if (d.length > 7 && d[0] === 0xFF && (d[1] & 0xF0) === 0xF0) d = d.subarray((d[1] & 1) ? 7 : 9);
+        if (ilk) { const dc = (m && m.decoderConfig) || {}; if (!dc.description || !dc.description.byteLength) m = { decoderConfig: { codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 2, description: ASC } }; }
+      }
+      if (ilk && m && m.decoderConfig) aciklama = m.decoderConfig.description || null;
+      ilk = false; P.push([new EncodedAudioChunk({ type: c.type, timestamp: c.timestamp, duration: c.duration, data: d }), m]); }, error: e => hata = e });
+    ae.configure({ codec: K_.s.kod, sampleRate: SR, numberOfChannels: 2, bitrate: 192000 });
+    const B = 4800;
+    for (let i = 0; i < N; i += B) { const m = Math.min(B, N - i), d = new Float32Array(m * 2);
+      if (bicim === "f32") { for (let j = 0; j < m; j++) { d[2 * j] = mix.L[i + j]; d[2 * j + 1] = mix.R[i + j]; } }
+      else { d.set(mix.L.subarray(i, i + m), 0); d.set(mix.R.subarray(i, i + m), m); }
+      const ad = new AudioData({ format: bicim, sampleRate: SR, numberOfFrames: m, numberOfChannels: 2, timestamp: Math.round(i / SR * 1e6), data: d }); ae.encode(ad); ad.close();
+      if (i % (B * 50) === 0) await new Promise(r => setTimeout(r, 0)); }
+    await ae.flush(); ae.close(); if (hata) throw hata; if (!P.length) throw new Error("Ses kodlanamadı");
+    return { P, aciklama };
+  }
+  /* kodlanmış sesi geri çözüp en yüksek düzeyine bakar (null: bu cihazda çözülemedi) */
+  async function sesDinle(s_, K_) {
+    if (!("AudioDecoder" in window)) return null;
+    try { let m = 0, hata = null; const cfg = { codec: K_.s.kod, sampleRate: SR, numberOfChannels: 2 }; if (s_.aciklama) cfg.description = s_.aciklama;
+      if (!(await AudioDecoder.isConfigSupported(cfg)).supported) return null;
+      const dec = new AudioDecoder({ output: a => { const n = a.numberOfFrames; for (let ch = 0; ch < a.numberOfChannels; ch++) { const x = new Float32Array(n);
+          try { a.copyTo(x, { planeIndex: ch, format: "f32-planar" }); } catch (e) { try { a.copyTo(x, { planeIndex: ch }); } catch (e2) { } } const t = tepe(x); if (t > m) m = t; } a.close(); }, error: e => hata = e });
+      dec.configure(cfg);
+      const P = s_.P, adim = Math.max(1, Math.floor(P.length / 400)); for (let i = 0; i < P.length; i += adim) dec.decode(P[i][0]);
+      await dec.flush(); dec.close(); return hata ? null : m;
+    } catch (e) { return null; }
   }
 
   async function gercekZamanli(ctx, cv, M, PARCA, T, mix, log, ilerle, durdur) {
