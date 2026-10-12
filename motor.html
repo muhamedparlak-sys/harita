@@ -443,7 +443,9 @@ function draw(p){ P=p; const N=ST.length, i=clamp(Math.floor(p),0,N-1), f=clamp(
     if(a==null){ SAAT.g.setAttribute("opacity",0); } else { let b2=b==null?a:b; if(b2>a) b2-=1440; const u=ease(seg(f,0,.28)), m=lerp(b2,a,u);
       SAAT.g.setAttribute("transform",`translate(${(VW-(VID?42:30)).toFixed(1)} ${(VID?VID.top/VZ+30:34).toFixed(1)}) scale(${VID?1.15:1})`); SAAT.g.setAttribute("opacity",(b!=null&&b!==a?1:Math.min(1,seg(f,0,.1))).toFixed(2));
       SAAT.akrep.setAttribute("transform",`rotate(${((m/60)%12*30).toFixed(1)})`); SAAT.yel.setAttribute("transform",`rotate(${((m%60)*6).toFixed(1)})`); } }
-  { const bos=VW-(VID?48:32), w1=TW(TAGP.textContent,14,.12), w2=TW(c.date||"",VID?26:22); TAGP.setAttribute("font-size",(14*Math.min(1,bos/Math.max(1,w1))).toFixed(1)); TAG.setAttribute("font-size",((VID?26:22)*Math.min(1,bos/Math.max(1,w2))).toFixed(1)); }
+  { const bos=VW-(VID?48:32), w1=TW(TAGP.textContent,14,.12), w2=TW(c.date||"",VID?26:22); TAGP.setAttribute("font-size",(14*Math.min(1,bos/Math.max(1,w1))).toFixed(1)); TAG.setAttribute("font-size",((VID?26:22)*Math.min(1,(bos-(VID?56:0))/Math.max(1,w2))).toFixed(1));
+    /* dikey videoda saat sağ üst köşede değil, tarihin hemen yanında durur: platformun sağ üst simgeleri onu örtmez, kadrajdan taşmaz */
+    if(VID&&+SAAT.g.getAttribute("opacity")>0){ const fs=+TAG.getAttribute("font-size"), x=Math.min(VW-30,24+TW(c.date||"",fs)+30); SAAT.g.setAttribute("transform",`translate(${x.toFixed(1)} ${(VID.top/VZ+38).toFixed(1)}) scale(.95)`); } }
   if(VID){ const u=ease(seg(f,0,.12)); for(const e of [TAGP,TAG]){ e.setAttribute("transform",`translate(${((1-u)*-60).toFixed(1)} 0)`); e.setAttribute("opacity",u.toFixed(2)); } } }
 
 /* ---------- yükleme ---------- */
