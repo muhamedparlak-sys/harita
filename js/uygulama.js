@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "38 · 12 Ekim";
+const SURUM = "39 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -511,7 +511,12 @@ async function kartUygula(o, yerEkle, log) {
     /* hiç hareket ya da olay yoksa ilk yere vurgu halkası: sahne hareketsiz kalmasın */
     if (!(st.ships || []).some(x => !x.fix) && !["booms", "shots", "vurgu", "ikon", "simsek", "bayrak", "mines", "torpido", "isaret", "anons", "isildak"].some(k => (st[k] || []).length) && (st.pts || []).length) {
       st.vurgu = [[st.pts[0][0], st.pts[0][1], 3, .08, .95, "", 4]]; log(`  S${+i + 1}: hareket yoktu, ${st.pts[0][2]} üzerine vurgu eklendi`); } }
-  const h = V.steps[0].hook || (V.steps[0].hook = { adim: 7, an: .6, ses: "" }); if (o.hook) h.ses = o.hook; if (o.en.hook) h.ses_en = o.en.hook;
+  const h = V.steps[0].hook || (V.steps[0].hook = { adim: 7, an: .6, ses: "" });
+  /* hook anı: hikâyenin en sert anı (batış > büyük patlama > torpido/atış), yoksa S7 */
+  { let en = null; V.steps.forEach((st, i) => { const ad = (p, t) => { if (!en || p > en.p || (p === en.p && Math.abs(i - 6) < Math.abs(en.i - 6))) en = { p, i, t }; };
+      for (const sh of st.ships || []) if (sh.sink != null) ad(3, sh.sink - .04); for (const b of st.booms || []) if (b[3] >= 2) ad(2, b[2]); for (const x of st.torpido || []) ad(1.5, x[5]); });
+    if (en) { h.adim = en.i + 1; h.an = +Math.max(.05, Math.min(.95, en.t)).toFixed(2); log(`Hook: S${en.i + 1} sahnesinin en sert anından`); } }
+  if (o.hook) h.ses = o.hook; if (o.en.hook) h.ses_en = o.en.hook;
   if (o.soru) V.meta.soru = o.soru; if (o.en.soru) V.meta.soru_en = o.en.soru;
   if (o.dogrulanacak && o.dogrulanacak.length) { V.meta.dogrulanacak = [...new Set([...(V.meta.dogrulanacak || []), ...o.dogrulanacak])]; log && log(`Doğrulanacak ${o.dogrulanacak.length} nokta “Hikâye” sekmesine eklendi.`); }
   vuruslar(); degisti(); ciz(); }

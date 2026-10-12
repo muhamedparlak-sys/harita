@@ -92,15 +92,15 @@ const KAPAK = (() => {
     const sol = [`OP CLOCK  ${b.tarih ? ingTarih(b.tarih) : "—"}`, b.geo ? `${derece(b.geo[1], "N", "S")}  ${derece(b.geo[0], "E", "W")}` : "", `UNIT CLASS  ${sinif || "—"}`].filter(Boolean);
     const sag = ["◉ REC  TACTICAL", op ? op.toLocaleUpperCase("en-US") : "", "GRID 180 · Z-1"].filter(Boolean);
     c.globalAlpha = .62; c.fillStyle = RENK.hud;
-    sol.forEach((s, i) => c.fillText(s, 56, 150 + i * 38));
-    c.textAlign = "right"; sag.forEach((s, i) => c.fillText(s, W - 56, 150 + i * 38));
+    sol.forEach((s, i) => c.fillText(s, 56, 250 + i * 34));
+    c.textAlign = "right"; sag.forEach((s, i) => c.fillText(s, W - 56, 250 + i * 34));
     c.globalAlpha = .45; c.strokeStyle = RENK.hud; c.lineWidth = 2.5;
-    for (const [x, y, sx, sy] of [[36, 132, 1, 1], [W - 36, 132, -1, 1]]) { c.beginPath(); c.moveTo(x, y + 60 * sy); c.lineTo(x, y); c.lineTo(x + 60 * sx, y); c.stroke(); }
+    for (const [x, y, sx, sy] of [[36, 232, 1, 1], [W - 36, 232, -1, 1]]) { c.beginPath(); c.moveTo(x, y + 60 * sy); c.lineTo(x, y); c.lineTo(x + 60 * sx, y); c.stroke(); }
     c.restore();
   }
   function metin(c, o) {
     const sat = [[o.s1, RENK[o.s1r] || RENK.beyaz, 210], [o.s2, RENK[o.s2r] || RENK.kirmizi, 170]].filter(s => s[0] && s[0].trim());
-    let y = 360; c.save(); c.textAlign = "center"; c.textBaseline = "alphabetic";
+    let y = 400; c.save(); c.textAlign = "center"; c.textBaseline = "alphabetic";
     for (const [s, renk, maxF] of sat) { const t = s.trim().toLocaleUpperCase("en-US"), f = sigdir(c, t, W - 120, maxF, 60);
       c.font = `${f}px ${AILE}`; y += f * .98;
       c.shadowColor = "rgba(0,0,0,.85)"; c.shadowBlur = 28; c.shadowOffsetY = 6; c.lineJoin = "round"; c.lineWidth = f * .07; c.strokeStyle = "rgba(0,0,0,.9)"; c.strokeText(t, W / 2, y);
@@ -135,7 +135,7 @@ const KAPAK = (() => {
 
   async function hazirla(hk) {
     try { await document.fonts.load(`120px Anton`); await document.fonts.load(`600 26px Inter`); } catch (e) { }
-    const M = await VIDEO.cerceveAc(hk, { w: 540, h: 960, top: 70 }, "taktik"); M.W.eval(YARDIMCI); return M;
+    const M = await VIDEO.cerceveAc(hk, { w: 540, h: 960, top: 130 }, "taktik"); M.W.eval(YARDIMCI); return M;
   }
   async function ciz(M, o, sec) {
     const t = sec.e.tur === "batis" ? Math.max(0, sec.e.t - .03) : Math.min(.999, sec.e.t + .05);

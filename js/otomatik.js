@@ -235,7 +235,9 @@
       for (const [n, a] of AK) if (!a.batti) T.push(a.p);
       const ic = (m, p) => p[0] >= m.lo0 && p[0] <= m.lo1 && p[1] >= m.la0 && p[1] <= m.la1;
       const U = c.haritalar.map(h => [h, c.kat[h]]).filter(([, m]) => m), T2 = T.filter(p => U.some(([, m]) => ic(m, p)));
-      if (T2.length) { const say = m => T2.filter(p => ic(m, p)).length;
+      /* kenara yapışık nokta sayılmaz: haritanın kenarından en az %7 içeride olmalı (dikey kadrajda kesilmesin) */
+      const icK = (m, p) => { const kx = (m.lo1 - m.lo0) * .07, ky = (m.la1 - m.la0) * .07; return p[0] >= m.lo0 + kx && p[0] <= m.lo1 - kx && p[1] >= m.la0 + ky && p[1] <= m.la1 - ky; };
+      if (T2.length) { const say = m => T2.filter(p => icK(m, p)).length * 2 + T2.filter(p => ic(m, p)).length;
         const [en] = U.sort((a, b) => say(b[1]) - say(a[1]) || (a[1].lo1 - a[1].lo0) - (b[1].lo1 - b[1].lo0));
         if (en && en[0] !== st.map && (!c.kat[st.map] || say(c.kat[st.map]) < say(en[1]))) { st.map = en[0]; log(`  harita: ${en[0]} (sahnenin bütün noktalarını kapsıyor)`); } }
     }

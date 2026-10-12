@@ -119,7 +119,7 @@ const VIDEO = (() => {
     g.k.forEach(([, s], i) => { const ww = ctx.measureText(s).width; if (satir.length && w + bosluk + ww > maxW) { S.push({ k: satir, w }); satir = []; w = 0; } w += (satir.length ? bosluk : 0) + ww; satir.push({ s, ww, i }); });
     if (satir.length) S.push({ k: satir, w });
     const toplam = S.length * lh; let y0;
-    if (soru) y0 = .30 * HV; else if (kip === "ust") y0 = 150 * K; else y0 = HV - 200 * K - toplam;
+    if (soru) y0 = .30 * HV; else if (kip === "ust") y0 = 215 * K; else y0 = HV - 270 * K - toplam; /* alt açıklama çubuğunun ve düğmelerin üstünde */
     const ox = WV / 2, oy = y0 + toplam * .6; ctx.translate(ox, oy); ctx.scale(sc, sc); ctx.translate(-ox, -oy); ctx.globalAlpha = op;
     S.forEach((L, r) => { const cy = y0 + r * lh + lh / 2, x0 = WV / 2 - L.w / 2, h = fs * 1.21 + 2 * py;
       ctx.fillStyle = soru ? "rgba(14,20,23,.86)" : "rgba(14,20,23,.78)"; ctx.beginPath();
@@ -200,7 +200,7 @@ const VIDEO = (() => {
     }
 
     log("Harita motoru açılıyor…");
-    const top = a.etiket === "off" ? 0 : 70;
+    const top = a.etiket === "off" ? 0 : 130; /* Instagram/Shorts üst şeridinin ve 3:4 ızgara kırpmasının altında */
     const M = await cerceveAc(a.dil === "en" ? ingilizce(hk) : hk, { w: 540, h: 960, top, alt: altOn ? .27 : 0 }, a.tema);
     try {
       const EV = M.W.__olaylar ? M.W.__olaylar() : steps.map(() => []);
@@ -406,7 +406,7 @@ const VIDEO = (() => {
 
   /* ---------------- dikey kontrol tablosu ---------------- */
   async function kontrolTablosu(hk, tema) {
-    const M = await cerceveAc(hk, { w: 540, h: 960, top: 70 }, tema), n = hk.veri.steps.length;
+    const M = await cerceveAc(hk, { w: 540, h: 960, top: 130 }, tema), n = hk.veri.steps.length;
     try { const cv = document.createElement("canvas"); cv.width = WV; cv.height = HV; const ctx = cv.getContext("2d");
       const cols = 4, w = 180, h = 320, sh = document.createElement("canvas"); sh.width = cols * (w + 6) + 6; sh.height = Math.ceil(n / cols) * (h + 28) + 6;
       const s = sh.getContext("2d"); s.fillStyle = "#fff"; s.fillRect(0, 0, sh.width, sh.height); s.font = "600 15px Inter, sans-serif";

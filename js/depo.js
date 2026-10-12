@@ -157,7 +157,7 @@ main>section:not(#story),main>.top{display:none!important}
     L[i] = "const DATA=" + JSON.stringify(hk.veri) + `, MAPS={${M}}, SRC={${S}};`;
     let html = L.join("\n");
     if (mod) {
-      const v = mod === "dikey" ? "window.__VID={w:540,h:960,top:70,alt:.27};" : mod === "video" ? `window.__VID=${JSON.stringify(vid)};` : "";
+      const v = mod === "dikey" ? "window.__VID={w:540,h:960,top:130,alt:.27};" : mod === "video" ? `window.__VID=${JSON.stringify(vid)};` : "";
       const bas = `<style>${await fontCss()}${ONIZ_CSS}</style><script>window.__ONIZLEME=1;${v}</script>`;
       html = html.replace('<script>\n"use strict";', bas + '<script>\n"use strict";');
       html = html.replace(/<link[^>]+fonts\.g[^>]+>/g, "");
