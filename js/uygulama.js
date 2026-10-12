@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "35 · 12 Ekim";
+const SURUM = "36 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -496,15 +496,17 @@ async function kartUygula(o, yerEkle, log) {
     if (yerEkle && s.yer) { log(`S${+i + 1}: ${s.yer}`);
       try { const r = await DEPO.sec(s.yer, kutu), P = r.noktalar;
         for (const [ad, lo, la] of P) if (!(st.pts || []).some(p => p[2] === ad)) (st.pts = st.pts || []).push([lo, la, ad, "start"]);
-        const uy = r.haritalar.filter(h => HK.haritalar.includes(h)); if (uy.length) st.map = uy[0]; else if (r.haritalar.length) log(`  uyarı: bu yerler hikâyenin haritalarının dışında; kapsayan harita: ${r.haritalar.join(", ")} (Haritalar'dan ekleyebilirsiniz)`);
+        const uy = r.haritalar.filter(h => HK.haritalar.includes(h)); if (uy.length) st.map = uy[0]; else if (r.haritalar.length) { st.map = r.haritalar[0]; }
         if (P.length) { const los = P.map(p => p[1]), las = P.map(p => p[2]), lo0 = Math.min(...los), lo1 = Math.max(...los), la0 = Math.min(...las), la1 = Math.max(...las);
           const mw = KAT[st.map] ? (KAT[st.map].lo1 - KAT[st.map].lo0) * .12 : .3; st.cam = { lo: +((lo0 + lo1) / 2).toFixed(4), la: +((la0 + la1) / 2).toFixed(4), w: +Math.max((lo1 - lo0) * 1.8, (la1 - la0) * 2.6, .3, mw).toFixed(3) }; }
         if (P.length < s.yer.split(/,(?![^()\[\]]*[)\]])/).filter(x => x.trim()).length) log("  bazı yerler bulunamadı");
       } catch (e) { log("  bulunamadı: " + e.message); } }
     if (s.hava !== undefined) { const H = s.hava.split(/[,;]/).map(x => x.trim().toLocaleLowerCase("tr-TR")).filter(x => x && !/^(yok|-|—|gündüz)$/.test(x)); if (H.length) st.hava = H; else delete st.hava; }
     if (yerEkle) {
-      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, yerDis: async ad => { const r = await DEPO.yer(ad, null); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, haritalar: HK.haritalar, kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR, mayinlar: MAYIN });
+      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, yerDis: async ad => { const r = await DEPO.yer(ad, null); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, haritalar: Object.keys(KAT), kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR, mayinlar: MAYIN });
         if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } }
+    /* sahnenin haritası kütüphaneden kendiliğinden seçilir; hikâyede yoksa eklenir */
+    if (st.map && KAT[st.map] && !HK.haritalar.includes(st.map)) { HK.haritalar.push(st.map); log(`  harita eklendi: ${st.map}`); }
     /* hiç hareket ya da olay yoksa ilk yere vurgu halkası: sahne hareketsiz kalmasın */
     if (!(st.ships || []).some(x => !x.fix) && !["booms", "shots", "vurgu", "ikon", "simsek", "bayrak", "mines", "torpido", "isaret", "anons", "isildak"].some(k => (st[k] || []).length) && (st.pts || []).length) {
       st.vurgu = [[st.pts[0][0], st.pts[0][1], 3, .08, .95, "", 4]]; log(`  S${+i + 1}: hareket yoktu, ${st.pts[0][2]} üzerine vurgu eklendi`); } }
@@ -676,6 +678,8 @@ async function ornekYukle() { const hk = await (await fetch("ornek/Bogaz_gecilme
   const L = await DEPO.hikayeler(), son = await DEPO.ayar("son");
   if (!L.length) await ornekYukle(); else await yukle(L.includes(son) ? son : L[0]);
   aracSec("sec");
+  /* bütün kütüphane haritaları arka planda bir kez indirilip saklanır (internetsiz de çalışsın) */
+  setTimeout(() => { for (const h of Object.keys(KAT)) if (!KAT[h].yerel) fetch(`kut/${h}.png`).catch(() => { }); }, 5000);
   try { VAR.marka = (await DEPO.ayar("marka")) || {}; if (VAR.marka.logo) await logoHazirla(VAR.marka.logo); } catch (e) { }
   try { const o = await DEPO.ayar("sonVideo"); if (o && o.blob && !o.alindi) bildir("Kaydedilmemiş bir video var: Menü → Son üretilen video", 6); } catch (e) { }
   if ("serviceWorker" in navigator && location.protocol === "https:") {
