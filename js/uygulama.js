@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "21 · 11 Ekim";
+const SURUM = "22 · 12 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -339,87 +339,49 @@ function yerAra() { pencere("Yer ara", `<div class="satir" style="flex-wrap:nowr
   $("#yaBtn").onclick = ara; $("#yaQ").onkeydown = e => { if (e.key === "Enter") ara(); }; setTimeout(() => $("#yaQ").focus(), 80); }
 
 /* ---------- kart içe aktarma ---------- */
-const ISTEM = `Sen bir askerî harekât odasında brifing veren subaysın. Bu kaynaklardaki hikâyeyi Instagram/Shorts için 60 saniyelik, Save the Cat yapısında bir harita hikâyesine çevir. Aşağıdaki BİÇİM'i BİREBİR kullan: başına ya da sonuna açıklama, selamlama, not, başlık, kod bloğu, kalın yazı ekleme; her satır "ANAHTAR:" ile başlasın.
+const ISTEM = `Kaynaklardaki olayı Instagram/Shorts için 60 saniyelik, Save the Cat yapısında bir harita hikâyesine çevir. Aşağıdaki BİÇİM'i BİREBİR kullan: başına, sonuna açıklama, not, kod bloğu, kalın yazı ekleme; her satır "ANAHTAR:" ile başlasın.
 
 DOĞRULUK
-- Yalnızca kaynaklardaki olgular. Kaynakta olmayan ayrıntı ekleme: hava durumu (sis, fırtına), duygu, diyalog, süre, sayı uydurma.
-- Sayıları ve süreleri kaynaktaki gibi ver; kesin değilse ya da yuvarlarsan "yaklaşık", "… aşkın" de. Kaynaklar farklı sayı veriyorsa daha temkinli olanı kullan.
-- Olayların sırasını ve aralarındaki zamanı koru: saatler sonra olan bir şeye "hemen ardından" deme.
-- Abartma: HOOK merak uyandırsın ama yanlış olmasın ("koca donanmayı batırdı" değil, "üç zırhlıyı batırdı").
-- Kaynakta emin olunamayan ya da kaynaklar arasında çelişen her noktayı DOĞRULANACAK satırına yaz.
+- Yalnızca kaynaktaki olgular: hava, duygu, diyalog, sayı, süre, çatışma uydurma. Sayıları kaynaktaki gibi ver; kesin değilse "yaklaşık" de. Kaynaklar çelişiyorsa temkinli olanı al ve DOĞRULANACAK'a yaz.
+- Olayların sırasını ve aralarındaki zamanı koru.
 
-ÜSLUP VE TON
-- Soğukkanlı, kesik, askerî harekât dili. Duygusal sıfatlar (kahramanca, haince, korkusuzca, muazzam, destansı vb.) YASAK; gerilimi olgu, sayı ve zaman yaratır.
-- Şimdiki zaman; cümleler kısa ve yüklem odaklı.
-- SORU CÜMLESİ YASAK: HOOK, S1–S8 ve _EN çevirilerinde retorik ya da yapay soru kurma ("fark edecek mi?", "kurtulan var mı?", "başarabilecekler mi?", "peki sonra?" vb.). Soru işareti (?) metnin tamamında YALNIZCA en sondaki SORU: ve SORU_EN: satırlarında yer alabilir. "Acaba", "mi/mı" ile kurulan dolaylı soru ve soru ima eden yarım cümle de yasaktır.
-- Gerilimi soruyla değil olguyla kur: eylem, zaman baskısı, mesafe, sayı ve somut tehdit. "Fark edecek mi?" değil "İki devriye muhribinin arasından fark edilmeden sıyrılıyor." · "Kurtulan var mı?" değil "Yedi yüz denizciden beş yüz yetmişi suda kayboluyor." · "Başarabilecekler mi?" değil "Şafağa kırk dakika var; boğazda tek ışık yok."
-- Sahne metinlerinde sayıları ve tarihleri yazıyla yaz, seslendirilecekler (on sekiz Mart, beş yüz yetmiş denizci). Okunması zor yazımları açık yaz (7/8 Mart → yedi Mart'ı sekize bağlayan gece).
-- Kelime sınırı (aşma): HOOK 8 · S1 12 · S2 14 · S3 12 · S4 14 · S5 16 · S6 12 · S7 18 · S8 16 · SORU 12.
+ÜSLUP
+- Soğukkanlı, kesik, olgu dili; şimdiki zaman, kısa ve yüklem odaklı cümleler. Duygusal sıfat (kahramanca, haince, muazzam, destansı vb.) yok; gerilimi eylem, sayı, mesafe ve zaman baskısı kurar.
+- Soru cümlesi yalnızca SORU ve SORU_EN satırlarında olur; HOOK ve S1–S8'de soru, "acaba", "mi/mı" yok. "Fark edecek mi?" değil "İki devriyenin arasından fark edilmeden geçiyor."
+- Sahne metinlerinde sayı ve tarihleri yazıyla yaz (on sekiz Mart, beş yüz yetmiş kişi).
+- Kelime sınırı: HOOK 8 · S1 12 · S2 14 · S3 12 · S4 14 · S5 16 · S6 12 · S7 18 · S8 16 · SORU 12.
 
-SAHNE GÖREVLERİ (Save the Cat)
-- HOOK: S7'deki en büyük kayıp, kritik hasar ya da şaşırtıcı çelişki; soru değil, düz bir olgu cümlesi.
-- S1 Tehdit/Açılış: büyük gücün harekete geçişi; mutlaka yer değiştiren bir unsur (hareket satırı dolu).
-- S2 Karşı hamle: savunmanın ya da küçük gücün yola çıkışı veya gizli mevzilenmesi.
-- S3 Gerilim/Tespit riski: ilk tespit riski ya da keşif; riski soruyla değil somut mesafe, ışık, nöbetçi ya da süreyle ver.
-- S4 Kırılma/Kilitlenme: menzile giriş, telsiz/parola teması ya da tuzak anı.
-- S5 İlk temas/Darbe: ilk ateş, torpido atışı ya da temas anı.
-- S6 Kriz: alınan yara, yatma açısı, manevra kaybı, suya düşen denizciler; çaresizliği olguyla ver, soru kurma.
-- S7 Doruk/Kayıp: batış ya da imha, resmî kayıp sayısı, diğer tarafın çekilmesi.
-- S8 Sonuç ve bugün: stratejik sonuç ve o batığın/noktanın bugünkü durumu.
-- SORU: yorumlarda stratejik tartışma açacak "Ya öyle olmasaydı?" türü bir soru. Hikâyedeki TEK soru cümlesi budur; soru işareti yalnızca burada ve SORU_EN'de kullanılır.
-- Kaynakta bir görevin karşılığı yoksa uydurma; o sahneyi hikâyenin gerçek akışına göre kullan.
+SAHNELER (olayın türü ne olursa olsun bu iskelet; kaynakta karşılığı yoksa uydurma, gerçek akışa uydur)
+HOOK: S7'nin en çarpıcı olgusu · S1 açılış: ana güç ya da ana olay harekete geçer, mutlaka yer değiştiren bir unsur · S2 karşı hamle ya da hazırlık · S3 risk, engel ya da keşif · S4 dönüm anı, karşılaşma · S5 ilk temas ya da ilk sonuç · S6 kriz, kayıp, çıkmaz · S7 doruk ve sonuç, sayılarla · S8 kalıcı sonuç ve bugün · SORU: yorumlarda tartışma açacak "Ya öyle olmasaydı?" türü soru.
 
-SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında; sıra: yer, tarih, hareket, olay, hava)
-- " | yer: " → o sahnede haritada gösterilecek yerler; virgülle ayrılmış, en çok 4 yer. Hikâyenin ana bölgesinin dışında kalan bir yer varsa (ör. bugünkü müze şehri) onu yer olarak yazma, yalnızca metinde geçsin.
-- YER ADI KURALI (yer, hareket ve olay alanlarının hepsinde geçerli): Harita, adları OpenStreetMap/Google Maps aramasıyla koordinata çevirir; bu yüzden yalnızca bu servislerin doğrudan tanıdığı tescilli, tekil nokta adları yaz: burun, koy, liman, fener, ada, kale, köy, kasaba, kıyı noktası (ör. Kilitbahir, Erenköy Koyu, Nara Burnu, Morto Koyu, Tekke Burnu, Kumkale, Kabatepe, Bozcaada).
-  "-açığı", "-açıkları", "-önleri", "-yakınları", "-civarı", "-bölgesi", "-kıyıları", "-suları" gibi muğlak uzantıları ASLA kullanma; arama motoru bunları tanımaz, olayı ya hiç bulamaz ya da karadaki aynı adlı bir müzeye, otele, kuruma atar. Denizde geçen olayda da en yakın tescilli kıyı noktasını yaz: "Kabatepe açığı" değil "Kabatepe"; "Seddülbahir önleri" değil "Morto Koyu" ya da "Tekke Burnu"; "Gökçeada açığı" değil "Gökçeada"; "Kumkale açığı" değil "Kumkale". Gemi işareti haritada kendiliğinden en yakın denize oturur.
-  Geniş deniz, boğaz ve bölge adları (Ege Denizi, Akdeniz, Marmara Denizi, Karadeniz, Çanakkale Boğazı, Gelibolu Yarımadası) YASAK; bunlar haritada tek bir noktaya karşılık gelmez.
-- " | tarih: " → ekranın köşesinde etiket olarak görünür, seslendirilmez: RAKAMLA ve kısa yaz, en çok 4 kelime (ör. 18 Mart 1915 · 7/8 Mart 1915 gecesi · 8–17 Mart 1915 · 18 Mart 1915, 13.54 · Bugün).
-- " | hareket: " → o sahnede yer değiştirenler; haritada rota boyunca ilerler. Biçim: Ad [taraf, tür] Başlangıç → Varış
-  Birden çoksa noktalı virgülle ayır; gerekirse ara nokta ekle (A → B → C). Gemiler denizden, kara birlikleri düz çizgiyle gider.
-  Yerinde duran (demirli, savaşan, batan) gemi için tek yer yaz: Goliath [lacivert, büyük gemi] Morto Koyu
-  Başlangıç ve varış da YER ADI KURALI'na uyar: Goliath [lacivert, büyük gemi] Kumkale → Morto Koyu (değil: Ege Denizi → Seddülbahir açığı).
-- " | olay: " → haritada gösterilecek anlar; noktalı virgülle ayır (biçimler aşağıdaki ARAÇ KUTUSU'nda).
-- Boş kalan alanı silme: iki dik çizgi arasını boş bırak (| olay:  | hava: ).
-- " | hava: " → sahnenin ışığı ve havası, virgülle (ör. gece, yağmur). Saat ve mevsimden çıkar: gece yapılan iş → gece; sabaha karşı → şafak; akşam olayı → akşam; kaynakta sis, yağmur, kar, fırtına geçiyorsa onları ekle. Kaynakta hava bilgisi yoksa ve olay gündüzse boş bırak; hava durumu uydurma.
-- ÖNEMLİ: Haritadaki bütün animasyon, efekt ve ses yalnızca bu alanlardan otomatik kurulur; kullanıcı haritada elle hiçbir şey eklemeyecek. Bu yüzden her sahnede hareket, olay ve hava alanlarını kaynağın izin verdiği ölçüde MUTLAKA doldur. Her sahnede en az bir hareket ya da olay olsun; sahnede gerçekten hiçbir şey yer değiştirmiyorsa bir olay (vurgu, ikon, bayrak) kullan.
-- Açılış izleyiciyi tutar: S1'de mutlaka yer değiştiren bir hareket olsun (gelen filo, yürüyen ordu, yola çıkan gemi); HOOK, S7'nin en hareketli anından seçilsin. Durağan bir açılış izleyiciyi kaçırır.
-- Bunlar yalnızca kaynaktaki olgulara dayanır: kaynakta olmayan çatışma, batış, patlama uydurma.
+SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında, bu sırayla; boş alan da yazılır: | olay:  | hava: )
+- yer: o sahnede haritada gösterilecek en çok 4 yer, virgülle.
+- tarih: ekranda etiket olur, seslendirilmez; RAKAMLA, en çok 4 kelime (18 Mart 1915 · 7/8 Mart 1915 gecesi · 18 Mart 1915, 13.54 · Bugün).
+- hareket: Ad [taraf, tür] Başlangıç → Varış; birden çoksa noktalı virgül; ara nokta olabilir (A → B → C). Yerinde duran için tek yer: Goliath [lacivert, büyük gemi] Morto Koyu
+- olay: aşağıdaki biçimlerle, noktalı virgülle; kartta yazdığın sırayla oynar.
+- hava: gece yapılan iş → gece; sabaha karşı → şafak; akşam → akşam; kaynakta geçiyorsa sis, yağmur, kar, rüzgâr, fırtına. Gündüz ve bilgi yoksa boş.
+- Animasyon yalnızca bu alanlardan kurulur; her sahnede en az bir hareket ya da olay olsun (hareket yoksa vurgu, ikon ya da bayrak).
 
-ARAÇ KUTUSU (yalnızca bunları kullan; başka bir şey yazarsan haritada görünmez)
-Taraf: kızıl (anlatılan/kahraman taraf) ya da lacivert (karşı taraf); nötr için yazma. Bir taraf hikâye boyunca hep aynı renk.
-Hareket türleri:
-  gemi işaretleri: büyük gemi · küçük gemi · denizaltı
-  rota boyunca ilerleyen ikonlar: at · süvari · asker · ordu · tank · araba · tren · uçak · helikopter · paraşüt · füze · yelkenli · vapur · kara (yalnızca nokta)
-  harekete bayrak eklemek için köşeli paranteze "bayrak ÜLKE" yaz.
-  Örnekler: Nusret [kızıl, küçük gemi] Nara Burnu → Erenköy Koyu
-            Mustafa Kemal'in birliği [kızıl, asker, bayrak Osmanlı] Bigalı → Conkbayırı
-            Şark Ekspresi [lacivert, tren] Sofya → İstanbul
-Olaylar (kartta yazdığın sırayla olur; gelenler önce varır, olay yerinden ayrılanlar olaydan sonra çekilir):
-  atış A → B (tek top atışı; mermi kavis çizer, hedefte patlar) · bombardıman A → B (arka arkaya üç atış)
-  torpido A → B (suda ilerleyen torpido izi, hedefte patlama) · patlama YER · büyük patlama YER
-  batış GEMİ (gemi yan yatıp batar, batığı sonraki sahnelerde işaretli kalır) · vurgu YER (yanıp sönen kalp atışı halkası)
-  işaret GEMİ/YER (yanıp sönen işaret lambası: parola sorma, sinyal) · ışıldak GEMİ → HEDEF (geceyi tarayan ışık huzmesi)
-  anons GEMİ/YER (hoparlör ve ses dalgaları: seslenen, emir veren, uyaran biri)
-  mayın YER → YER (mayın hattı) · bayrak ÜLKE YER · yıldırım YER (şimşek çakar, gök gürler; kaynakta fırtına/yıldırım geçiyorsa)
-  ikon TÜR YER, istersen köşeli parantezde taraf ve etiket: ikon kale [kızıl, Kilitbahir Kalesi] Kilitbahir
-  Sabit ikon türleri:
-    yapılar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar (çiftlik) · silo · okul · hastane · banka · anıt · kapı · çan
-    doğa: dağ · orman · ağaç · ada · su (kuyu, pınar) · balık
-    askerî: çadır (ordugâh) · çapa (liman) · havaalanı · radar · dürbün (gözetleme) · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol
-    durum: ölüm (kayıp) · mezar · sağlık (yaralı) · anlaşma · belge (antlaşma, emir) · taç · nişan (madalya) · bayrak · hoparlör · telsiz · uydu
-AKTÖRLER (önemli):
-  Hareket satırında adı geçen her gemi, birlik ya da araç bir AKTÖRDÜR ve sonraki sahnelerde son bulunduğu yerde kalır; batana ya da yeniden hareket edene kadar haritada durur. Duran aktörü her sahnede yeniden yazmana gerek yok; yalnızca yer değiştirdiğinde yaz.
-  Olaylarda yer yerine aktör adı yaz: torpido Muavenet-i Milliye → Goliath · bombardıman Goliath → Seddülbahir · işaret Goliath · batış Goliath. Aktörün adını her yerde aynı yaz.
-  Zaman: tarih alanına saat yazarsan (01.15) ve saat önceki sahneden farklıysa ekranda bir saat belirir, akrep ve yelkovan geçen zamanı gösterir.
-Hava ve ışık (hava alanı): gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına (yağmur + rüzgâr + yıldırım). Görüntüsü ve sesi birlikte gelir.
-Bayrak ülkeleri: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
-Ses efektleri olaylardan ve havadan kendiliğinden gelir (patlama, top atışı, batış, kalp atışı, gök gürültüsü, yağmur, rüzgâr, gece, ikon ve bayrak belirmesi, sahne geçişi, deniz); ayrıca yazma.
-- _EN satırlarına yer, tarih, hareket, olay ve hava ekleme; yalnızca çeviri.
+YER ADLARI (yer, hareket, olay alanlarının hepsi)
+- Yalnızca OpenStreetMap'te tek başına bulunan nokta adları: şehir, köy, burun, koy, liman, ada, kale, fener (Kilitbahir, Nara Burnu, Morto Koyu, Kumkale, Kabatepe, Gökçeada).
+- "-açığı, -önleri, -yakınları, -civarı, -bölgesi, -kıyıları" ekleme; denizdeki olay için en yakın kıyı noktasını yaz, gemi kendiliğinden denize oturur.
+- Deniz, boğaz, bölge adı yazma (Ege Denizi, Akdeniz, Çanakkale Boğazı, Gelibolu Yarımadası).
+- Haritanın dışından gelen ya da dışarı giden için gerçek yerin adını yaz (U-21 [lacivert, denizaltı] Cattaro → Gökçeada): araç haritanın o yöndeki kenarından girer. Yeri bilinmiyorsa yön yaz: batıdan, kuzeyden…
 
-BAŞLIK: (en çok 6 kelime; ekranın üstünde ve videonun adında görünür)
-YABANCI: metinde geçen yabancı özel adlar ve Türkçe okunuşu (Irresistible = İrrezistıbıl; Bouvet = Buve)
-DOĞRULANACAK: kaynaktan kontrol edilmesi gereken noktalar; noktalı virgülle ayır (yoksa boş bırak)
+ARAÇ KUTUSU (başka bir şey yazarsan haritada görünmez)
+Taraf: kızıl (anlatılan taraf) · lacivert (karşı taraf); nötrse yazma; hikâye boyunca değişmez.
+Tür: büyük gemi · küçük gemi · denizaltı · at · süvari · asker · ordu · tank · araba · tren · uçak · helikopter · paraşüt · füze · yelkenli · vapur · kara (nokta). Bayrak için: [kızıl, asker, bayrak Osmanlı]
+Olaylar: atış A → B · bombardıman A → B (üç atış) · torpido A → B · patlama YER · büyük patlama YER · batış GEMİ · vurgu YER · işaret GEMİ (yanıp sönen lamba) · ışıldak GEMİ → HEDEF · anons GEMİ (hoparlör) · mayın YER → YER · bayrak ÜLKE YER · yıldırım YER · ikon TÜR [taraf, etiket] YER
+İkonlar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar · silo · okul · hastane · banka · anıt · kapı · çan · dağ · orman · ağaç · ada · su · balık · çadır · çapa · havaalanı · radar · dürbün · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol · ölüm · mezar · sağlık · anlaşma · belge · taç · nişan · bayrak · hoparlör · telsiz · uydu
+Hava: gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına
+Bayraklar: Türk · Osmanlı · İngiliz · Fransız · Alman · Rus · İtalyan · Yunan · Amerikan · Avusturya · Bulgar · Avustralya · Yeni Zelanda · Japon · İspanyol
+Aktörler: hareket satırında adı geçen her araç sonraki sahnelerde son yerinde durur; yalnızca yer değiştirince yeniden yaz. Olaylarda yer yerine aktör adını, her yerde aynı yazımla kullan (torpido U-21 → Triumph · batış Triumph). Gemiden gemiye atışta arada kara varsa atan gemi denizden dolaşıp yaklaşır.
+Saat: tarihe saat yazarsan (01.15) ve önceki sahneden farklıysa ekranda saat döner.
+_EN satırları yalnızca çeviridir; alan ekleme.
+
+BAŞLIK: (en çok 6 kelime)
+YABANCI: yabancı özel adlar ve Türkçe okunuşu (Triumph = Trayamf; Bouvet = Buve)
+DOĞRULANACAK: kontrol edilecek noktalar, noktalı virgülle (yoksa boş)
 HOOK:
 S1:  | yer:  | tarih:  | hareket:  | olay:  | hava:
 S2:  | yer:  | tarih:  | hareket:  | olay:  | hava:
@@ -466,7 +428,7 @@ async function kartUygula(o, yerEkle, log) {
       } catch (e) { log("  bulunamadı: " + e.message); } }
     if (s.hava !== undefined) { const H = s.hava.split(/[,;]/).map(x => x.trim().toLocaleLowerCase("tr-TR")).filter(x => x && !/^(yok|-|—|gündüz)$/.test(x)); if (H.length) st.hava = H; else delete st.hava; }
     if (yerEkle) {
-      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR });
+      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, yerDis: async ad => { const r = await DEPO.yer(ad, null); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR });
         if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } }
     /* hiç hareket ya da olay yoksa ilk yere vurgu halkası: sahne hareketsiz kalmasın */
     if (!(st.ships || []).some(x => !x.fix) && !["booms", "shots", "vurgu", "ikon", "simsek", "bayrak", "mines", "torpido", "isaret", "anons", "isildak"].some(k => (st[k] || []).length) && (st.pts || []).length) {

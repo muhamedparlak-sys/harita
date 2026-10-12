@@ -174,14 +174,25 @@
       const qq = H ? denizeIt(M, H, q) : q; if (!yakinMi(qq)) return P.length >= 2 ? [...P.slice(0, -1), qq] : [qq]; }
     return P;
   }
+  /* iki nokta arasındaki düz çizgi karadan geçiyor mu (uçlardaki kıyı payı hariç) */
+  function karaVar(M, H, a, b) { if (!M || !H) return false; const A = px(M, H, ...a), B = px(M, H, ...b), n = Math.ceil(Math.hypot(B[0] - A[0], B[1] - A[1])); let dizi = 0;
+    for (let k = 0; k <= n; k++) { const f = k / Math.max(1, n); if (f < .08 || f > .92) continue; const x = Math.round(A[0] + (B[0] - A[0]) * f), y = Math.round(A[1] + (B[1] - A[1]) * f);
+      if (x >= 0 && y >= 0 && x < H.W && y < H.H && H.V[y * H.W + x] >= 128) { if (++dizi > 3) return true; } else dizi = 0; }
+    return false; }
+  const YONLER = { kuzey: [0, 1], güney: [0, -1], doğu: [1, 0], batı: [-1, 0], kuzeydoğu: [1, 1], kuzeybatı: [-1, 1], güneydoğu: [1, -1], güneybatı: [-1, -1] };
+  const yonCoz = y => { const m = kucuk(y).match(/^(kuzeydoğu|kuzeybatı|güneydoğu|güneybatı|kuzey|güney|doğu|batı)(dan|den|ya|ye|a|e)?(\s+kenarı(ndan)?)?$/); return m ? YONLER[m[1]] : null; };
+  /* haritanın kenarında, N noktasından v yönünde giden çizginin çıktığı yer (biraz içeride) */
+  function kenar(M, N, v) { const c = Math.cos(N[1] * Math.PI / 180), dx = v[0] / c, dy = v[1], pw = (M.lo1 - M.lo0) * .03, ph = (M.la1 - M.la0) * .03;
+    let t = Infinity; if (dx > 0) t = Math.min(t, (M.lo1 - pw - N[0]) / dx); if (dx < 0) t = Math.min(t, (M.lo0 + pw - N[0]) / dx); if (dy > 0) t = Math.min(t, (M.la1 - ph - N[1]) / dy); if (dy < 0) t = Math.min(t, (M.la0 + ph - N[1]) / dy);
+    if (!isFinite(t) || t < 0) t = 0; return [+(N[0] + dx * t).toFixed(4), +(N[1] + dy * t).toFixed(4)]; }
   async function kur(st, s, c) {
     const log = c.log || (() => { }), M = c.kat[st.map], H = M ? await c.harita(st.map) : null, yer = {}, eklendi = [];
     const AK = c.aktorler || (c.aktorler = new Map());
     const aktorBul = ad => { for (const sh of st.ships || []) if (sh.n && esle(sh.n, ad)) return { p: sh.p[sh.p.length - 1], sh }; for (const [n, a] of AK) if (esle(n, ad)) return { p: a.p, a, n }; return null; };
-    const bul = async ad => { const k = kucuk(ad); if (k in yer) return yer[k];
+    const bul = async (ad, sessiz) => { const k = kucuk(ad); if (k in yer) return yer[k];
       const ak = aktorBul(ad); if (ak) return (yer[k] = ak.p);
       const p = (st.pts || []).find(p => kucuk(p[2]) === k); if (p) return (yer[k] = [p[0], p[1]]);
-      let r = null; try { r = await c.yerBul(ad); } catch (e) { } if (!r) log(`  bulunamadı: ${ad}`); return (yer[k] = r); };
+      let r = null; try { r = await c.yerBul(ad); } catch (e) { } if (!r && !sessiz) log(`  bulunamadı: ${ad}`); return (yer[k] = r); };
     const H_ = hareketCoz(s.hareket), O = olayCoz(s.olay);
     st.ships = (st.ships || []).filter(x => !x.fix);
     /* 1) daha önceki sahnelerden kalan aktörler yerinde durur (bu sahnede hareket etmiyorlarsa) */
@@ -191,7 +202,15 @@
     const yeni = [];
     for (const h of H_) {
       const once = h.ad ? aktorBul(h.ad) : null, A = [];
-      for (const y of h.yol) { const p = await bul(y); if (p && !(A.length && Math.hypot(A[A.length - 1][0] - p[0], A[A.length - 1][1] - p[1]) < 1e-4)) A.push(p); }
+      /* harita dışındaki yer (Cattaro, İstanbul…) ya da yön (batıdan, kuzey kenarı): araç haritanın o yöndeki kenarından girer/çıkar */
+      const Y = [];
+      for (const y of h.yol) { const v = yonCoz(y); if (v) { Y.push({ v, ad: y }); continue; } const p = await bul(y, true); if (p) { Y.push({ p }); continue; }
+        const d = c.yerDis ? await c.yerDis(y).catch(() => null) : null; if (d) Y.push({ d, ad: y }); else log(`  bulunamadı: ${y}`); }
+      for (let i = 0; i < Y.length; i++) { const o = Y[i]; if (o.p) continue; const N = (Y.slice(i + 1).find(x => x.p) || Y.slice(0, i).reverse().find(x => x.p) || {}).p || (once && once.p);
+        if (!N || !M) { Y.splice(i--, 1); continue; }
+        const v = o.v || [(o.d[0] - N[0]) * Math.cos(N[1] * Math.PI / 180), o.d[1] - N[1]];
+        o.p = kenar(M, N, v); log(`  ${h.ad || "rota"}: ${o.ad} harita dışında; ${i === 0 ? "kenardan giriyor" : "kenardan çıkıyor"}`); }
+      for (const { p } of Y) if (p && !(A.length && Math.hypot(A[A.length - 1][0] - p[0], A[A.length - 1][1] - p[1]) < 1e-4)) A.push(p);
       if (once && once.a) { if (!A.length || A.length === 1 && yakin(A[0], once.p, M)) A.splice(0, A.length, once.p); else if (yakin(A[0], once.p, M) || A.length >= 2) A[0] = once.p; }
       if (!A.length) { log(`  rota kurulamadı: ${h.ad || h.yol.join(" → ")} (yerler bulunamadı)`); continue; }
       const denizde = h.tur !== "dot" && !(h.ikon && !DENIZ_IKON.has(h.ikon)) && M && H;
@@ -213,16 +232,39 @@
     for (const sh of yeni) { if (sh.p.length < 2) { sh.t = [0, 1]; continue; } (olayYer.some(p => yakin(p, sh.p[0], M)) && !olayYer.some(p => yakin(p, sh.p[sh.p.length - 1], M)) ? ayrilan : gelen).push(sh); }
     gelen.forEach((sh, j) => { sh.t = [+(.03 + j * .06).toFixed(2), +Math.min(.62, .48 + j * .05).toFixed(2)]; });
     let t = gelen.length ? Math.min(.66, .5 + gelen.length * .05) : (O.length ? .12 : .3);
+    /* gemiden gemiye torpido/atış karayı aşamaz: atan gemi denizden dolaşıp hedefi açıkça gördüğü yere gelir, sonra atar */
+    const mevziAl = async (ad, a, b, tt) => {
+      if (!M || !H || !karaVar(M, H, a, b)) return null;
+      const D = denizYolu(M, H, [a, b]); if (!D || D.length < 2) return null;
+      const adim = (M.lo1 - M.lo0) * .004, Y = [D[0]];
+      for (let k = 1; k < D.length; k++) { const p = D[k - 1], q = D[k], n = Math.max(1, Math.ceil(mesafe(p, q) / adim)); for (let j = 1; j <= n; j++) Y.push([p[0] + (q[0] - p[0]) * j / n, p[1] + (q[1] - p[1]) * j / n]); }
+      const en = (M.lo1 - M.lo0) * .05; let i = -1;
+      for (let k = Y.length - 1; k >= 0; k--) if (mesafe(Y[k], b) >= en && !karaVar(M, H, Y[k], b)) { i = k; break; }
+      if (i < 0) for (let k = 0; k < Y.length; k++) if (!karaVar(M, H, Y[k], b)) { i = k; break; }
+      if (i < 0) return null;
+      const L = [+Y[i][0].toFixed(4), +Y[i][1].toFixed(4)], yol = [...D.filter((p, k) => k === 0 || mesafe(D[0], p) < mesafe(D[0], L)), L];
+      yer[kucuk(ad)] = L;
+      const sh = st.ships.find(x => x.n && esle(x.n, ad));
+      if (!sh) return { p: L, t: tt };
+      const P = yumusat(yol, M, H, true);
+      if (sh.fix || (sh.p || []).length < 2) { delete sh.fix; sh.p = P; sh.t = [tt, +Math.min(.9, tt + .22).toFixed(2)]; }
+      else sh.p = [...sh.p, ...P.slice(1)];
+      log(`  ${sh.n}: hedef karanın ardında; denizden dolaşıp atış yerine geliyor`);
+      return { p: L, t: +Math.min(.92, tt + .24).toFixed(2) };
+    };
+    const gemiMi = ad => { const x = st.ships.find(x => x.n && esle(x.n, ad)); return !!x && x.k !== "dot" && !x.kara; };
     /* 4) olaylar, kartta yazıldıkları sırayla */
     for (const [j, o] of O.entries()) {
-      const tt = +Math.min(.9, t).toFixed(2), sure = SURE[o.tur] || .05;
+      const tt0 = +Math.min(.9, t).toFixed(2), tt = tt0, sure = SURE[o.tur] || .05;
       if (o.tur === "patlama") { const p = await bul(o.yer); if (p) { (st.booms = st.booms || []).push([p[0], p[1], tt, o.k]); eklendi.push(o.k > 1 ? "büyük patlama" : "patlama"); } }
-      else if (o.tur === "atis") { const a = await bul(o.yer), b = o.hedef ? await bul(o.hedef) : null;
+      else if (o.tur === "atis") { let a = await bul(o.yer), tt = tt0; const b = o.hedef ? await bul(o.hedef) : null;
+        if (a && b && o.hedef && gemiMi(o.yer) && gemiMi(o.hedef)) { const y = await mevziAl(o.yer, a, b, tt); if (y) { a = y.p; t += y.t - tt; tt = y.t; } }
         if (a && b) { for (let k = 0; k < (o.salvo || 1); k++) { const t0 = +Math.min(.92, tt + k * .07).toFixed(2), t1 = +Math.min(.98, t0 + .09).toFixed(2), sap = k ? (k % 2 ? 1 : -1) * .0025 * k : 0;
             (st.shots = st.shots || []).push([a[0], a[1], b[0] + sap, b[1] - sap, t0, t1]); (st.booms = st.booms || []).push([a[0], a[1], t0, .45], [b[0] + sap, b[1] - sap, t1, 1.25]); }
           eklendi.push(o.salvo > 1 ? "bombardıman" : "atış"); t += (o.salvo - 1) * .07; } }
-      else if (o.tur === "torpido") { const a = await bul(o.yer), b = o.hedef ? await bul(o.hedef) : null;
-        if (a && b) { const n = (st.torpido || []).length, t1 = +Math.min(.95, tt + .13).toFixed(2), sap = n ? (n % 2 ? 1 : -1) * Math.ceil(n / 2) * .0012 : 0,
+      else if (o.tur === "torpido") { let a = await bul(o.yer), tt = tt0; const b = o.hedef ? await bul(o.hedef) : null;
+        if (a && b) { const y = await mevziAl(o.yer, a, b, tt); if (y) { a = y.p; t += y.t - tt; tt = y.t; }
+          const n = (st.torpido || []).length, t1 = +Math.min(.95, tt + .13).toFixed(2), sap = n ? (n % 2 ? 1 : -1) * Math.ceil(n / 2) * .0012 : 0,
             dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, B = [+(b[0] - dy / L * sap).toFixed(4), +(b[1] + dx / L * sap).toFixed(4)];
           (st.torpido = st.torpido || []).push([a[0], a[1], B[0], B[1], tt, t1]); (st.booms = st.booms || []).push([B[0], B[1], t1, 1.3]); eklendi.push("torpido"); } }
       else if (o.tur === "batis") { let g = st.ships.find(x => x.n && esle(x.n, o.gemi));
