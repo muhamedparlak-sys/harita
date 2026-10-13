@@ -242,8 +242,13 @@ const VIDEO = (() => {
         }
       }
       /* döngü: son kare videonun ilk karesine erir; Instagram başa sardığında kesinti olmaz */
-      { const d = a.dil === "en", m = (d ? META.cta_en : META.cta) || (d ? "FOLLOW FOR THE NEXT BATTLE" : "SIRADAKİ SAVAŞ İÇİN TAKİP ET");
-        CTA = { metin: m.toLocaleUpperCase(d ? "en-US" : "tr-TR"), bas: Math.max(0, T - 2.6), son: T + .7 }; OLAY.push({ t: Math.max(0, T - 2.6), ad: "pop" }); }
+      /* CTA: her videoda aynı sesli çağrı (marka ayarı) + ekranda şerit; ardından döngü */
+      { const d = a.dil === "en", ekran = (d ? META.cta_en : META.cta) || (d ? "FOLLOW FOR THE NEXT BATTLE" : "SIRADAKİ SAVAŞ İÇİN TAKİP ET");
+        const sesli = (d ? a.ctaSesEn : a.ctaSes) || (d ? "Follow for the next battle." : "Sıradaki savaş için takip edin.");
+        const s = PARCA[PARCA.length - 1], { x, W } = await seslendir(sesli, "cta"), sure = x ? Math.max(2.2, LEAD + x.length / SR + .35) : 2.2;
+        const G = altyazi({ ses: sesli, ses_en: sesli }, x, W, LEAD, sure - .1), t0 = T; if (x) SESLER.push([t0 + LEAD, x]);
+        CTA = { metin: ekran.toLocaleUpperCase(d ? "en-US" : "tr-TR"), bas: t0, son: t0 + sure + .7 }; OLAY.push({ t: t0 + .02, ad: "pop" });
+        if (s) ekle({ ad: "CTA", p0: s.p1, p1: s.p1, sure, solo: s.solo, G, metin: sesli, i: s.i }); }
       { const s = PARCA[PARCA.length - 1]; if (s) ekle({ ad: "Döngü", p0: s.p1, p1: s.p1, sure: .7, solo: s.solo, G: [], metin: "", i: s.i, dongu: true }); }
       PARCA.forEach(p => { p.G = p.G.map(g => ({ ...g, bas: g.bas, son: g.son })); const od = M.W.__odak ? M.W.__odak(Math.floor(p.p0)) : [0, 0]; p.kip = p.soru ? "soru" : (od[1] > .66 ? "ust" : "alt"); });
       log(`Toplam ${T.toFixed(1)} sn. Ses karıştırılıyor…`);

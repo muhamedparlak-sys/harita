@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "42 · 13 Ekim";
+const SURUM = "43 · 13 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -346,12 +346,14 @@ function kapakPencere() { const m = V.meta, P = (m.paylasim = m.paylasim || {}),
     <div class="satir">${gir("s2", "2. satır", "BROKE CHURCHILL")}${sec("s2r", "Renk", [["kirmizi", "Kırmızı"], ["beyaz", "Beyaz"]])}</div>
     ${gir("alt", "Alt başlık (ince)", "DARDANELLES (1915) - TACTICAL BRIEFING")}
     <div class="satir">${gir("mavi", "Mavi taraf", "ALLIED FLEET")}${gir("kirmizi", "Kırmızı taraf", "OTTOMAN MINES")}</div>
-    <div class="satir">${gir("kanal", "Kanal", "@kanaladı")}${gir("marka", "Marka yazısı", "MARKA")}</div><div class="satir"><button id="kpLogo">${window.__MARKA_LOGO ? "Logoyu değiştir" : "Logo yükle"}</button>${window.__MARKA_LOGO ? '<button id="kpLogoSil" class="tehlike">Logoyu kaldır</button>' : ""}</div><p class="ipucu">Logo videoda sağ üst köşede filigran olur ve 8 saniyede bir döner; kapakta imzanın yanında durur.</p>
+    <div class="satir">${gir("kanal", "Kanal", "@kanaladı")}${gir("marka", "Marka yazısı", "MARKA")}</div>
+    <div class="satir"><label>Sesli CTA (her videoda aynı, Türkçe)<input data-mk="ctaSes" value="${esc((VAR.marka || {}).ctaSes || "")}" placeholder="Sıradaki savaş için takip edin."></label><label>Sesli CTA (İngilizce)<input data-mk="ctaSesEn" value="${esc((VAR.marka || {}).ctaSesEn || "")}" placeholder="Follow for the next battle."></label></div><div class="satir"><button id="kpLogo">${window.__MARKA_LOGO ? "Logoyu değiştir" : "Logo yükle"}</button>${window.__MARKA_LOGO ? '<button id="kpLogoSil" class="tehlike">Logoyu kaldır</button>' : ""}</div><p class="ipucu">Logo videoda sağ üst köşede filigran olur ve 8 saniyede bir döner; kapakta imzanın yanında durur.</p>
     ${sec("kare", "İlk aday", [["oto", "Otomatik (S5 patlama → S4 kilitlenme)"], ...V.steps.map((_, i) => [String(i + 1), `S${i + 1}`])])}
     <div id="kpUyari"></div><button class="ana" id="kpUret">Kapağı üret</button><div id="kpSonuc"></div>`);
   const uyar = () => { const U = KAPAK.denetle(o, m.title); $("#kpUyari").innerHTML = U.map(u => `<p class="ipucu uyari">${esc(u)}</p>`).join(""); };
   $$("#dlgIc [data-k]").forEach(e => e.oninput = e.onchange = () => { o[e.dataset.k] = e.value; sadeceKaydet(); uyar();
     if (e.dataset.k === "kanal" || e.dataset.k === "marka") { VAR.marka = Object.assign({}, VAR.marka || {}, { [e.dataset.k]: e.value }); DEPO.ayarYaz("marka", VAR.marka); } }); uyar();
+  $$("#dlgIc [data-mk]").forEach(e => e.oninput = () => { VAR.marka = Object.assign({}, VAR.marka || {}, { [e.dataset.mk]: e.value }); DEPO.ayarYaz("marka", VAR.marka); });
   $("#kpLogo").onclick = () => { const i = document.createElement("input"); i.type = "file"; i.accept = "image/*";
     i.onchange = async () => { const f = i.files[0]; if (!f) return; VAR.marka = Object.assign({}, VAR.marka || {}, { logo: f }); await DEPO.ayarYaz("marka", VAR.marka); await logoHazirla(f); bildir("Logo kaydedildi"); kapakPencere(); }; i.click(); };
   if ($("#kpLogoSil")) $("#kpLogoSil").onclick = async () => { if (VAR.marka) delete VAR.marka.logo; await DEPO.ayarYaz("marka", VAR.marka || {}); await logoHazirla(null); kapakPencere(); };
@@ -436,7 +438,7 @@ _EN satırları yalnızca çeviridir; alan ekleme.
 
 BAŞLIK: (en çok 6 kelime)
 BAŞLIK_EN: başlığın İngilizcesi (İngilizce videoda ekrandaki bölüm adı olur)
-CTA: videonun son saniyelerinde ekranda çıkan çağrı, en çok 6 kelime, BÜYÜK HARF; dizinin sonraki bölümünü çağırsın (SIRADAKİ: KARADENİZ BASKINI · TAKİP ET)
+CTA: videonun sonunda ekranda çıkan şerit, en çok 6 kelime, BÜYÜK HARF; dizinin sonraki bölümünü çağırsın (SIRADAKİ: KARADENİZ BASKINI · TAKİP ET). Sesli çağrı her videoda aynıdır ve uygulamada ayarlıdır; buraya yazma.
 CTA_EN: aynısı İngilizce (NEXT: THE BLACK SEA RAID · FOLLOW)
 ÇEVİRİ: İngilizce videoda ekranda yazacak her Türkçe kelimenin karşılığı, noktalı virgülle: hareket satırlarındaki araç ve filo adları, yer adlarındaki ortak sözcükler, tarihteki sözcükler (Erenköy Koyu = Erenköy Bay; Mecidiye Tabyası = Mecidiye Battery; tarama tekneleri = minesweepers; zırhlı = battleship; İngiliz hattı = British line). Özel adlar (Kepez, Nusret, Bouvet) aynen kalır, yazma. Ay adları kendiliğinden çevrilir.
 KAPAK: 1. satır | 2. satır | alt başlık — kapak görseli; BÜYÜK HARF, toplam en çok 4 kelime, başlığın aynısı olamaz; 1. satır ölçek/neden (26 MAYIN), 2. satır sonuç/kayıp (3 ZIRHLI BATTI); alt başlık yer ve yıl (ÇANAKKALE 1915)
@@ -626,7 +628,7 @@ async function videoPencere() {
     i.click(); };
   $("#vBas").onclick = async () => {
     VIDEO.sesKilidiAc(); VIDEO.uyanikBaslat(); VIDEO.yontem($("#vYon").value);
-    const a = { yontem: $("#vYon").value, ses: $("#vSes").value, konusmaci: $("#vKon").value, ton: $("#vTon").value, dil: $("#vDil").value, altyazi_dil: $("#vADil").value, altyazi: $("#vAlt").value, efekt: $("#vEf").value, adimlar: $("#vAd").value.trim(), tema: $("#vTema").value };
+    const a = { yontem: $("#vYon").value, ses: $("#vSes").value, konusmaci: $("#vKon").value, ton: $("#vTon").value, dil: $("#vDil").value, altyazi_dil: $("#vADil").value, altyazi: $("#vAlt").value, efekt: $("#vEf").value, adimlar: $("#vAd").value.trim(), tema: $("#vTema").value, ctaSes: (VAR.marka || {}).ctaSes || "", ctaSesEn: (VAR.marka || {}).ctaSesEn || "" };
     DEPO.ayarYaz("video", a); VIDEO_DURDUR = false; $("#vBas").disabled = true; $("#vIs").hidden = false; $("#vRes").innerHTML = ""; $("#vLog").textContent = "";
     const log = (t, ust) => { const L = $("#vLog"); if (!L) return; if (ust && L.textContent.endsWith("\n") && L._son && t.startsWith(L._son)) { L.textContent = L.textContent.replace(/[^\n]*\n$/, t + "\n"); } else L.textContent += t + "\n"; L._son = ust ? t.slice(0, 18) : null; L.scrollTop = 1e9; };
     const ilerle = u => { const b = $("#vBar"); if (b) { b.style.width = (u * 100).toFixed(1) + "%"; $("#vYuzde").textContent = `Video: %${Math.round(u * 100)}`; } };
