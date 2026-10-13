@@ -436,6 +436,8 @@ _EN satırları yalnızca çeviridir; alan ekleme.
 
 BAŞLIK: (en çok 6 kelime)
 BAŞLIK_EN: başlığın İngilizcesi (İngilizce videoda ekrandaki bölüm adı olur)
+CTA: videonun son saniyelerinde ekranda çıkan çağrı, en çok 6 kelime, BÜYÜK HARF; dizinin sonraki bölümünü çağırsın (SIRADAKİ: KARADENİZ BASKINI · TAKİP ET)
+CTA_EN: aynısı İngilizce (NEXT: THE BLACK SEA RAID · FOLLOW)
 ÇEVİRİ: İngilizce videoda ekranda yazacak her Türkçe kelimenin karşılığı, noktalı virgülle: hareket satırlarındaki araç ve filo adları, yer adlarındaki ortak sözcükler, tarihteki sözcükler (Erenköy Koyu = Erenköy Bay; Mecidiye Tabyası = Mecidiye Battery; tarama tekneleri = minesweepers; zırhlı = battleship; İngiliz hattı = British line). Özel adlar (Kepez, Nusret, Bouvet) aynen kalır, yazma. Ay adları kendiliğinden çevrilir.
 KAPAK: 1. satır | 2. satır | alt başlık — kapak görseli; BÜYÜK HARF, toplam en çok 4 kelime, başlığın aynısı olamaz; 1. satır ölçek/neden (26 MAYIN), 2. satır sonuç/kayıp (3 ZIRHLI BATTI); alt başlık yer ve yıl (ÇANAKKALE 1915)
 KAPAK_EN: aynısı İngilizce (26 MINES | BROKE CHURCHILL | DARDANELLES (1915) - TACTICAL BRIEFING)
@@ -471,6 +473,7 @@ function kartCoz(t) { const o = { sahne: {}, en: {} };
   for (const ham of t.split(/\r?\n/)) { const sat = ham.replace(/^[\s*\-•#]+/, "").replace(/\*\*/g, "");
     const d0 = sat.match(/^DO[ĞG]RULANACAK\s*[:：]\s*(.*)$/i); if (d0) { o.dogrulanacak = d0[1].split(";").map(x => x.trim()).filter(x => x && !/^(yok|-|—)$/i.test(x)); continue; }
     const c0 = sat.match(/^(ÇEVİRİ|CEVIRI)\s*[:：]\s*(.*)$/i); if (c0) { o.ceviri = c0[2]; continue; }
+    const ct = sat.match(/^CTA(_EN)?\s*[:：]\s*(.*)$/i); if (ct) { o[ct[1] ? "ctaEn" : "cta"] = ct[2].trim(); continue; }
     const b0 = sat.match(/^(BAŞLIK|BASLIK)_EN\s*[:：]\s*(.*)$/i); if (b0) { o.baslikEn = b0[2].trim(); continue; }
     const p0 = sat.match(/^(KAPAK|LEJANT|AÇIKLAMA|ACIKLAMA|ETİKETLER|ETIKETLER|YORUM)(_EN)?\s*[:：]\s*(.*)$/i);
     if (p0) { const k = p0[1].toLocaleUpperCase("tr-TR").replace("Ç", "C").replace("İ", "I"); (o.paylas = o.paylas || {})[k + (p0[2] ? "_EN" : "")] = p0[3].trim(); continue; }
@@ -491,6 +494,7 @@ async function kartUygula(o, yerEkle, log) {
     if (!bos(Y.YORUM)) pk.yorum = Y.YORUM; }
   if (o.ceviri) { const C = (V.meta.ceviri = V.meta.ceviri || {}); for (const p of o.ceviri.split(";")) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) C[k] = v; } }
   if (o.baslikEn) V.meta.title_en = o.baslikEn;
+  if (o.cta) V.meta.cta = o.cta; if (o.ctaEn) V.meta.cta_en = o.ctaEn;
   if (o.yabanci) { V.meta.okunus = V.meta.okunus || {}; for (const p of o.yabanci.split(/[;,]/)) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) V.meta.okunus[k] = v; } }
   { const sq = [["HOOK", o.hook], ...Object.entries(o.sahne).map(([i, s]) => [`S${+i + 1}`, s.ses])].filter(([, x]) => /\?/.test(x || "")).map(([k]) => k); if (sq.length) log(`uyarı: ${sq.join(", ")} soru cümlesi içeriyor (şablona göre soru yalnızca SORU satırında olmalı)`); }
   const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map(), MAYIN = [];

@@ -242,6 +242,8 @@ const VIDEO = (() => {
         }
       }
       /* döngü: son kare videonun ilk karesine erir; Instagram başa sardığında kesinti olmaz */
+      { const d = a.dil === "en", m = (d ? META.cta_en : META.cta) || (d ? "FOLLOW FOR THE NEXT BATTLE" : "SIRADAKİ SAVAŞ İÇİN TAKİP ET");
+        CTA = { metin: m.toLocaleUpperCase(d ? "en-US" : "tr-TR"), bas: Math.max(0, T - 2.6), son: T + .7 }; OLAY.push({ t: Math.max(0, T - 2.6), ad: "pop" }); }
       { const s = PARCA[PARCA.length - 1]; if (s) ekle({ ad: "Döngü", p0: s.p1, p1: s.p1, sure: .7, solo: s.solo, G: [], metin: "", i: s.i, dongu: true }); }
       PARCA.forEach(p => { p.G = p.G.map(g => ({ ...g, bas: g.bas, son: g.son })); const od = M.W.__odak ? M.W.__odak(Math.floor(p.p0)) : [0, 0]; p.kip = p.soru ? "soru" : (od[1] > .66 ? "ust" : "alt"); });
       log(`Toplam ${T.toFixed(1)} sn. Ses karıştırılıyor…`);
@@ -266,12 +268,16 @@ const VIDEO = (() => {
   function filigranCiz(ctx, t) { const L = window.__MARKA_LOGO; if (!L) return; const r = 62, x = WV - 50 - r, y = 300 + r, f = t % 8, sx = f < 1.4 ? Math.cos(f / 1.4 * Math.PI * 2) : 1;
     ctx.save(); ctx.globalAlpha = .82; ctx.translate(x, y); ctx.scale(Math.max(.04, Math.abs(sx)), 1); ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 12; ctx.drawImage(L, -r, -r, 2 * r, 2 * r); ctx.restore(); }
   let KAPAK_RESMI = null; /* seçilen kapak videonun ilk karelerine konur: platform kapağı otomatik onu alır */
-  let ILK = null;
+  let ILK = null, CTA = null;
+  function ctaCiz(ctx, t) { if (!CTA || t < CTA.bas || t > CTA.son) return; const u = Math.min(1, (t - CTA.bas) / .35), [sc] = zipla(t - CTA.bas);
+    ctx.save(); ctx.font = `800 ${21 * K}px Inter, sans-serif`; const w = ctx.measureText(CTA.metin).width, x = WV / 2, y = HV * .6, ph = 18 * K, h = 30 * K + ph;
+    ctx.translate(x, y); ctx.scale(sc, sc); ctx.globalAlpha = u; ctx.fillStyle = "#E63946"; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-w / 2 - 22 * K, -h / 2, w + 44 * K, h, 12 * K); else ctx.rect(-w / 2 - 22 * K, -h / 2, w + 44 * K, h); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(CTA.metin, 0, 2 * K); ctx.restore(); }
   function cizZaman(ctx, M, PARCA, t) { const p = parcaBul(PARCA, t), u = Math.min(1, Math.max(0, (t - p.t0) / p.sure));
     if (p.kapak) { ctx.globalAlpha = 1; ctx.drawImage(KAPAK_RESMI, 0, 0, WV, HV); if (!ILK) { ILK = document.createElement("canvas"); ILK.width = WV; ILK.height = HV; ILK.getContext("2d").drawImage(ctx.canvas, 0, 0); } return; }
-    if (p.dongu) { kare(ctx, M, p.p0, p.solo, null, 0); filigranCiz(ctx, t); if (ILK) { ctx.globalAlpha = u * u * (3 - 2 * u); ctx.drawImage(ILK, 0, 0, WV, HV); ctx.globalAlpha = 1; } return; }
+    if (p.dongu) { kare(ctx, M, p.p0, p.solo, null, 0); filigranCiz(ctx, t); ctaCiz(ctx, t); if (ILK) { ctx.globalAlpha = u * u * (3 - 2 * u); ctx.drawImage(ILK, 0, 0, WV, HV); ctx.globalAlpha = 1; } return; }
     /* hook ve soru kendi içinde yaklaşır; sahneler sahne ilerlemesini kullanır */
-    kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip, p.ad === "Hook" ? u : null, p.ad === "Hook"); filigranCiz(ctx, t);
+    kare(ctx, M, p.p0 + (p.p1 - p.p0) * u, p.solo, p.G, t - p.t0, p.kip, p.ad === "Hook" ? u : null, p.ad === "Hook"); filigranCiz(ctx, t); ctaCiz(ctx, t);
     if (!ILK) { ILK = document.createElement("canvas"); ILK.width = WV; ILK.height = HV; ILK.getContext("2d").drawImage(ctx.canvas, 0, 0); } }
 
   let ACX = null, YONTEM = "oto";
