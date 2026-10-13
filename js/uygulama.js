@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "43 · 13 Ekim";
+const SURUM = "44 · 13 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -428,6 +428,7 @@ Olaylar: atış A → B · bombardıman A → B (üç atış) · torpido A → B
 Mayınlar (kalıcıdır; bir kez yazılan hat sonraki bütün sahnelerde durur, tekrar yazma):
   · mayın hattı A (enlem, boylam) → B (enlem, boylam) (12) — tek hat; uçlar iki ayrı nokta, parantezde mayın sayısı
   · mayın hatları N: A → B / C → D — birbirine paralel N hat; yalnızca İLK hattın iki ucunu ve SON hattın iki ucunu yaz, aradakiler eşit aralıkla çizilir. Boğazı enine kesen hatlar için uçlar karşılıklı iki kıyıdadır: mayın hatları 10: Kıyı-1 (enlem, boylam) → Karşı kıyı-1 (enlem, boylam) / Kıyı-2 (enlem, boylam) → Karşı kıyı-2 (enlem, boylam). Koordinatları kaynaktan ya da yerin gerçek konumundan al; kesin değilse ~ koy ve DOĞRULANACAK'a yaz
+  · ağ A (enlem, boylam) → B (enlem, boylam) — denizaltı ağı / çelik ağ engeli; kalıcıdır
   · mayın döşer GEMİ A (enlem, boylam) → B (enlem, boylam) (26) — gemi A'dan B'ye giderken mayınlar arkasına tek tek düşer. Aynı sahnenin hareket alanında o geminin rotası A ve B'den GEÇMELİ: Nusret [kızıl, küçük gemi] Nara Burnu (40.19, 26.40) → A (…) → B (…) → Nara Burnu (40.19, 26.40)
 İkonlar: kale · kule · fener · köprü · cami · kilise · saray · ev · köy · şehir · fabrika · yel değirmeni · rüzgâr türbini · ambar · silo · okul · hastane · banka · anıt · kapı · çan · dağ · orman · ağaç · ada · su · balık · çadır · çapa · havaalanı · radar · dürbün · hedef · kılıç · çatışma · kalkan · bomba · yangın · maden · petrol · ölüm · mezar · sağlık · kızılay · kızılhaç · anlaşma · belge · taç · nişan · bayrak · hoparlör · telsiz · uydu
 Hava: gece · şafak · akşam · sis · yağmur · kar · rüzgâr · yıldırım · fırtına
@@ -499,7 +500,7 @@ async function kartUygula(o, yerEkle, log) {
   if (o.cta) V.meta.cta = o.cta; if (o.ctaEn) V.meta.cta_en = o.ctaEn;
   if (o.yabanci) { V.meta.okunus = V.meta.okunus || {}; for (const p of o.yabanci.split(/[;,]/)) { const [k, v] = p.split("=").map(x => (x || "").trim()); if (k && v) V.meta.okunus[k] = v; } }
   { const sq = [["HOOK", o.hook], ...Object.entries(o.sahne).map(([i, s]) => [`S${+i + 1}`, s.ses])].filter(([, x]) => /\?/.test(x || "")).map(([k]) => k); if (sq.length) log(`uyarı: ${sq.join(", ")} soru cümlesi içeriyor (şablona göre soru yalnızca SORU satırında olmalı)`); }
-  const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map(), MAYIN = [];
+  const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map(), MAYIN = [], AGD = {};
   const n = Math.max(8, ...Object.keys(o.sahne).map(k => +k + 1)); while (V.steps.length < n) { const k = JSON.parse(JSON.stringify(V.steps.at(-1))); delete k.hook; Object.assign(k, { ses: "", text: "", date: "", ships: [], booms: [], shots: [] }); V.steps.push(k); }
   for (const [i, s] of Object.entries(o.sahne)) { const st = V.steps[+i]; st.ses = s.ses; if (!st.text) st.text = s.ses; if (s.tarih) st.date = s.tarih; if (o.en[i]) st.ses_en = o.en[i];
     if (yerEkle && s.yer) { log(`S${+i + 1}: ${s.yer}`);
@@ -512,7 +513,7 @@ async function kartUygula(o, yerEkle, log) {
       } catch (e) { log("  bulunamadı: " + e.message); } }
     if (s.hava !== undefined) { const H = s.hava.split(/[,;]/).map(x => x.trim().toLocaleLowerCase("tr-TR")).filter(x => x && !/^(yok|-|—|gündüz)$/.test(x)); if (H.length) st.hava = H; else delete st.hava; }
     if (yerEkle) {
-      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, yerDis: async ad => { const r = await DEPO.yer(ad, null); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, haritalar: Object.keys(KAT), kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR, mayinlar: MAYIN });
+      try { const E = await OTOMATIK.kur(st, s, { yerBul: async ad => { const r = await DEPO.yer(ad, kutu); return r ? [r[0], r[1]] : null; }, yerDis: async ad => { const r = await DEPO.yer(ad, null); return r ? [r[0], r[1]] : null; }, harita: HARITA.pikseller, haritalar: Object.keys(KAT), kat: KAT, bayraklar: VAR.bayraklar, log, aktorler: AKTOR, mayinlar: MAYIN, agDurum: AGD });
         if (E.length) log(`  animasyon: ${E.join(", ")}`); } catch (e) { log("  animasyon kurulamadı: " + e.message); } }
     /* sahnenin haritası kütüphaneden kendiliğinden seçilir; hikâyede yoksa eklenir */
     if (st.map && KAT[st.map] && !HK.haritalar.includes(st.map)) { HK.haritalar.push(st.map); log(`  harita eklendi: ${st.map}`); }

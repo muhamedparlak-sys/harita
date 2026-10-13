@@ -76,7 +76,8 @@
     const O = [];
     for (let x of (t || "").split(";").map(x => x.trim()).filter(Boolean)) {
       const k = kucuk(x); let m;
-      if ((m = x.match(/^(çekilir|ayrılır|haritadan çıkar|kaybolur)\s+(.+)$/i))) { for (const g of m[2].split(/\s*,\s*/).filter(Boolean)) O.push({ tur: "cekil", gemi: g.trim() }); }
+      if ((m = x.match(/^(ağ|çelik ağ|denizaltı ağı)\s+(.+)$/i))) { const y = ok(m[2]); O.push({ tur: "ag", yer: y[0], hedef: y[1] || null }); }
+      else if ((m = x.match(/^(çekilir|ayrılır|haritadan çıkar|kaybolur)\s+(.+)$/i))) { for (const g of m[2].split(/\s*,\s*/).filter(Boolean)) O.push({ tur: "cekil", gemi: g.trim() }); }
       else if ((m = x.match(/^büyük\s+patlama\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[1].trim(), k: 2.2 });
       else if ((m = x.match(/^(patlama|infilak)\s+(.+)$/i))) O.push({ tur: "patlama", yer: m[2].trim(), k: 1 });
       else if ((m = x.match(/^(yıldırım|şimşek)\s+(.+)$/i))) O.push({ tur: "simsek", yer: m[2].trim() });
@@ -179,7 +180,7 @@
     for (let it = 0; it < 3; it++) { const R = [Q[0]]; for (let k = 0; k + 1 < Q.length; k++) { const a = Q[k], b = Q[k + 1]; R.push([a[0] * .75 + b[0] * .25, a[1] * .75 + b[1] * .25], [a[0] * .25 + b[0] * .75, a[1] * .25 + b[1] * .75]); } R.push(Q[Q.length - 1]);
       if (denizde && M && H && R.some(p => !denizNokta(M, H, p))) break; Q = R; }
     return Q.map(p => [+p[0].toFixed(4), +p[1].toFixed(4)]); }
-  const SURE = { cekil: 0, doser: .02, hatlar: .02, torpido: .16, atis: .12, patlama: .06, batis: .16, isaret: .22, anons: .26, isildak: .08, vurgu: .1, simsek: .06, ikon: .04, bayrak: .04, mayin: .04 };
+  const SURE = { ag: .02, cekil: 0, doser: .02, hatlar: .02, torpido: .16, atis: .12, patlama: .06, batis: .16, isaret: .22, anons: .26, isildak: .08, vurgu: .1, simsek: .06, ikon: .04, bayrak: .04, mayin: .04 };
   const yakin = (a, b, M) => Math.hypot(a[0] - b[0], a[1] - b[1]) < Math.max(.006, (M ? (M.lo1 - M.lo0) : 1) * .04);
 
   /* st: sahne; s: {hareket, olay}; c: {yerBul(ad)->[lo,la]|null, harita(ad)->{V,W,H}, kat, bayraklar, log, aktorler: Map (sahneler arası durum)} */
@@ -227,6 +228,7 @@
     /* mayınlar kalıcıdır: önceki sahnelerde konan ya da döşenen hatlar bu sahnede de durur */
     const MY = c.mayinlar || (c.mayinlar = []);
     if (MY.length || O.some(o => ["mayin", "hatlar", "doser"].includes(o.tur))) { st.mines = MY.map(R => R.map(p => [...p])); delete st.nus; }
+    const AGD = c.agDurum || (c.agDurum = {}); if (AGD.ag) st.net = AGD.ag.map(p => [...p]); /* ağ da kalıcıdır */
     /* 0) harita: hikâyenin haritalarından, sahnenin bütün noktalarını (yer, rota, olay, duran aktörler) en iyi kapsayan en dar olan */
     if ((c.haritalar || []).length > 1) {
       const T = (st.pts || []).map(p => [p[0], p[1]]);
@@ -288,7 +290,7 @@
       st.ships = st.ships.filter(x => !(x.n && h.ad && esle(x.n, h.ad))); st.ships.push(sh); yeni.push(sh); eklendi.push(`rota ${h.ad || ""}${notu}`);
     }
     /* 3) zamanlama: gelenler önce gelir, sonra olaylar sırayla olur, olay yerinden ayrılanlar en son çekilir */
-    const olayYer = []; for (const o of O) if (!["bayrak", "ikon", "mayin", "hatlar", "doser", "cekil"].includes(o.tur)) { const p = o.tur === "batis" ? (aktorBul(o.gemi) || {}).p : await bul(o.yer); if (p) olayYer.push(p); }
+    const olayYer = []; for (const o of O) if (!["bayrak", "ikon", "mayin", "hatlar", "doser", "cekil", "ag"].includes(o.tur)) { const p = o.tur === "batis" ? (aktorBul(o.gemi) || {}).p : await bul(o.yer); if (p) olayYer.push(p); }
     const gelen = [], ayrilan = [];
     for (const sh of yeni) { if (sh.p.length < 2) { sh.t = [0, 1]; continue; } (olayYer.some(p => yakin(p, sh.p[0], M)) && !olayYer.some(p => yakin(p, sh.p[sh.p.length - 1], M)) ? ayrilan : gelen).push(sh); }
     gelen.forEach((sh, j) => { sh.t = [+(.03 + j * .06).toFixed(2), +Math.min(.62, .48 + j * .05).toFixed(2)]; });
@@ -358,6 +360,7 @@
           st.nus = g ? { pts: R, ship: g.n, fr } : { pts: R, fr }; MY.push(R); eklendi.push(`${gemi} ${o.n} mayın döşüyor`); }
         else log(`  mayın döşer: başlangıç ya da bitiş bulunamadı (${bas} → ${o.hedef})`); }
       else if (o.tur === "cekil") { }
+      else if (o.tur === "ag") { const a = await bul(o.yer), b = o.hedef ? await bul(o.hedef) : null; if (a && b) { st.net = [a, b]; AGD.ag = [a, b]; eklendi.push("ağ"); } }
       else log(`  anlaşılmayan olay: ${o.ham}`);
       t += sure;
     }
