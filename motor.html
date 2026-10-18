@@ -358,9 +358,57 @@ function havaCiz(c,q,f,solo,r){ if(!c.HV) return; const tek=!q||solo, u=tek?1:se
       for(const [lw,al] of [[14*S,.25],[5*S,.7],[2*S,1]]){ ctx.globalAlpha=al*a; ctx.strokeStyle=lw>6*S?"rgba(190,215,255,1)":"#fff"; ctx.lineWidth=lw; ctx.lineJoin="round"; ctx.beginPath(); P_.forEach(([x,y],k)=>k?ctx.lineTo(x,y):ctx.moveTo(x,y)); ctx.stroke(); } } }
   ctx.restore(); }
 
+/* ---------- deniz düzeyi (st.deniz=[başlangıç, bitiş] metre; yükseklik dosyası gerekir) ---------- */
+for(const e of [TAGP,TAG,SAAT.g]) e.setAttribute("data-hud","1");
+/* taşma düzeyi: her kara pikselinin denize bağlandığı en düşük su düzeyi (öncelikli taşırma, kova kuyruğu) */
+function tasma(m){ if(m.F) return m.F; const E=m.E, V=m.V, W=m.w, H=m.h, N=W*H, F=new Int16Array(N), gor=new Uint8Array(N), KM=12000, bas=new Int32Array(KM).fill(-1), sonr=new Int32Array(N);
+  const it=(i,k)=>{ k=Math.max(0,Math.min(KM-1,k)); sonr[i]=bas[k]; bas[k]=i; };
+  for(let i=0;i<N;i++) if(V[i]<128){ gor[i]=1; F[i]=Math.min(-1,E[i]); it(i,0); }
+  for(let k=0;k<KM;k++){ while(bas[k]>=0){ const i=bas[k]; bas[k]=sonr[i]; const x=i%W, f=F[i];
+      for(const j of [x>0?i-1:-1,x<W-1?i+1:-1,i>=W?i-W:-1,i<N-W?i+W:-1]){ if(j<0||gor[j]) continue; gor[j]=1; F[j]=Math.max(E[j],f); it(j,F[j]); } } }
+  return (m.F=F); }
+const DZ={ sh:[217,203,168], su:[86,150,190] };
+function denizTuval(m,L){ L=Math.round(L*2)/2; if(m.dzL===L&&m.dzC) return m.dzC;
+  if(!m.dzC){ m.dzC=document.createElement("canvas"); m.dzC.width=m.w; m.dzC.height=m.h; m.dzX=m.dzC.getContext("2d"); m.dzI=m.dzX.createImageData(m.w,m.h); m.dzO=new Uint32Array(m.dzI.data.buffer); m.dzS=new Uint8Array(m.w*m.h); }
+  const E=m.E, V=m.V, W=m.w, N=W*m.h, O=m.dzO, B=m.o, S=m.dzS, F=L>0?tasma(m):null, C=COL;
+  /* su maskesi: yükselişte denize bağlanan kara basılır; alçalışta düzeyin üstünde kalan deniz tabanı kara olur (kopuk çukurlar göl olarak kalır) */
+  for(let i=0;i<N;i++) S[i]=V[i]<128?(E[i]<L?1:0):(F&&F[i]<L?2:0);
+  const sea0=C.s0, sea1=C.s1, co=pk(C.coast[0],C.coast[1],C.coast[2]);
+  for(let i=0;i<N;i++){ const s=S[i], x=i%W, kiyi=(x>0&&!S[i-1]!==!s)||(x<W-1&&!S[i+1]!==!s)||(i>=W&&!S[i-W]!==!s)||(i<N-W&&!S[i+W]!==!s);
+    if(kiyi&&!s){ O[i]=co; continue; }
+    if(s===1){ const t=Math.min(1,Math.log1p(Math.max(0,L-E[i]))/Math.log1p(3000)); O[i]=pk(lerp(sea0[0],sea1[0],t),lerp(sea0[1],sea1[1],t),lerp(sea0[2],sea1[2],t)); }
+    else if(s===2){ const b=B[i], d=Math.min(1,(L-E[i])/Math.max(20,L)), k=.55+.25*d; O[i]=pk(lerp(b&255,DZ.su[0],k),lerp((b>>8)&255,DZ.su[1],k),lerp((b>>16)&255,DZ.su[2],k)); }
+    else if(V[i]<128){ const t=Math.min(1,(E[i]-L)/Math.max(30,-L)); O[i]=pk(lerp(DZ.sh[0],C.land[0],t*.6),lerp(DZ.sh[1],C.land[1],t*.6),lerp(DZ.sh[2],C.land[2],t*.6)); }
+    else O[i]=B[i]; }
+  m.dzX.putImageData(m.dzI,0,0); m.dzL=L; return m.dzC; }
+const denizL=(c,f)=>c&&c.deniz?lerp(+c.deniz[0]||0,+c.deniz[1]||0,ease(seg(f,.12,.82))):null;
+/* gösterge: sağ kenarda dikey cetvel ve metre yazısı (ekran öğesi, 3D'de düz kalır) */
+const DZG=(()=>{ const g=el("g",{opacity:0,"data-hud":"1"}), x=VW-(VID?30:22), y0=VID?VID.top/VZ+70:96, h=VID?210:150;
+  el("rect",{x:x-5,y:y0,width:10,height:h,rx:5,style:"fill:var(--m-halo)","fill-opacity":.75,"stroke-width":1.2,"stroke-opacity":.5},g);
+  const dol=el("rect",{x:x-5,y:y0,width:10,height:0,rx:5,style:"fill:#3E93C8"},g), sifir=el("line",{x1:x-10,x2:x+10,"stroke-width":2,style:"stroke:var(--ink)"},g);
+  const yaz=txt(g,"",{x:x-14,"text-anchor":"end","font-size":VID?22:16,"font-weight":700}), bas=txt(g,"",{x:x-14,"text-anchor":"end","font-size":VID?11:9,"font-weight":600,"letter-spacing":".1em",style:"stroke:var(--m-halo);stroke-opacity:.7;fill:var(--ink);fill-opacity:.75"});
+  return { g, guncel(L,lo,hi){ const sy=v=>y0+h*(1-(v-lo)/(hi-lo)); const y=sy(clamp(L,lo,hi)); dol.setAttribute("y",y.toFixed(1)); dol.setAttribute("height",(y0+h-y).toFixed(1)); sifir.setAttribute("y1",sy(0).toFixed(1)); sifir.setAttribute("y2",sy(0).toFixed(1));
+    yaz.setAttribute("y",(y+7).toFixed(1)); yaz.textContent=(L>0?"+":L<0?"−":"")+Math.abs(Math.round(L))+" m"; bas.setAttribute("y",(y0-8).toFixed(1)); bas.textContent=(META.dil==="en"?"SEA LEVEL":"DENİZ DÜZEYİ"); } }; })();
+/* 3D için: görünen alanın yükseklik ızgarası (metre) ve genişliği (metre); su düzeyinin altı düz su yüzü */
+/* 3D çevresi: görünen alanın yanlarına ve ufka doğru genişletilmiş harita resmi ve yükseklikleri (uzak kısım pusa karışır) */
+window.__yukGenis=(gw,gh,ex,eyU,eyY,tw)=>{ const c=ST[clamp(Math.floor(P),0,ST.length-1)], m=c&&c.m, r=c&&c.rect; if(!m||!m.E||!r) return null; const L=c.__L||0, E=m.E;
+  const R=[r[0]-r[2]*(ex-1)/2, r[1]-r[3]*eyU, r[2]*ex, r[3]*(1+eyU+eyY)], th=Math.min(2048,Math.round(tw*R[3]/R[2]));
+  const oc=window.__genisC||(window.__genisC=document.createElement("canvas")); oc.width=tw; oc.height=th; const ox=oc.getContext("2d"); ox.fillStyle=SKY; ox.fillRect(0,0,tw,th);
+  const src=c.deniz&&m.dzC?m.dzC:m.c, sx0=Math.max(0,R[0]), sy0=Math.max(0,R[1]), sx1=Math.min(m.w,R[0]+R[2]), sy1=Math.min(m.h,R[1]+R[3]);
+  if(sx1>sx0&&sy1>sy0){ const dx=(sx0-R[0])/R[2]*tw, dy=(sy0-R[1])/R[3]*th, dw=(sx1-sx0)/R[2]*tw, dh=(sy1-sy0)/R[3]*th; ox.drawImage(src,sx0,sy0,sx1-sx0,sy1-sy0,dx,dy,dw,dh);
+    /* haritanın kendi sınırı ufukta çizgi olmasın: kenarlar pusa karışır */
+    const p=Math.round(Math.min(tw,th)*.06), sis=a=>{ const g=SKY.replace("#",""), r=parseInt(g.slice(0,2),16), gg=parseInt(g.slice(2,4),16), b=parseInt(g.slice(4,6),16); return `rgba(${r},${gg},${b},${a})`; };
+    for(const [kx,ky,kw,kh,x0,y0,x1,y1] of [[dx,dy,dw,p,0,dy,0,dy+p],[dx,dy+dh-p,dw,p,0,dy+dh,0,dy+dh-p],[dx,dy,p,dh,dx,0,dx+p,0],[dx+dw-p,dy,p,dh,dx+dw,0,dx+dw-p,0]]){
+      if((x0===dx&&sx0===0&&y0===0)||(x0===dx+dw&&sx1===m.w&&y0===0)||(y0===dy&&sy0===0&&x0===0)||(y0===dy+dh&&sy1===m.h&&x0===0)){ const g=ox.createLinearGradient(x0,y0,x1,y1); g.addColorStop(0,sis(1)); g.addColorStop(1,sis(0)); ox.fillStyle=g; ox.fillRect(kx,ky,kw,kh); } } }
+  const Z=new Float32Array(gw*gh); for(let j=0;j<gh;j++){ const y=Math.round(R[1]+(j+.5)/gh*R[3]); for(let k=0;k<gw;k++){ const x=Math.round(R[0]+(k+.5)/gw*R[2]); /* harita dışı: en yakın kenar (kenarda duvar oluşmasın) */ const cx=Math.min(m.w-1,Math.max(0,x)), cy=Math.min(m.h-1,Math.max(0,y)), d=Math.hypot(x-cx,y-cy)/(r[2]*.25), e=E[cy*m.w+cx]; Z[j*gw+k]=Math.max(d>0?e*Math.max(0,1-d):e,L); } }
+  return { Z, cv:oc }; };
+window.__yukKare=(gw,gh)=>{ const c=ST[clamp(Math.floor(P),0,ST.length-1)], m=c&&c.m, r=c&&c.rect; if(!m||!m.E||!r) return null; const E=m.E, Z=new Float32Array(gw*gh), L=c.__L||0;
+  for(let j=0;j<gh;j++){ const y=Math.min(m.h-1,Math.max(0,Math.round(r[1]+(j+.5)/gh*r[3]))); for(let k=0;k<gw;k++){ const x=Math.min(m.w-1,Math.max(0,Math.round(r[0]+(k+.5)/gw*r[2]))), i=y*m.w+x; Z[j*gw+k]=Math.max(E[i],L); } }
+  const la=(m.la0+m.la1)/2*Math.PI/180, gm=r[2]/m.w*(m.lo1-m.lo0)*111320*Math.cos(la); return { Z, gm, L, i:ST.indexOf(c) }; };
+
 /* ---------- çizim ---------- */
 let P=0;
-function blit(m,r,a){ ctx.globalAlpha=a; if(m.ok) ctx.drawImage(m.c,r[0],r[1],r[2],r[3],0,0,CW,CH); else { ctx.fillStyle=SKY; ctx.fillRect(0,0,CW,CH); } ctx.globalAlpha=1; }
+function blit(m,r,a,cv){ ctx.globalAlpha=a; if(m.ok) ctx.drawImage(cv||m.c,r[0],r[1],r[2],r[3],0,0,CW,CH); else { ctx.fillStyle=SKY; ctx.fillRect(0,0,CW,CH); } ctx.globalAlpha=1; }
 const sameCam=(a,b)=>VID?(a.vr+"")===(b.vr+""):(a.cam.lo===b.cam.lo&&a.cam.la===b.cam.la&&a.cam.w===b.cam.w);
 function place(c,f){ const r=c.rect, kx=VW/r[2], ky=VH/r[3], sx=X=>(X-r[0])*kx, sy=Y=>(Y-r[1])*ky, T=(X,Y)=>`translate(${sx(X).toFixed(1)} ${sy(Y).toFixed(1)})`;
   for(const it of c.items) it.node.setAttribute("transform",T(it.X,it.Y));
@@ -431,8 +479,10 @@ function draw(p){ P=p; const N=ST.length, i=clamp(Math.floor(p),0,N-1), f=clamp(
   let r=camOf(c); if(same&&!sameCam(q,c)){ const a=kb(camOf(q),1,i-1), u=ease(seg(f,0,.3)); r=a.map((v,k)=>lerp(v,r[k],u)); }
   r=(same&&!sameCam(q,c))?(f<.3?r:kb(r,(U-.3)/.7,i)):kb(r,U,i);
   const gw=gece(c,q,f,solo), ge=gw>.5?"1":""; if((document.documentElement.dataset.gece||"")!==ge) document.documentElement.dataset.gece=ge;
-  if(t<1){ q.rect=kb(camOf(q),1,i-1); blit(q.m,q.rect,1); if(gw>0&&q.m.ok){ ctx.globalAlpha=gw; ctx.drawImage(paintGece(q.m),q.rect[0],q.rect[1],q.rect[2],q.rect[3],0,0,CW,CH); ctx.globalAlpha=1; } }
-  c.rect=r; blit(c.m,r,t); if(gw>0&&c.m.ok){ ctx.globalAlpha=gw*t; ctx.drawImage(paintGece(c.m),r[0],r[1],r[2],r[3],0,0,CW,CH); ctx.globalAlpha=1; }
+  const Lc=c.m&&c.m.E?denizL(c,f):null, Lq=q&&q.m&&q.m.E&&q.deniz?+q.deniz[1]:null; c.__L=Lc==null?0:Lc;
+  if(Lc!=null){ const D=c.deniz.map(Number), lo=Math.min(-130,...D)-10, hi=Math.max(80,...D)+10; DZG.guncel(Lc,lo,hi); DZG.g.setAttribute("opacity",(solo?seg(f,0,.1):seg(f,0,.12)).toFixed(2)); } else DZG.g.setAttribute("opacity",0);
+  if(t<1){ q.rect=kb(camOf(q),1,i-1); blit(q.m,q.rect,1,Lq!=null?denizTuval(q.m,Lq):null); if(gw>0&&q.m.ok){ ctx.globalAlpha=gw; ctx.drawImage(paintGece(q.m),q.rect[0],q.rect[1],q.rect[2],q.rect[3],0,0,CW,CH); ctx.globalAlpha=1; } }
+  c.rect=r; blit(c.m,r,t,Lc!=null&&c.m.ok?denizTuval(c.m,Lc):null); if(gw>0&&c.m.ok){ ctx.globalAlpha=gw*t; ctx.drawImage(paintGece(c.m),r[0],r[1],r[2],r[3],0,0,CW,CH); ctx.globalAlpha=1; }
   havaCiz(c,q,f,solo,r);
   for(const o of c.S){ o.trail.setAttribute("stroke-width",(o.sw*(1+.8*gw)).toFixed(2)); o.trail.setAttribute("stroke-opacity",(.38+.22*gw).toFixed(2)); o.tail.setAttribute("stroke-width",(o.sw*1.25*(1+.8*gw)).toFixed(2)); o.tail.setAttribute("stroke-opacity",(.92).toFixed(2)); }
   const fin=solo?seg(f,0,.1):(i===0?1:seg(f,.03,.2));

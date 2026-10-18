@@ -160,7 +160,7 @@ main>section:not(#story),main>.top{display:none!important}
     const H = hk.haritalar.filter(h => kat[h]); for (const s of hk.veri.steps) if (kat[s.map] && !H.includes(s.map)) H.push(s.map);
     const M = H.map(h => `${h}:` + JSON.stringify({ lo0: kat[h].lo0, lo1: kat[h].lo1, la0: kat[h].la0, la1: kat[h].la1, w: kat[h].w, h: kat[h].h })).join(",");
     const S = (await Promise.all(H.map(async h => `${h}:"${await b64(h)}"`))).join(",");
-    const Y = yukGerek(hk) ? (await Promise.all(H.map(async h => { const y = kat[h].yuk ? await yuk64(h) : null; return y ? `${h}:"${y}"` : ""; }))).filter(Boolean).join(",") : "";
+    const Y = yukGerek(hk) || (vid && vid.uc) ? (await Promise.all(H.map(async h => { const y = kat[h].yuk ? await yuk64(h) : null; return y ? `${h}:"${y}"` : ""; }))).filter(Boolean).join(",") : "";
     L[i] = "const DATA=" + JSON.stringify(hk.veri) + `, MAPS={${M}}, SRC={${S}}, YUK={${Y}};`;
     let html = L.join("\n");
     if (mod) {

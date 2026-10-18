@@ -230,7 +230,7 @@
     if (MY.length || O.some(o => ["mayin", "hatlar", "doser"].includes(o.tur))) { st.mines = MY.map(R => R.map(p => [...p])); delete st.nus; }
     const AGD = c.agDurum || (c.agDurum = {}); if (AGD.ag) st.net = AGD.ag.map(p => [...p]); /* ağ da kalıcıdır */
     /* 0) harita: hikâyenin haritalarından, sahnenin bütün noktalarını (yer, rota, olay, duran aktörler) en iyi kapsayan en dar olan */
-    if ((c.haritalar || []).length > 1) {
+    if ((c.haritalar || []).length > 1 && !st.haritaSabit) {
       const T = (st.pts || []).map(p => [p[0], p[1]]);
       for (const h of H_) for (const y of h.yol) if (!yonCoz(y)) { const p = await bul(y, true); if (p) T.push(p); }
       for (const o of O) for (const k of ["yer", "hedef", "gemi"]) if (o[k]) { const p = await bul(o[k], true); if (p) T.push(p); }

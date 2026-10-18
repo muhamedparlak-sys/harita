@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "45 · 18 Ekim";
+const SURUM = "46 · 18 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -399,7 +399,7 @@ DOĞRULUK
 SAHNELER (olayın türü ne olursa olsun bu iskelet; kaynakta karşılığı yoksa uydurma, gerçek akışa uydur)
 HOOK: S7'nin en çarpıcı olgusu · S1 açılış: ana güç ya da ana olay harekete geçer, mutlaka yer değiştiren bir unsur · S2 karşı hamle ya da hazırlık · S3 risk, engel ya da keşif · S4 dönüm anı, karşılaşma · S5 ilk temas ya da ilk sonuç · S6 kriz, kayıp, çıkmaz · S7 doruk ve sonuç, sayılarla · S8 kalıcı sonuç ve bugün · SORU: yorumlarda tartışma açacak "Ya öyle olmasaydı?" türü soru.
 
-SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında, bu sırayla; boş alan da yazılır: | olay:  | hava: )
+SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında, bu sırayla; boş alan da yazılır: | olay:  | hava:  | harita:  | deniz: )
 - yer: o sahnede haritada gösterilecek en çok 4 yer, virgülle; her yerin yanına koordinatını yaz: Kabatepe (40.20, 26.27), Morto Koyu (40.04, 26.19)
 - tarih: ekranda etiket olur, seslendirilmez; RAKAMLA, en çok 4 kelime (18 Mart 1915 · 7/8 Mart 1915 gecesi · 18 Mart 1915, 13.54 · Bugün).
 - hareket: Ad [taraf, tür] Başlangıç (enlem, boylam) → güzergâh noktaları (enlem, boylam) → Varış (enlem, boylam). Birden çoksa noktalı virgül. Birlikte, hat hâlinde giden gemiler TEK satırda filo olarak yazılır, ayrı ayrı değil: Fransız hattı: Suffren, Bouvet, Gaulois, Charlemagne [lacivert, büyük gemi, bayrak Fransız] Başlangıç (…) → Varış (…). Gemiler aynı rotada yan yana, aynı anda ilerler; sonraki sahnelerde her biri kendi adıyla anılır (batış Bouvet). Yerinde duran için tek nokta: Goliath [lacivert, büyük gemi] Morto Koyu (40.04, 26.19)
@@ -408,6 +408,8 @@ SATIR SONLARI (yalnızca S1–S8 Türkçe satırlarında, bu sırayla; boş alan
   DENİZ GEÇİŞ NOKTASI: rota bir adalar arasından, dar bir boğazdan ya da bir yarımadanın çevresinden geçiyorsa, gemi karadan geçmesin diye arada açık denizde nokta ver ve adına “açığı / batısı / güneyi” koy (Sakız batısı (38.50, 25.70); Limni güneyi (39.50, 25.90)). Bunlar tarihî durak değil, yol tarifidir; uzak rotalarda her 150–200 km'de bir yeterlidir.
 - olay: aşağıdaki biçimlerle, noktalı virgülle; kartta yazdığın sırayla oynar.
 - hava: gece yapılan iş → gece; sabaha karşı → şafak; akşam → akşam; kaynakta geçiyorsa sis, yağmur, kar, rüzgâr, fırtına. Gündüz ve bilgi yoksa boş.
+- harita: o sahnenin haritası; aşağıdaki HARİTA KÜTÜPHANESİ'nden TEK ad. Sahnenin bütün yerlerini ve rota noktalarını kapsayan EN DAR haritayı seç; yakın plan gereken sahnede dar, geniş bölgeyi anlatan sahnede geniş harita.
+- deniz: yalnızca deniz düzeyinin değiştiğini anlatan sahnede, metre olarak başlangıç → bitiş; bugünkü düzey 0 (bütün buzlar erirse: 0 → 70 · son buzul çağından bugüne: -123 → 0). Su sahne boyunca yükselir ya da çekilir, ekranda metre göstergesi akar. Değer kaynaktan; yoksa boş. Bu sahnede seçilen haritada "yükseklik yok" yazmamalı.
 - Animasyon yalnızca bu alanlardan kurulur; her sahnede en az bir hareket ya da olay olsun (hareket yoksa vurgu, ikon ya da bayrak).
 - HARİTA ANLATIYI TAŞIR: seslendirmede geçen her mekânsal unsur (mayın hattı, set, tabya, batarya, cephe, konvoy, döşenen mayın, dönüş yeri) o sahnenin hareket ya da olay alanında da yazılır. Haritada görünmeyen şeyi anlatma.
 - S1 DÜZENİ KURAR: hikâyenin başındaki durağan düzeni (mevcut mayın hatları, tabyalar, kıyı bataryaları, gemilerin bekleme yerleri) kaynakta varsa S1'in olay alanına yaz; sonraki sahnelerde yeniden yazma, kendiliğinden durur.
@@ -437,6 +439,10 @@ Aktörler: hareket satırında adı geçen her araç sonraki sahnelerde son yeri
 Saat: tarihe saat yazarsan (01.15) ve önceki sahneden farklıysa ekranda saat döner.
 _EN satırları yalnızca çeviridir; alan ekleme.
 
+HARİTA KÜTÜPHANESİ (ad — kapsadığı alan; harita: alanına ve HARİTALAR satırına yalnızca bu adlar yazılır)
+{HARITA_LISTESI}
+
+HARİTALAR: hikâyede kullanılan haritaların adları, virgülle (kütüphaneden)
 BAŞLIK: (en çok 6 kelime)
 BAŞLIK_EN: başlığın İngilizcesi (İngilizce videoda ekrandaki bölüm adı olur)
 CTA: videonun sonunda ekranda çıkan şerit, en çok 6 kelime, BÜYÜK HARF; dizinin sonraki bölümünü çağırsın (SIRADAKİ: KARADENİZ BASKINI · TAKİP ET). Sesli çağrı her videoda aynıdır ve uygulamada ayarlıdır; buraya yazma.
@@ -453,14 +459,14 @@ YORUM: sabit yorum: kaynaklar (yazar, yıl, eser) ve "harita sayfası profildeki
 YABANCI: yabancı özel adlar ve Türkçe okunuşu (Triumph = Trayamf; Bouvet = Buve)
 DOĞRULANACAK: kontrol edilecek noktalar, noktalı virgülle (yoksa boş)
 HOOK:
-S1:  | yer:  | tarih:  | hareket:  | olay:  | hava:
-S2:  | yer:  | tarih:  | hareket:  | olay:  | hava:
-S3:  | yer:  | tarih:  | hareket:  | olay:  | hava:
-S4:  | yer:  | tarih:  | hareket:  | olay:  | hava:
-S5:  | yer:  | tarih:  | hareket:  | olay:  | hava:
-S6:  | yer:  | tarih:  | hareket:  | olay:  | hava:
-S7:  | yer:  | tarih:  | hareket:  | olay:  | hava:
-S8:  | yer:  | tarih:  | hareket:  | olay:  | hava:
+S1:  | yer:  | tarih:  | hareket:  | olay:  | hava:  | harita:  | deniz:
+S2:  | yer:  | tarih:  | hareket:  | olay:  | hava:  | harita:  | deniz:
+S3:  | yer:  | tarih:  | hareket:  | olay:  | hava:  | harita:  | deniz:
+S4:  | yer:  | tarih:  | hareket:  | olay:  | hava:  | harita:  | deniz:
+S5:  | yer:  | tarih:  | hareket:  | olay:  | hava:  | harita:  | deniz:
+S6:  | yer:  | tarih:  | hareket:  | olay:  | hava:  | harita:  | deniz:
+S7:  | yer:  | tarih:  | hareket:  | olay:  | hava:  | harita:  | deniz:
+S8:  | yer:  | tarih:  | hareket:  | olay:  | hava:  | harita:  | deniz:
 SORU:
 HOOK_EN:
 S1_EN:
@@ -476,6 +482,7 @@ function kartCoz(t) { const o = { sahne: {}, en: {} };
   for (const ham of t.split(/\r?\n/)) { const sat = ham.replace(/^[\s*\-•#]+/, "").replace(/\*\*/g, "");
     const d0 = sat.match(/^DO[ĞG]RULANACAK\s*[:：]\s*(.*)$/i); if (d0) { o.dogrulanacak = d0[1].split(";").map(x => x.trim()).filter(x => x && !/^(yok|-|—)$/i.test(x)); continue; }
     const c0 = sat.match(/^(ÇEVİRİ|CEVIRI)\s*[:：]\s*(.*)$/i); if (c0) { o.ceviri = c0[2]; continue; }
+    const hr = sat.match(/^HAR[İI]TALAR\s*[:：]\s*(.*)$/i); if (hr) { o.haritalar = hr[1].split(/[,;\s]+/).map(x => x.trim().toLocaleLowerCase("tr-TR")).filter(Boolean); continue; }
     const ct = sat.match(/^CTA(_EN)?\s*[:：]\s*(.*)$/i); if (ct) { o[ct[1] ? "ctaEn" : "cta"] = ct[2].trim(); continue; }
     const b0 = sat.match(/^(BAŞLIK|BASLIK)_EN\s*[:：]\s*(.*)$/i); if (b0) { o.baslikEn = b0[2].trim(); continue; }
     const p0 = sat.match(/^(KAPAK|LEJANT|AÇIKLAMA|ACIKLAMA|ETİKETLER|ETIKETLER|YORUM)(_EN)?\s*[:：]\s*(.*)$/i);
@@ -484,7 +491,7 @@ function kartCoz(t) { const o = { sahne: {}, en: {} };
     const anah = m[1].toUpperCase().replace(/\s/g, ""), en = !!m[3], [metin, ...ek] = m[4].split("|").map(x => x.trim());
     if (anah.startsWith("BA")) o.baslik = metin; else if (anah === "YABANCI") o.yabanci = m[4];
     else if (anah === "HOOK") en ? o.en.hook = metin : o.hook = metin; else if (anah === "SORU") en ? o.en.soru = metin : o.soru = metin;
-    else { const i = +m[2] - 1; if (en) o.en[i] = metin; else { const s = { ses: metin }; for (const e of ek) { const k = e.match(/^(yer|tarih|rota|hareket|olay|hava)\s*:\s*(.*)$/i); if (k) s[k[1].toLocaleLowerCase("tr-TR")] = /^(yok|-+|—|–|boş|yok\.)$/i.test(k[2].trim()) ? "" : k[2].trim(); } o.sahne[i] = s; } } }
+    else { const i = +m[2] - 1; if (en) o.en[i] = metin; else { const s = { ses: metin }; for (const e of ek) { const k = e.match(/^(yer|tarih|rota|hareket|olay|hava|deniz|harita)\s*:\s*(.*)$/i); if (k) s[k[1].toLocaleLowerCase("tr-TR")] = /^(yok|-+|—|–|boş|yok\.)$/i.test(k[2].trim()) ? "" : k[2].trim(); } o.sahne[i] = s; } } }
   return o; }
 async function kartUygula(o, yerEkle, log) {
   if (o.baslik) { const eski = V.meta.title, P = V.meta.paylasim || {}; V.meta.title = V.meta.h1 = o.baslik; if (P[eski] && eski !== o.baslik) { P[o.baslik] = P[eski]; delete P[eski]; } }
@@ -503,6 +510,10 @@ async function kartUygula(o, yerEkle, log) {
   const kutu = await DEPO.kutuHesapla(HK.haritalar), AKTOR = new Map(), MAYIN = [], AGD = {};
   const n = Math.max(8, ...Object.keys(o.sahne).map(k => +k + 1)); while (V.steps.length < n) { const k = JSON.parse(JSON.stringify(V.steps.at(-1))); delete k.hook; Object.assign(k, { ses: "", text: "", date: "", ships: [], booms: [], shots: [] }); V.steps.push(k); }
   for (const [i, s] of Object.entries(o.sahne)) { const st = V.steps[+i]; st.ses = s.ses; if (!st.text) st.text = s.ses; if (s.tarih) st.date = s.tarih; if (o.en[i]) st.ses_en = o.en[i];
+    /* harita: karttan gelen ad kütüphanede varsa sahne o haritada kalır (otomatik seçim değiştirmez) */
+    if (s.harita) { const h = s.harita.trim().toLocaleLowerCase("tr-TR"); if (KAT[h]) { st.map = h; st.haritaSabit = 1; if (!HK.haritalar.includes(h)) HK.haritalar.push(h); } else { delete st.haritaSabit; log(`  harita bulunamadı: ${s.harita}`); } } else delete st.haritaSabit;
+    /* deniz: başlangıç → bitiş metre (0 → 70, -123 → 0); su sahne boyunca yükselir ya da çekilir */
+    if (s.deniz) { const d = (s.deniz.replace(/[−–—]/g, "-").match(/[-+]?\d+(?:[.,]\d+)?/g) || []).map(x => +x.replace(",", ".")); if (d.length) { st.deniz = [d[0], d.length > 1 ? d[1] : d[0]]; log(`  deniz düzeyi: ${st.deniz[0]} → ${st.deniz[1]} m`); } else delete st.deniz; } else delete st.deniz;
     if (yerEkle && s.yer) { log(`S${+i + 1}: ${s.yer}`);
       try { const r = await DEPO.sec(s.yer, kutu), P = r.noktalar;
         for (const [ad, lo, la] of P) if (!(st.pts || []).some(p => p[2] === ad)) (st.pts = st.pts || []).push([lo, la, ad, "start"]);
@@ -529,22 +540,35 @@ async function kartUygula(o, yerEkle, log) {
   if (o.soru) V.meta.soru = o.soru; if (o.en.soru) V.meta.soru_en = o.en.soru;
   if (o.dogrulanacak && o.dogrulanacak.length) { V.meta.dogrulanacak = [...new Set([...(V.meta.dogrulanacak || []), ...o.dogrulanacak])]; log && log(`Doğrulanacak ${o.dogrulanacak.length} nokta “Hikâye” sekmesine eklendi.`); }
   vuruslar(); degisti(); ciz(); }
-const GORSEL = ["pts", "seas", "ships", "booms", "shots", "vurgu", "ikon", "bayrak", "simsek", "mines", "hava", "vcamFix", "nus", "net", "blast", "all", "torpido", "isaret", "anons", "isildak"];
+const GORSEL = ["deniz", "haritaSabit", "pts", "seas", "ships", "booms", "shots", "vurgu", "ikon", "bayrak", "simsek", "mines", "hava", "vcamFix", "nus", "net", "blast", "all", "torpido", "isaret", "anons", "isildak"];
 function sahneTemizle(st) { for (const k of GORSEL) delete st[k]; st.pts = []; st.seas = []; st.ships = []; st.text = ""; st.date = ""; st.ses = ""; delete st.ses_en; }
+/* kartın haritaları: HARİTALAR satırı; yoksa her sahnenin koordinatlarını kapsayan en dar kütüphane haritası */
+function istemTam() { return ISTEM.replace("{HARITA_LISTESI}", haritaListesi()); }
+function kartHaritalari(o, metin) {
+  const gecerli = (o.haritalar || []).filter(h => KAT[h]); if (gecerli.length) return gecerli;
+  const kor = t => [...(t || "").matchAll(/\(\s*~?\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)/g)].map(m => [+m[2], +m[1]]).filter(p => Math.abs(p[1]) <= 90);
+  const ic = (m, p) => { const kx = (m.lo1 - m.lo0) * .05, ky = (m.la1 - m.la0) * .05; return p[0] >= m.lo0 + kx && p[0] <= m.lo1 - kx && p[1] >= m.la0 + ky && p[1] <= m.la1 - ky; };
+  const sec = P => { if (!P.length) return null; const U = Object.entries(KAT).map(([h, m]) => [h, m, P.filter(p => ic(m, p)).length]).filter(x => x[2]);
+    U.sort((a, b) => b[2] - a[2] || (a[1].lo1 - a[1].lo0) - (b[1].lo1 - b[1].lo0)); return U.length ? U[0][0] : null; };
+  const H = []; for (const s of Object.values(o.sahne)) { const h = s.harita && KAT[s.harita.toLocaleLowerCase("tr-TR")] ? s.harita.toLocaleLowerCase("tr-TR") : sec(kor([s.yer, s.hareket, s.olay].join(" "))); if (h && !H.includes(h)) H.push(h); }
+  if (!H.length) { const h = sec(kor(metin)); H.push(h || (KAT.akd ? "akd" : Object.keys(KAT)[0])); }
+  return H; }
+/* şablona eklenen harita listesi: kütüphanedeki (ve telefonda üretilen) bütün haritalar, kapsadığı alanla */
+function haritaListesi() { return Object.entries(KAT).map(([h, m]) => `${h} — ${m.aciklama || ""} (boylam ${m.lo0}–${m.lo1}, enlem ${m.la0}–${m.la1})${m.yuk ? "" : " · yükseklik yok"}`).join("\n"); }
 async function kartPencere() { pencere("Kartı içe aktar", `<p class="ipucu">NotebookLM'e (ya da başka bir yapay zekâya) aşağıdaki istemi kaynakla birlikte verin, çıktıyı buraya yapıştırın. Metinler, tarihler, okunuşlar, soru, rotalar, olaylar ve hava sahnelere kendiliğinden yerleşir.</p>
   <div class="satir"><button id="istemKop">İstemi kopyala</button></div><details><summary>İstemi göster</summary><pre class="log" id="istem"></pre></details>
   <label>Çıktı<textarea id="kartMetin" rows="10" placeholder="BAŞLIK: …&#10;HOOK: …&#10;S1: … | yer: … | tarih: …"></textarea></label>
   <label>Nereye<select id="kartKip"><option value="yeni">Yeni hikâye olarak (önerilen)</option><option value="ustune">Açık hikâyenin (“${esc(V.meta.title || AD)}”) üzerine yaz</option></select></label>
-  <div id="kartHar"><p class="ipucu" style="margin:0">Haritalar (yerlerin bulunduğu bölge; birden çok seçilebilir):</p>${await haritaKutulari(HK.haritalar)}</div>
+  <details id="kartHar"><summary>Haritaları elle seç (isteğe bağlı)</summary><p class="ipucu" style="margin:0">Seçmezseniz haritalar kartın HARİTALAR satırından ya da koordinatlardan kendiliğinden seçilir.</p>${await haritaKutulari([])}</details>
   <button class="ana" id="kartUy">Aktar</button><pre class="log" id="kartLog" hidden></pre>`);
-  kutuTikla(); $("#istem").textContent = ISTEM; $("#istemKop").onclick = e => kopyala(ISTEM, e.target);
+  kutuTikla(); const IST = istemTam(); $("#istem").textContent = IST; $("#istemKop").onclick = e => kopyala(IST, e.target);
   $("#kartKip").onchange = e => { $("#kartHar").hidden = e.target.value !== "yeni"; };
   $("#kartUy").onclick = async () => { const o = kartCoz($("#kartMetin").value), ns = Object.keys(o.sahne).length; if (!ns && !o.hook) return bildir("Kart biçimi tanınmadı. Satırlar “S1: …” gibi başlamalı.", 4);
     const kip = $("#kartKip").value, H = $$("#dlgIc .hk.sec").map(d => d.dataset.h);
-    if (kip === "yeni" && !H.length) return bildir("En az bir harita seçin", 3);
+    if (kip === "yeni" && !H.length) H.push(...kartHaritalari(o, $("#kartMetin").value));
     if (kip === "ustune" && !await onayla(`“${V.meta.title || AD}” hikâyesinin bütün sahneleri silinip karttan yeniden kurulacak. Devam edilsin mi?`, "Üzerine yaz")) return;
     $("#kartUy").disabled = true; const L = $("#kartLog"); L.hidden = false; const log = t => { L.textContent += t + "\n"; L.scrollTop = 1e9; };
-    if (kip === "yeni") { const ad = await DEPO.yeniHikaye(o.baslik || "Yeni hikâye", H); await yukle(ad); log(`Yeni hikâye: ${o.baslik || ad}`); }
+    if (kip === "yeni") { const ad = await DEPO.yeniHikaye(o.baslik || "Yeni hikâye", H); await yukle(ad); log(`Yeni hikâye: ${o.baslik || ad} · haritalar: ${H.join(", ")}`); }
     else { GECMIS.push(JSON.stringify(HK)); V.steps.forEach(sahneTemizle); delete V.meta.soru; delete V.meta.soru_en; V.meta.dogrulanacak = []; log("Eski sahne içeriği temizlendi."); }
     log(`${ns} sahne, hook ${o.hook ? "var" : "yok"}, soru ${o.soru ? "var" : "yok"}`); await kartUygula(o, true, log);
     log("Tamam. Video için üstteki “Video” düğmesine dokunun."); bildir("Kart aktarıldı"); }; }
@@ -608,12 +632,12 @@ async function videoPencere() {
     <div class="izgara2"><label>Seslendirme dili<select id="vDil"><option value="tr">Türkçe</option><option value="en">İngilizce (sahnelerdeki İngilizce metin)</option></select></label>
     <label>Altyazı dili<select id="vADil"><option value="">Sesle aynı (kelime kelime)</option><option value="tr">Türkçe</option><option value="en">İngilizce</option></select></label>
     <label>Altyazı<select id="vAlt"><option value="on">Açık</option><option value="off">Kapalı</option></select></label><label>Efektler<select id="vEf"><option value="kisik">Kısık</option><option value="on" selected>Normal</option><option value="guclu">Güçlü</option><option value="off">Kapalı</option></select></label>
-    <label>Kodlama<select id="vYon"><option value="oto">Otomatik (hızlı)</option><option value="gercek">Gerçek zamanlı kayıt</option></select></label><label>Harita teması<select id="vTema"><option value="light">Açık</option><option value="dark">Koyu</option><option value="taktik">Taktik</option></select></label><label>Yalnız şu sahneler<input id="vAd" placeholder="hepsi · ör. 8 ya da 5-8" inputmode="text"></label></div>
+    <label>Kodlama<select id="vYon"><option value="oto">Otomatik (hızlı)</option><option value="gercek">Gerçek zamanlı kayıt</option></select></label><label>Görünüm<select id="vGor"><option value="uc">3D eğik</option><option value="duz">Düz</option></select></label><label>Harita teması<select id="vTema"><option value="light">Açık</option><option value="dark">Koyu</option><option value="taktik">Taktik</option></select></label><label>Yalnız şu sahneler<input id="vAd" placeholder="hepsi · ör. 8 ya da 5-8" inputmode="text"></label></div>
     <p class="ipucu" id="vNot"></p>
     <button class="ana" id="vBas">Üret</button>
     <div id="vIs" hidden><div class="ilerleme"><b id="vBar"></b></div><div class="satir" style="justify-content:space-between"><span id="vYuzde" class="ipucu" style="background:none;padding:0"></span><button id="vDur" class="tehlike">Durdur</button></div><pre class="log" id="vLog"></pre></div>
     <div id="vRes"></div>`);
-  for (const [id, k] of [["vYon", "yontem"], ["vSes", "ses"], ["vKon", "konusmaci"], ["vTon", "ton"], ["vDil", "dil"], ["vADil", "altyazi_dil"], ["vAlt", "altyazi"], ["vEf", "efekt"], ["vTema", "tema"]]) if (ayar[k] != null && $("#" + id).querySelector(`option[value="${ayar[k]}"]`)) $("#" + id).value = ayar[k];
+  for (const [id, k] of [["vYon", "yontem"], ["vSes", "ses"], ["vKon", "konusmaci"], ["vTon", "ton"], ["vDil", "dil"], ["vADil", "altyazi_dil"], ["vAlt", "altyazi"], ["vEf", "efekt"], ["vTema", "tema"], ["vGor", "gorunum"]]) if (ayar[k] != null && $("#" + id).querySelector(`option[value="${ayar[k]}"]`)) $("#" + id).value = ayar[k];
   const not = () => { const s = $("#vSes").value; $("#vTtsAyar").hidden = s !== "tts";
     $("#vNot").innerHTML = s === "tts" ? "Ses telefonda üretilir; ilk kullanımda seçilen ses modeli bir kez indirilir (yaklaşık 60 MB, Wi-Fi önerilir), sonra internetsiz çalışır. iPhone'un kendi sesi (Siri sesleri) videoya kaydedilemediği için videoda bu sesler kullanılır; önizlemede 🔈 düğmesiyle iPhone sesini dinleyebilirsiniz."
       : s === "kendi" ? "Seslendirme kabininde okuduğunuz parçalar kullanılır; altyazı kaydınıza göre zamanlanır. Kaydı olmayan parça sessiz kalır."
@@ -629,7 +653,7 @@ async function videoPencere() {
     i.click(); };
   $("#vBas").onclick = async () => {
     VIDEO.sesKilidiAc(); VIDEO.uyanikBaslat(); VIDEO.yontem($("#vYon").value);
-    const a = { yontem: $("#vYon").value, ses: $("#vSes").value, konusmaci: $("#vKon").value, ton: $("#vTon").value, dil: $("#vDil").value, altyazi_dil: $("#vADil").value, altyazi: $("#vAlt").value, efekt: $("#vEf").value, adimlar: $("#vAd").value.trim(), tema: $("#vTema").value, ctaSes: (VAR.marka || {}).ctaSes || "", ctaSesEn: (VAR.marka || {}).ctaSesEn || "" };
+    const a = { yontem: $("#vYon").value, ses: $("#vSes").value, konusmaci: $("#vKon").value, ton: $("#vTon").value, dil: $("#vDil").value, altyazi_dil: $("#vADil").value, altyazi: $("#vAlt").value, efekt: $("#vEf").value, adimlar: $("#vAd").value.trim(), tema: $("#vTema").value, gorunum: $("#vGor").value, ctaSes: (VAR.marka || {}).ctaSes || "", ctaSesEn: (VAR.marka || {}).ctaSesEn || "" };
     DEPO.ayarYaz("video", a); VIDEO_DURDUR = false; $("#vBas").disabled = true; $("#vIs").hidden = false; $("#vRes").innerHTML = ""; $("#vLog").textContent = "";
     const log = (t, ust) => { const L = $("#vLog"); if (!L) return; if (ust && L.textContent.endsWith("\n") && L._son && t.startsWith(L._son)) { L.textContent = L.textContent.replace(/[^\n]*\n$/, t + "\n"); } else L.textContent += t + "\n"; L._son = ust ? t.slice(0, 18) : null; L.scrollTop = 1e9; };
     const ilerle = u => { const b = $("#vBar"); if (b) { b.style.width = (u * 100).toFixed(1) + "%"; $("#vYuzde").textContent = `Video: %${Math.round(u * 100)}`; } };

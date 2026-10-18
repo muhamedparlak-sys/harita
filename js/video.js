@@ -12,7 +12,8 @@ const VIDEO = (() => {
   async function resimlerHazir(svg) { const L = [...svg.querySelectorAll("image")].map(e => resim(e.getAttribute("href"))); await Promise.all(L.map(im => im.complete ? 0 : new Promise(ok => { im.onload = im.onerror = ok; }))); }
   function stilAyir(s) { const o = {}; if (!s) return o; for (const p of s.split(";")) { const i = p.indexOf(":"); if (i > 0) o[p.slice(0, i).trim()] = p.slice(i + 1).trim(); } return o; }
   const MIRAS = ["fill", "stroke", "stroke-width", "stroke-opacity", "fill-opacity", "stroke-linecap", "stroke-linejoin", "stroke-dasharray", "stroke-dashoffset", "font-size", "font-weight", "text-anchor", "paint-order", "letter-spacing"];
-  function svgCiz(ctx, svg, degisken, aile) {
+  /* hud: 0 hepsi · 1 ekran öğeleri (tarih, saat, gösterge) hariç · 2 yalnız ekran öğeleri */
+  function svgCiz(ctx, svg, degisken, aile, hud) {
     const vb = svg.viewBox.baseVal, sx = ctx.canvas.width / vb.width, sy = ctx.canvas.height / vb.height;
     const renk = v => { if (!v || v === "none") return null; const m = v.match(/^var\((--[\w-]+)\)$/); return m ? degisken(m[1]) : v; };
     ctx.save(); ctx.scale(sx, sy);
@@ -27,7 +28,7 @@ const VIDEO = (() => {
       else boya(ctx, e, tag, st, a, renk, aile);
       ctx.restore(); };
     const kok = { fill: "#000", "font-size": "16", "font-weight": "400", "text-anchor": "start" };
-    for (const c of svg.children) dugum(c, kok, 1);
+    for (const c of svg.children) { const h = c.getAttribute("data-hud"); if ((hud === 1 && h) || (hud === 2 && !h)) continue; dugum(c, kok, 1); }
     ctx.restore();
   }
   function donustur(ctx, tr) {
@@ -71,7 +72,8 @@ const VIDEO = (() => {
     await resimlerHazir(W.document.getElementById("ov"));
     const kokE = W.document.documentElement, cs = W.getComputedStyle(kokE), onb = {};
     const degisken = k => { const a = (kokE.dataset.gece || "") + k; return onb[a] || (onb[a] = cs.getPropertyValue(k).trim() || "#000"); };
-    return { f, W, degisken, kapat: () => f.remove() };
+    const uc = !!(vid && vid.uc) && W.eval("Object.values(MAPS).some(m=>m.E)");
+    return { f, W, degisken, uc, exag: {}, kapat: () => f.remove() };
   }
 
   /* ---------------- altyazı ---------------- */
@@ -128,11 +130,79 @@ const VIDEO = (() => {
     ctx.restore();
   }
 
+  /* ---------------- 3D eğik harita ----------------
+     Kare önce düz çizilir (harita + rotalar + ikonlar), sonra yüksekliğe göre kabartılmış eğik bir yüzeye giydirilir (WebGL).
+     Tarih, saat, deniz göstergesi ve altyazı düz kalır. Uzak kenar sise karışır. */
+  const UC = (() => {
+    const GX = 90, GY = 160, OX = 96, OY = 120, EX = 3, EU = 3, EY = .25, EGIM = 46 * Math.PI / 180, FOV = 30 * Math.PI / 180, A = WV / HV;
+    let gl = null, txc = null, tx = null, cv = null, P = {}, ic = null, dis = null, KAM = null, hazir = false;
+    const vs = `attribute vec2 uv;attribute float h;attribute float s;uniform mat4 mvp;uniform vec2 ext;uniform vec2 off;uniform float hk;uniform float lift;varying vec2 vuv;varying float vd;varying float vs;
+      void main(){vec3 p=vec3(off.x+(uv.x-.5)*ext.x,h*hk+lift,off.y+(uv.y-.5)*ext.y);gl_Position=mvp*vec4(p,1.);vuv=uv;vd=gl_Position.w;vs=s;}`;
+    const fs = `precision mediump float;uniform sampler2D t;uniform vec3 sis;uniform vec2 sa;varying vec2 vuv;varying float vd;varying float vs;
+      void main(){vec3 c=texture2D(t,vuv).rgb*vs;float f=smoothstep(sa.x,sa.y,vd);gl_FragColor=vec4(mix(c,sis,f),1.);}`;
+    const carp = (a, b) => { const o = new Float32Array(16); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { let x = 0; for (let k = 0; k < 4; k++) x += a[k * 4 + j] * b[i * 4 + k]; o[i * 4 + j] = x; } return o; };
+    const persp = (f, a, n, F) => { const t = 1 / Math.tan(f / 2); return new Float32Array([t / a, 0, 0, 0, 0, t, 0, 0, 0, 0, (F + n) / (n - F), -1, 0, 0, 2 * F * n / (n - F), 0]); };
+    const bak = (e, c) => { const up = [0, 1, 0], z = [e[0] - c[0], e[1] - c[1], e[2] - c[2]], zl = Math.hypot(...z); z.forEach((v, i) => z[i] = v / zl);
+      const x = [up[1] * z[2] - up[2] * z[1], up[2] * z[0] - up[0] * z[2], up[0] * z[1] - up[1] * z[0]], xl = Math.hypot(...x); x.forEach((v, i) => x[i] = v / xl);
+      const y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]], d = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -d(x, e), -d(y, e), -d(z, e), 1]); };
+    const izd = (M, p) => { const v = [0, 1, 2, 3].map(j => M[j] * p[0] + M[4 + j] * p[1] + M[8 + j] * p[2] + M[12 + j]); return [v[0] / v[3], v[1] / v[3], v[3]]; };
+    /* kamera: görünen alanın yakın kenarı ekranın altına tam genişlikte oturur; çevre yanlara ve ufka uzanır, uzakta pusa karışır */
+    function kamera() { const Pm = persp(FOV, A, .01, 80), yakin = .5;
+      const kur1 = D => { const e = [0, D * Math.cos(EGIM), D * Math.sin(EGIM)]; let lo = -2, hi = 2, M;
+        for (let k = 0; k < 50; k++) { const zt = (lo + hi) / 2; M = carp(Pm, bak([e[0], e[1], e[2] + zt], [0, 0, zt])); if (izd(M, [0, 0, yakin])[1] > -1) hi = zt; else lo = zt; } return M; };
+      let lo = .3, hi = 10, M; for (let k = 0; k < 50; k++) { const D = (lo + hi) / 2; M = kur1(D); if (izd(M, [A / 2, 0, yakin])[0] > 1) lo = D; else hi = D; }
+      return { M, wIc: izd(M, [0, 0, -.5])[2], wDis: izd(M, [0, 0, -.5 - EU])[2] }; }
+    function kur() { if (hazir) return !!gl; hazir = true;
+      cv = document.createElement("canvas"); cv.width = WV; cv.height = HV; gl = cv.getContext("webgl", { preserveDrawingBuffer: true, antialias: true }); if (!gl) return false;
+      txc = document.createElement("canvas"); txc.width = WV; txc.height = HV; tx = txc.getContext("2d");
+      const sh = (t, k) => { const o = gl.createShader(t); gl.shaderSource(o, k); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+      const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+      for (const n of ["mvp", "ext", "off", "hk", "lift", "t", "sis", "sa"]) P[n] = gl.getUniformLocation(pr, n);
+      const L = { uv: gl.getAttribLocation(pr, "uv"), h: gl.getAttribLocation(pr, "h"), s: gl.getAttribLocation(pr, "s") };
+      const ag = (gx, gy) => { const uv = new Float32Array(gx * gy * 2); for (let j = 0; j < gy; j++) for (let k = 0; k < gx; k++) { uv[(j * gx + k) * 2] = k / (gx - 1); uv[(j * gx + k) * 2 + 1] = j / (gy - 1); }
+        const I = new Uint16Array((gx - 1) * (gy - 1) * 6); let n = 0; for (let j = 0; j < gy - 1; j++) for (let k = 0; k < gx - 1; k++) { const a = j * gx + k; I.set([a, a + gx, a + 1, a + 1, a + gx, a + gx + 1], n); n += 6; }
+        const b = d => { const x = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, x); gl.bufferData(gl.ARRAY_BUFFER, d, gl.DYNAMIC_DRAW); return x; };
+        const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, I, gl.STATIC_DRAW);
+        const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+        return { gx, gy, n, ib, t, uv: b(uv), hB: b(new Float32Array(gx * gy)), sB: b(new Float32Array(gx * gy)), h: new Float32Array(gx * gy), s: new Float32Array(gx * gy) }; };
+      ic = ag(GX, GY); dis = ag(OX, OY); ic.L = dis.L = L;
+      gl.enable(gl.DEPTH_TEST); gl.enable(gl.POLYGON_OFFSET_FILL); KAM = kamera(); return true; }
+    const hex = h => { const m = (h || "#dfe7ea").trim().match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})/i); return m ? [1, 2, 3].map(i => parseInt(m[i], 16) / 255) : [.87, .9, .92]; };
+    /* ızgara yükseklikleri ve eğim gölgesi (kuzeybatı ışığı) */
+    function doldur(g, Z, en, boy, ex) { const dx = en / (g.gx - 1), dz = boy / (g.gy - 1);
+      for (let j = 0; j < g.gy; j++) for (let k = 0; k < g.gx; k++) { const i = j * g.gx + k; g.h[i] = Z[i];
+        const gx = (Z[j * g.gx + Math.min(g.gx - 1, k + 1)] - Z[j * g.gx + Math.max(0, k - 1)]) * ex / (2 * dx), gz = (Z[Math.min(g.gy - 1, j + 1) * g.gx + k] - Z[Math.max(0, j - 1) * g.gx + k]) * ex / (2 * dz);
+        const d = (gx * .55 + .7 + gz * .45) / Math.hypot(gx, 1, gz); g.s[i] = Math.max(.6, Math.min(1.12, .5 + .62 * d)); } }
+    function ag(g, resim, ext, off, lift, ofs) { gl.bindBuffer(gl.ARRAY_BUFFER, g.uv); gl.enableVertexAttribArray(g.L.uv); gl.vertexAttribPointer(g.L.uv, 2, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, g.hB); gl.bufferData(gl.ARRAY_BUFFER, g.h, gl.DYNAMIC_DRAW); gl.enableVertexAttribArray(g.L.h); gl.vertexAttribPointer(g.L.h, 1, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, g.sB); gl.bufferData(gl.ARRAY_BUFFER, g.s, gl.DYNAMIC_DRAW); gl.enableVertexAttribArray(g.L.s); gl.vertexAttribPointer(g.L.s, 1, gl.FLOAT, false, 0, 0);
+      gl.bindTexture(gl.TEXTURE_2D, g.t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, resim);
+      gl.uniform2f(P.ext, ext[0], ext[1]); gl.uniform2f(P.off, off[0], off[1]); gl.uniform1f(P.lift, lift); gl.polygonOffset(ofs, ofs);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, g.ib); gl.drawElements(gl.TRIANGLES, g.n, gl.UNSIGNED_SHORT, 0); }
+    /* Y: görünen alan {Z, gm (genişlik, metre), L (su düzeyi), i (sahne)}; G: çevre {Z, cv} */
+    function ciz(M, Y, G, gokRenk) {
+      let hmax = 0; for (let i = 0; i < Y.Z.length; i++) hmax = Math.max(hmax, Y.Z[i] - Y.L);
+      /* dikey abartı sahne başına bir kez seçilir (kamera kayarken titremesin): en yüksek kabartı görünen genişliğin ~%5'i, 1,5–10 kat */
+      if (M.exag[Y.i] == null) M.exag[Y.i] = Math.max(1.5, Math.min(10, .05 * Y.gm / Math.max(250, hmax)));
+      const ex = M.exag[Y.i], hk = A / Y.gm * ex, g = hex(gokRenk);
+      gl.viewport(0, 0, WV, HV); gl.clearColor(g[0], g[1], g[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.uniformMatrix4fv(P.mvp, false, KAM.M); gl.uniform1f(P.hk, hk); gl.uniform1i(P.t, 0); gl.uniform3f(P.sis, g[0], g[1], g[2]);
+      gl.uniform2f(P.sa, KAM.wIc + (KAM.wDis - KAM.wIc) * .05, KAM.wDis * .97);
+      if (G) { doldur(dis, G.Z, Y.gm * EX, Y.gm / A * (1 + EU + EY), ex); ag(dis, G.cv, [A * EX, 1 + EU + EY], [0, (EY - EU) / 2], 0, 1); }
+      doldur(ic, Y.Z, Y.gm, Y.gm / A, ex); ag(ic, txc, [A, 1], [0, 0], 0, -2);
+      return cv; }
+    return { kur, ciz, GX, GY, OX, OY, EX, EU, EY, tuval: () => tx };
+  })();
+
   /* bir kare: harita tuvali + SVG katmanı + altyazı */
   function kare(ctx, M, p, solo, G, t, kip, u, hook) {
     const W = M.W; W.__solo = solo; W.__u = u == null ? null : u; W.__kbz = hook ? .2 : null; W.__kbYon = hook ? 1 : null; W.__draw(p);
-    const cv = W.document.getElementById("cv"); ctx.globalAlpha = 1; ctx.drawImage(cv, 0, 0, WV, HV);
-    svgCiz(ctx, W.document.getElementById("ov"), M.degisken, "Inter, \"Instrument Sans\", -apple-system, sans-serif");
+    const cv = W.document.getElementById("cv"), ov = W.document.getElementById("ov"), AILE = "Inter, \"Instrument Sans\", -apple-system, sans-serif";
+    const Y = M.uc && UC.kur() ? W.__yukKare(UC.GX, UC.GY) : null;
+    if (Y) { const tx = UC.tuval(); tx.globalAlpha = 1; tx.drawImage(cv, 0, 0, WV, HV); svgCiz(tx, ov, M.degisken, AILE, 1);
+      const G = W.__yukGenis ? W.__yukGenis(UC.OX, UC.OY, UC.EX, UC.EU, UC.EY, 1024) : null; ctx.globalAlpha = 1; ctx.drawImage(UC.ciz(M, Y, G, M.degisken("--sky")), 0, 0, WV, HV); svgCiz(ctx, ov, M.degisken, AILE, 2); }
+    else { ctx.globalAlpha = 1; ctx.drawImage(cv, 0, 0, WV, HV); svgCiz(ctx, ov, M.degisken, AILE); }
     if (G && G.length) altyaziCiz(ctx, G, t, kip);
   }
 
@@ -156,7 +226,7 @@ const VIDEO = (() => {
     const v = JSON.parse(JSON.stringify(hk.veri)), C = Object.assign({}, (v.meta || {}).ceviri || {}), K = Object.keys(C).sort((a, b) => b.length - a.length);
     const tr = s => { if (!s || typeof s !== "string") return s; if (C[s]) return C[s]; let r = s; for (const k of K) r = r.split(k).join(C[k]); return r; };
     const tarih = s => s ? tr(s).replace(/[\p{L}]+/gu, w => AYLAR[w.toLocaleLowerCase("tr-TR")] || w).replace(/(\d{1,2})\.(\d{2})\b/g, "$1:$2") : s;
-    const baslik = (v.meta || {}).title_en;
+    const baslik = (v.meta || {}).title_en; v.meta = v.meta || {}; v.meta.dil = "en";
     for (const st of v.steps || []) {
       if (st.perde) st.perde = (baslik || tr(st.perde)).toUpperCase(); st.date = tarih(st.date);
       for (const p of st.pts || []) p[2] = tr(p[2]); for (const p of st.seas || []) p[2] = tr(p[2]);
@@ -201,7 +271,7 @@ const VIDEO = (() => {
 
     log("Harita motoru açılıyor…");
     const top = a.etiket === "off" ? 0 : 130; /* Instagram/Shorts üst şeridinin ve 3:4 ızgara kırpmasının altında */
-    const M = await cerceveAc(a.dil === "en" ? ingilizce(hk) : hk, { w: 540, h: 960, top, alt: altOn ? .27 : 0 }, a.tema);
+    const M = await cerceveAc(a.dil === "en" ? ingilizce(hk) : hk, { w: 540, h: 960, top, alt: altOn ? .27 : 0, uc: a.gorunum !== "duz" }, a.tema);
     try {
       const EV = M.W.__olaylar ? M.W.__olaylar() : steps.map(() => []);
       const evs = (i, f0, f1, sure, t0) => (EV[i] || []).filter(e => f0 <= e.t && e.t <= f1).map(e => ({ t: t0 + (e.t - f0) / Math.max(1e-6, f1 - f0) * sure, ad: e.tur, k: e.k }));
