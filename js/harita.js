@@ -51,6 +51,10 @@ const HARITA = (() => {
       while (yig.length) { const i = yig.pop(), x = i % W, y = (i / W) | 0; alan[n]++; if (zz[i] < -20) derin[n] = true; if (x === 0 || y === 0 || x === W - 1 || y === H - 1) kenar.add(n);
         for (const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, y > 0 ? i - W : -1, y < H - 1 ? i + W : -1]) if (j >= 0 && sea[j] && !lb[j]) { lb[j] = n; yig.push(j); } } }
     if (n > 1) for (let i = 0; i < N; i++) { const k = lb[i]; if (k && !kenar.has(k) && alan[k] < .003 * N && derin[k]) sea[i] = 0; }
+    /* yükseklik dosyası: ham yükseklik, denizde en az -1 m (kıyı çizgisi ana haritayla aynı kalsın); v = metre + 12000 */
+    const yc = document.createElement("canvas"); yc.width = W; yc.height = H; const yx = yc.getContext("2d"), yi = yx.createImageData(W, H);
+    for (let i = 0; i < N; i++) { const e = sea[i] ? Math.min(zz[i], -1) : zz[i], v = Math.max(0, Math.min(65535, Math.round(e) + 12000)); yi.data[4 * i] = v >> 8; yi.data[4 * i + 1] = v & 255; yi.data[4 * i + 2] = 0; yi.data[4 * i + 3] = 255; }
+    yx.putImageData(yi, 0, 0); const yuk = await new Promise(ok => yc.toBlob(ok, "image/png"));
     for (let i = 0; i < N; i++) if (!sea[i]) zz[i] = Math.max(zz[i], 1);
     const out = new Uint8Array(N), dd = []; for (let i = 0; i < N; i++) if (sea[i]) dd.push(Math.max(0, -zz[i]));
     dd.sort((a, b) => a - b); const dmax = Math.max(dd.length ? dd[Math.floor(.99 * (dd.length - 1))] : 1, 20);
@@ -71,7 +75,7 @@ const HARITA = (() => {
       pi.data[4 * i] = r; pi.data[4 * i + 1] = gg; pi.data[4 * i + 2] = b; pi.data[4 * i + 3] = 255; } p.putImageData(pi, 0, 0);
     const kc = document.createElement("canvas"); kc.width = pw; kc.height = ph; kc.getContext("2d").drawImage(pc, 0, 0, pw, ph);
     const onizle = await new Promise(ok => kc.toBlob(ok, "image/jpeg", .82));
-    return { meta: { lo0: +lo0.toFixed(6), lo1: +lo1.toFixed(6), la0: +la0.toFixed(6), la1: +la1.toFixed(6), w: W, h: H }, png, onizle };
+    return { meta: { lo0: +lo0.toFixed(6), lo1: +lo1.toFixed(6), la0: +la0.toFixed(6), la1: +la1.toFixed(6), w: W, h: H }, png, onizle, yuk };
   }
 
   /* ---------- Save the Cat denetimi ---------- */

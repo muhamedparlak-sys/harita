@@ -27,9 +27,15 @@ const DEPO = (() => {
   function kutuphaneSifirla() { KAT = null; }
   async function haritaPng(ad) { const h = await al("haritalar", ad); if (h) return h.png; const r = await fetch(`kut/${ad}.png`); if (!r.ok) throw new Error("Harita yok: " + ad); return await r.blob(); }
   async function onizleUrl(ad) { const h = await al("haritalar", ad); if (h && h.onizle) return URL.createObjectURL(h.onizle); return `kut/onizle/${ad}.jpg`; }
-  async function haritaKaydet(ad, meta, png, onizle) { await yaz("haritalar", ad, { meta, png, onizle }); KAT = null; }
+  async function haritaKaydet(ad, meta, png, onizle, yuk) { if (yuk) meta = Object.assign({}, meta, { yuk: 1 }); await yaz("haritalar", ad, { meta, png, onizle, yuk: yuk || null }); KAT = null; }
+  /* yükseklik dosyası (ad.yuk.png): v = metre + 12000, R = v >> 8, G = v & 255; yalnızca deniz düzeyi ve 3D sahneleri için yüklenir */
+  async function yukPng(ad) { const h = await al("haritalar", ad); if (h) return h.yuk || null; const r = await fetch(`kut/${ad}.yuk.png`); return r.ok ? await r.blob() : null; }
   async function haritaSil(ad) { await sil("haritalar", ad); KAT = null; }
   const _b64 = {};
+  const blob64 = b => new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result.split(",")[1]); r.readAsDataURL(b); });
+  async function yuk64(ad) { const k = "yuk:" + ad; if (_b64[k] !== undefined) return _b64[k]; const b = await yukPng(ad); return (_b64[k] = b ? await blob64(b) : null); }
+  /* hikâye yükseklik ister mi: deniz düzeyi, kesit ya da 3D sahnesi */
+  const yukGerek = hk => !!((hk.veri.meta || {}).uc || hk.veri.steps.some(s => s.deniz || s.kesit || s.uc));
   async function b64(ad) { if (_b64[ad]) return _b64[ad]; const b = await haritaPng(ad); const s = await new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result.split(",")[1]); r.readAsDataURL(b); }); return (_b64[ad] = s); }
 
   async function okunusSozluk() {
@@ -115,7 +121,7 @@ const DEPO = (() => {
   async function iceAktar(metin, onerilenAd) {
     const j = JSON.parse(metin); let hk = j, ad = onerilenAd;
     if (j.tur === "harita-hikaye-paket") { hk = j.hikaye; ad = j.ad || ad;
-      for (const [h, v] of Object.entries(j.haritalar || {})) { const kat = await kutuphane(); if (!kat[h]) await haritaKaydet(h, v.meta, b64Blob(v.png, "image/png"), v.onizle ? b64Blob(v.onizle, "image/jpeg") : null); } }
+      for (const [h, v] of Object.entries(j.haritalar || {})) { const kat = await kutuphane(); if (!kat[h]) await haritaKaydet(h, v.meta, b64Blob(v.png, "image/png"), v.onizle ? b64Blob(v.onizle, "image/jpeg") : null, v.yuk ? b64Blob(v.yuk, "image/png") : null); } }
     if (!hk.veri || !hk.veri.steps) throw new Error("Bu dosya bir hikâye değil (hikaye.json bekleniyor).");
     if (!hk.haritalar) hk.haritalar = [...new Set(hk.veri.steps.map(s => s.map))];
     const kat = await kutuphane(), eksik = hk.haritalar.filter(h => !kat[h]);
@@ -124,7 +130,7 @@ const DEPO = (() => {
   }
   async function disaAktar(ad) {
     const hk = await hikaye(ad), kat = await kutuphane(), H = {};
-    for (const h of hk.haritalar) if (kat[h] && kat[h].yerel) { const v = await al("haritalar", h); H[h] = { meta: v.meta, png: await blobB64(v.png), onizle: v.onizle ? await blobB64(v.onizle) : null }; }
+    for (const h of hk.haritalar) if (kat[h] && kat[h].yerel) { const v = await al("haritalar", h); H[h] = { meta: v.meta, png: await blobB64(v.png), onizle: v.onizle ? await blobB64(v.onizle) : null, yuk: v.yuk ? await blobB64(v.yuk) : null }; }
     return JSON.stringify({ tur: "harita-hikaye-paket", surum: 1, ad, hikaye: hk, haritalar: H });
   }
   const b64Blob = (s, t) => new Blob([Uint8Array.from(atob(s), c => c.charCodeAt(0))], { type: t });
@@ -154,7 +160,8 @@ main>section:not(#story),main>.top{display:none!important}
     const H = hk.haritalar.filter(h => kat[h]); for (const s of hk.veri.steps) if (kat[s.map] && !H.includes(s.map)) H.push(s.map);
     const M = H.map(h => `${h}:` + JSON.stringify({ lo0: kat[h].lo0, lo1: kat[h].lo1, la0: kat[h].la0, la1: kat[h].la1, w: kat[h].w, h: kat[h].h })).join(",");
     const S = (await Promise.all(H.map(async h => `${h}:"${await b64(h)}"`))).join(",");
-    L[i] = "const DATA=" + JSON.stringify(hk.veri) + `, MAPS={${M}}, SRC={${S}};`;
+    const Y = yukGerek(hk) ? (await Promise.all(H.map(async h => { const y = kat[h].yuk ? await yuk64(h) : null; return y ? `${h}:"${y}"` : ""; }))).filter(Boolean).join(",") : "";
+    L[i] = "const DATA=" + JSON.stringify(hk.veri) + `, MAPS={${M}}, SRC={${S}}, YUK={${Y}};`;
     let html = L.join("\n");
     if (mod) {
       const v = mod === "dikey" ? "window.__VID={w:540,h:960,top:130,alt:.27};" : mod === "video" ? `window.__VID=${JSON.stringify(vid)};` : "";
@@ -168,6 +175,6 @@ main>section:not(#story),main>.top{display:none!important}
   const sesOnb = k => al("sesonbellek", k);
   const sesOnbYaz = (k, v) => yaz("sesonbellek", k, v);
   const ayar = k => al("ayar", k), ayarYaz = (k, v) => yaz("ayar", k, v);
-  return { kutuphane, kutuphaneSifirla, haritaPng, onizleUrl, haritaKaydet, haritaSil, okunusSozluk, okunusEkle, yer, noktalar, sec, VURUS, guvenli,
+  return { kutuphane, kutuphaneSifirla, haritaPng, yukPng, yukGerek, onizleUrl, haritaKaydet, haritaSil, okunusSozluk, okunusEkle, yer, noktalar, sec, VURUS, guvenli,
     kutuHesapla, hikayeler, hikaye, hikayeKaydet, hikayeSil, yeniHikaye, iceAktar, disaAktar, kayitKaydet, kayit, kayitSil, kayitlar, sayfaKur, sesOnb, sesOnbYaz, ayar, ayarYaz };
 })();

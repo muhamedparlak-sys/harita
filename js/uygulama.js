@@ -2,7 +2,7 @@
 "use strict";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const SURUM = "44 · 13 Ekim";
+const SURUM = "45 · 18 Ekim";
 const BUTCE = [12, 14, 12, 14, 16, 12, 18, 16], HOOKB = 8;
 const IPUCU = ["Geniş plan, “önce” hâli. Kim, nerede; tema cümlesi.", "Kahraman yerinde. Bağlam ve tek cümlede risk.", "Olayı başlatan hareket. 1. yeniden kanca.", "Eşik, sınır, giriş. Karar anı.", "Asıl hareket, rotalar; varsa yan hikâye.", "Sahte zafer ya da sahte yenilgi. “Ama…” ile 2. kanca.", "Çatışma, kayıp, en kötü an. Hook bu sahneden.", "Sonuç ve bugün; S1'in aynası. Son cümle hook'a döner."];
 
@@ -288,7 +288,7 @@ function haritaUret() { pencere("Yeni harita üret", `<div class="ipucu">Bölgen
         al = [Math.min(...los) - w * .2, Math.max(...los) + w * .2, Math.min(...las) - h * .2, Math.max(...las) + h * .2]; }
       if (al.length !== 4 || al.some(isNaN)) throw new Error("Alan dört sayı olmalı");
       const r = await HARITA.uret(...al, +$("#nGen").value, log);
-      await DEPO.haritaKaydet(ad, Object.assign(r.meta, { aciklama: $("#nAc").value, kaynak: "gmrt" }), r.png, r.onizle); KAT = await DEPO.kutuphane();
+      await DEPO.haritaKaydet(ad, Object.assign(r.meta, { aciklama: $("#nAc").value, kaynak: "gmrt" }), r.png, r.onizle, r.yuk); KAT = await DEPO.kutuphane();
       log(`Hazır: ${ad} (${r.meta.w}×${r.meta.h}). Haritalar penceresinden seçebilirsiniz.`);
       if (HK && !HK.haritalar.includes(ad)) { HK.haritalar.push(ad); degisti(false); log("Bu hikâyenin haritalarına eklendi."); }
     } catch (e) { log("Hata: " + e.message); } $("#nBas").disabled = false; }; }

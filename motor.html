@@ -129,7 +129,7 @@ sup a{color:inherit;text-decoration:none}
 </main>
 <script>
 "use strict";
-const DATA={"meta":{"title":"Yeni hikâye","lab":"Harita hikâyesi","durum":"Taslak · yayımlanmamıştır","h1":"Başlık","lead":"Giriş paragrafı: hikâye nerede, ne zaman, kimin hikâyesi. Kaydırdıkça harita ilerler.","listeBaslik":"","listeAciklama":"","dogrulanacak":[],"yontem":["Kıyı çizgisi ve derinlik/yükseklik: (veri kaynağı).","Çıkış ve varış yerleri, sıralar ve tarihler kaynaklara dayanır; aradaki rotalar şematiktir."],"kaynak":"","hazirlayan":"","paylasim":{}},"lg":[],"notes":[],"wr":[],"wl":{},"steps":[]}, MAPS={}, SRC={};
+const DATA={"meta":{"title":"Yeni hikâye","lab":"Harita hikâyesi","durum":"Taslak · yayımlanmamıştır","h1":"Başlık","lead":"Giriş paragrafı: hikâye nerede, ne zaman, kimin hikâyesi. Kaydırdıkça harita ilerler.","listeBaslik":"","listeAciklama":"","dogrulanacak":[],"yontem":["Kıyı çizgisi ve derinlik/yükseklik: (veri kaynağı).","Çıkış ve varış yerleri, sıralar ve tarihler kaynaklara dayanır; aradaki rotalar şematiktir."],"kaynak":"","hazirlayan":"","paylasim":{}},"lg":[],"notes":[],"wr":[],"wl":{},"steps":[]}, MAPS={}, SRC={}, YUK={};
 const $=s=>document.querySelector(s), NS="http://www.w3.org/2000/svg";
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t, ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2, seg=(t,a,b)=>clamp((t-a)/(b-a),0,1);
 const n=k=>`<sup><a href="#n${k}">${k}</a></sup>`;
@@ -450,7 +450,13 @@ function draw(p){ P=p; const N=ST.length, i=clamp(Math.floor(p),0,N-1), f=clamp(
 
 /* ---------- yükleme ---------- */
 colors();
-for(const k in MAPS){ const m=MAPS[k], im=new Image(); im.onload=()=>{ const t=document.createElement("canvas"); t.width=m.w; t.height=m.h; const x=t.getContext("2d",{willReadFrequently:true}); x.drawImage(im,0,0); const px=x.getImageData(0,0,m.w,m.h).data, N=m.w*m.h; m.V=new Uint8Array(N); for(let i=0;i<N;i++) m.V[i]=px[4*i]; m.img=m.x.createImageData(m.w,m.h); m.o=new Uint32Array(m.img.data.buffer); m.ok=1; paint(m); draw(P); }; im.src="data:image/png;base64,"+SRC[k]; }
+const YK=(typeof YUK!=="undefined"&&YUK)||{};
+for(const k in MAPS){ const m=MAPS[k], im=new Image(); im.onload=()=>{ const t=document.createElement("canvas"); t.width=m.w; t.height=m.h; const x=t.getContext("2d",{willReadFrequently:true}); x.drawImage(im,0,0); const px=x.getImageData(0,0,m.w,m.h).data, N=m.w*m.h; m.V=new Uint8Array(N); for(let i=0;i<N;i++) m.V[i]=px[4*i]; m.img=m.x.createImageData(m.w,m.h); m.o=new Uint32Array(m.img.data.buffer); m.ok=YK[k]?0:1; m.ok0=1; if(m.ok){ paint(m); draw(P); } }; im.src="data:image/png;base64,"+SRC[k]; }
+/* yükseklik (YUK, yalnızca deniz düzeyi / kesit / 3D hikâyelerinde gelir): m.E metre (Int16), harita pikseliyle birebir */
+for(const k in YK){ const m=MAPS[k]; if(!m) continue; const im=new Image(); im.onload=()=>{ const t=document.createElement("canvas"); t.width=m.w; t.height=m.h; const x=t.getContext("2d",{willReadFrequently:true}); x.drawImage(im,0,0); const px=x.getImageData(0,0,m.w,m.h).data, N=m.w*m.h; m.E=new Int16Array(N); for(let i=0;i<N;i++) m.E[i]=((px[4*i]<<8)|px[4*i+1])-12000;
+  const bekle=()=>{ if(!m.ok0) return setTimeout(bekle,20); m.ok=1; paint(m); draw(P); }; bekle(); }; im.src="data:image/png;base64,"+YK[k]; }
+/* bir noktanın yüksekliği (metre); yükseklik yoksa null */
+window.__yukseklik=(k,lo,la)=>{ const m=MAPS[k]; if(!m||!m.E) return null; const x=Math.round(mx(m,lo)), y=Math.round(my(m,la)); if(x<0||y<0||x>=m.w||y>=m.h) return null; return m.E[y*m.w+x]; };
 const retheme=()=>{ colors(); for(const k in MAPS) paint(MAPS[k]); draw(P); };
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",retheme);
 new MutationObserver(retheme).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
